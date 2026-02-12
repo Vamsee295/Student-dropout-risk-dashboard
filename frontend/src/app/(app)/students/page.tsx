@@ -6,13 +6,13 @@ import { StudentTable } from "@/components/students/StudentTable";
 
 export default function StudentsPage() {
   return (
-    <div className="space-y-6">
+    <div className="max-w-[1600px] mx-auto space-y-8 p-1">
       <DirectoryHeader />
-      <div className="space-y-6">
+
+      <div className="p-1 space-y-6">
         <DirectoryFilters />
         <StudentTable />
       </div>
     </div>
   );
 }
-

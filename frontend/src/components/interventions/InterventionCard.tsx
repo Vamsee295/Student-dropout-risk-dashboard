@@ -1,145 +1,130 @@
 "use client";
 
-import { AlertTriangle, TrendingDown, Clock, CheckCircle2, MoreHorizontal, User, Calendar } from "lucide-react";
+import { Calendar, User, MoreHorizontal, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
-export interface InterventionData {
+export interface InterventionCardProps {
     id: string;
     studentName: string;
+    studentInitial: string; // e.g. "IC"
     studentId: string;
     grade: string;
-    riskLevel: 'High' | 'Medium' | 'Low';
-    status: 'Pending' | 'In Progress' | 'Completed';
-    title: string;
-    description: string;
-    meta: {
-        owner?: string;
-        date?: string;
-        suggestion?: string;
-        outcome?: string;
-    };
+    riskLevel: "High Risk" | "Medium Risk" | "Low Risk";
+    alertTitle: string;
+    alertDescription: string;
+    suggestedAction: string;
+    actionPlan?: string;
+    actionPlanDescription?: string;
+    assignedTo?: string; // Name
+    assignedToAvatar?: string; // URL
+    dueDate?: string;
+    status: "Pending" | "In Progress" | "Completed";
+    resolvedDate?: string;
+    resolvedBy?: string;
 }
 
-interface InterventionCardProps {
-    data: InterventionData;
-}
+const getRiskColor = (risk: string) => {
+    switch (risk) {
+        case "High Risk": return "bg-red-50 text-red-600 border-red-100";
+        case "Medium Risk": return "bg-orange-50 text-orange-600 border-orange-100";
+        default: return "bg-green-50 text-green-600 border-green-100";
+    }
+};
 
-export function InterventionCard({ data }: InterventionCardProps) {
-    const isPending = data.status === 'Pending';
-    const isInProgress = data.status === 'In Progress';
-    const isCompleted = data.status === 'Completed';
+const getStatusBorder = (status: string) => {
+    switch (status) {
+        case "Pending": return "border-l-orange-400";
+        case "In Progress": return "border-l-blue-500";
+        case "Completed": return "border-l-emerald-500";
+        default: return "border-l-gray-200";
+    }
+};
 
-    // Styles based on status
-    const cardBorder = isPending
-        ? "border-l-4 border-l-amber-400"
-        : isInProgress
-            ? "border-l-4 border-l-blue-500"
-            : "border-l-4 border-l-emerald-500";
-
-    const riskBadge = data.riskLevel === 'High'
-        ? "bg-red-50 text-red-600 border-red-100"
-        : data.riskLevel === 'Medium'
-            ? "bg-orange-50 text-orange-600 border-orange-100"
-            : "bg-emerald-50 text-emerald-600 border-emerald-100";
-
+export function InterventionCard({ data }: { data: InterventionCardProps }) {
     return (
-        <div className={`relative flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md ${cardBorder}`}>
+        <div className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm border-l-4 ${getStatusBorder(data.status)} hover:shadow-md transition-shadow`}>
             {/* Header */}
-            <div className="mb-3 flex items-start justify-between">
+            <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                    {/* Avatar placeholder */}
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                        <span className="text-sm font-bold">{data.studentName.charAt(0)}</span>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+                        {data.studentInitial}
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-slate-900">{data.studentName}</h4>
-                        <p className="text-[10px] text-slate-500">Grade {data.grade} • ID #{data.studentId}</p>
+                        <h4 className="font-bold text-gray-900 text-sm">{data.studentName}</h4>
+                        <p className="text-[10px] text-gray-500">{data.grade} • ID #{data.studentId}</p>
                     </div>
                 </div>
-                {!isCompleted && (
-                    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${riskBadge}`}>
-                        {data.riskLevel} Risk
-                    </span>
-                )}
-                {isCompleted && (
-                    <CheckCircle2 size={18} className="text-emerald-500" />
-                )}
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${getRiskColor(data.riskLevel)}`}>
+                    {data.riskLevel}
+                </span>
             </div>
 
-            {/* Content Body */}
-            <div className={`mb-3 flex-1 rounded-lg p-3 ${isPending ? 'bg-amber-50' : isInProgress ? 'bg-slate-50' : 'bg-emerald-50'}`}>
-                {isPending && (
-                    <div className="flex items-start gap-2">
-                        <AlertTriangle className="flex-shrink-0 text-amber-500" size={14} />
-                        <div>
-                            <p className="text-xs font-bold text-slate-800">{data.title}</p>
-                            <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{data.description}</p>
-                        </div>
+            {/* Alert Content */}
+            <div className={`rounded-lg p-3 mb-3 ${data.status === 'Completed' ? 'bg-emerald-50 border border-emerald-100' : 'bg-orange-50 border border-orange-100'}`}>
+                {data.status === 'Completed' ? (
+                    <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle size={14} className="text-emerald-600" />
+                        <h5 className="font-bold text-emerald-800 text-xs">{data.alertTitle}</h5>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 mb-1">
+                        <AlertTriangle size={14} className="text-orange-600" />
+                        <h5 className="font-bold text-orange-800 text-xs">{data.alertTitle}</h5>
                     </div>
                 )}
-
-                {isInProgress && (
-                    <div>
-                        <div className="mb-2 flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Action Plan</span>
-                        </div>
-                        <p className="text-xs font-bold text-slate-800">{data.title}</p>
-                        <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{data.description}</p>
-
-                        <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-2">
-                            <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600">
-                                <User size={12} />
-                                {data.meta.owner}
-                            </div>
-                            <div className="flex items-center gap-1.5 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
-                                <Calendar size={12} />
-                                {data.meta.date}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {isCompleted && (
-                    <div>
-                        <p className="text-xs font-bold text-emerald-800">{data.title}</p>
-                        <p className="mt-1 text-[11px] text-emerald-700">{data.description}</p>
-                        <div className="mt-2 flex justify-between text-[10px] text-emerald-600/80">
-                            <span>Resolved: {data.meta.date}</span>
-                            <span>By: {data.meta.owner}</span>
-                        </div>
-                    </div>
-                )}
+                <p className="text-[11px] text-gray-600 leading-snug">{data.alertDescription}</p>
             </div>
 
-            {/* Suggested Action (Pending only) */}
-            {isPending && (
-                <div className="mb-3 text-[11px] text-slate-500">
-                    <span className="font-semibold text-slate-700">Suggested:</span> {data.meta.suggestion}
+            {/* Suggested / Plan */}
+            {data.status === 'Pending' && (
+                <div className="flex items-center gap-2 text-xs text-gray-500 font-medium mb-3">
+                    <span>Suggested:</span>
+                    <span className="text-gray-800">{data.suggestedAction}</span>
                 </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="mt-auto flex gap-2">
-                {isPending && (
-                    <button className="flex-1 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
-                        Schedule
-                    </button>
-                )}
-                {isInProgress && (
-                    <>
-                        <button className="flex-1 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
-                            Log Note
-                        </button>
-                        <button className="flex-1 rounded-lg bg-blue-600 py-1.5 text-xs font-bold text-white hover:bg-blue-700">
-                            Complete
-                        </button>
-                    </>
-                )}
-            </div>
+            {data.status === 'In Progress' && (
+                <div className="mb-4">
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Action Plan</div>
+                    <h5 className="font-bold text-gray-800 text-xs">{data.actionPlan}</h5>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{data.actionPlanDescription}</p>
+                </div>
+            )}
 
-            {/* Options Dot */}
-            <button className="absolute right-4 top-4 text-slate-300 hover:text-slate-600">
-                <MoreHorizontal size={16} />
-            </button>
+            {data.status === 'Completed' && (
+                <div className="flex justify-between items-end mt-2 text-[10px] text-gray-400">
+                    <span>Resolved: {data.resolvedDate}</span>
+                    <span>By: {data.resolvedBy}</span>
+                </div>
+            )}
+
+            {/* Footer Actions */}
+            {data.status !== 'Completed' && (
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                    <div className="flex items-center gap-2">
+                        {data.assignedTo && (
+                            <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+                                <span className="h-4 w-4 rounded-full bg-gray-300"></span>
+                                <span className="text-[10px] font-medium text-gray-600">{data.assignedTo}</span>
+                            </div>
+                        )}
+                        {data.dueDate && (
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                                <Calendar size={12} />
+                                <span>{data.dueDate}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex gap-2">
+                        {data.status === 'In Progress' && (
+                            <button className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-md text-[10px] font-bold hover:bg-gray-50">Log Note</button>
+                        )}
+                        <button className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-[10px] font-bold hover:bg-blue-700 shadow-sm shadow-blue-200">
+                            {data.status === 'Pending' ? 'Assign' : 'Complete'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
