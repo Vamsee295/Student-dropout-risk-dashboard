@@ -9,7 +9,7 @@ const students = [
     { id: "5521", name: "Tom H.", avatar: "https://ui-avatars.com/api/?name=Tom+H&background=random", risk: 78 },
 ];
 
-export function HighRiskStudentList() {
+export function HighRiskStudentList({ onIntervene }: { onIntervene?: (student: { name: string, id: string, risk: number }) => void }) {
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">
             <div className="flex items-center justify-between mb-4">
@@ -42,7 +42,10 @@ export function HighRiskStudentList() {
                             </span>
                         </div>
                         <div className="col-span-3 text-right">
-                            <button className="px-2 py-1 rounded border border-blue-200 text-blue-600 text-[10px] font-bold hover:bg-blue-50">
+                            <button
+                                onClick={() => onIntervene?.(student)}
+                                className="px-2 py-1 rounded border border-blue-200 text-blue-600 text-[10px] font-bold hover:bg-blue-50"
+                            >
                                 Intervene
                             </button>
                         </div>

@@ -14,6 +14,21 @@ export interface Student {
     advisor?: string;
 }
 
+export interface PeerMentor {
+    id: string;
+    name: string;
+    department: string;
+    year: string;
+}
+
+export const PEER_MENTORS: PeerMentor[] = [
+    { id: "m1", name: "David Kim", department: "Computer Science", year: "4th Year" },
+    { id: "m2", name: "Elena Rodriguez", department: "Aerospace", year: "4th Year" },
+    { id: "m3", name: "Ryan Gupta", department: "Data Science", year: "3rd Year" },
+    { id: "m4", name: "Sarah Jenkins", department: "Mechanical", year: "4th Year" },
+    { id: "m5", name: "Mike Chen", department: "Computer Science", year: "3rd Year" },
+];
+
 export interface Teacher {
     id: string;
     name: string;

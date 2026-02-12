@@ -7,6 +7,7 @@ import { StudentTable } from "@/components/students/StudentTable";
 import { AssignAdvisorModal } from "@/components/students/AssignAdvisorModal";
 import { GroupCounselingModal } from "@/components/students/GroupCounselingModal";
 import { STUDENTS, Student } from "@/data/mockStudentData";
+import { exportToCSV } from "@/utils/exportUtils";
 
 export default function StudentsPage() {
   // State
@@ -78,25 +79,24 @@ export default function StudentsPage() {
     alert(`Scheduled "${topic}" for ${selectedStudentIds.size} students on ${date}.`);
   };
 
+
+
   const handleExport = () => {
     const studentsToExport = selectedStudentIds.size > 0
       ? students.filter(s => selectedStudentIds.has(s.id))
       : filteredStudents;
 
-    const headers = ["ID", "Name", "Department", "Risk Status", "Attendance", "GPA/Engagement", "Advisor"];
-    const rows = studentsToExport.map(s => [
-      s.id, s.name, s.department, s.riskStatus, `${s.attendance}%`, s.engagementScore, s.advisor || "None"
-    ]);
+    const data = studentsToExport.map(s => ({
+      "Student Name": s.name,
+      "ID": s.id,
+      "Department": s.department,
+      "Risk Status": s.riskStatus,
+      "Attendance": `${s.attendance}%`,
+      "Engagement Score": s.engagementScore,
+      "Advisor": s.advisor || "None"
+    }));
 
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "student_directory_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportToCSV(data, "student_directory_export");
   };
 
   // Constant Lists for Dropdowns

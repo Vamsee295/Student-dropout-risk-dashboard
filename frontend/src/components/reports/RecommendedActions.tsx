@@ -1,10 +1,59 @@
 "use client";
 
 import { Calendar, UserPlus, Mail, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { CounselingModal } from "./CounselingModal";
+import { AssignMentorModal } from "./AssignMentorModal";
+import { EmailStudentModal } from "./EmailStudentModal";
+import { SuccessAnimation } from "@/components/interventions/SuccessAnimation";
 
 export function RecommendedActions() {
+    // Modal State
+    const [isCounselingOpen, setIsCounselingOpen] = useState(false);
+    const [isMentorOpen, setIsMentorOpen] = useState(false);
+    const [isEmailOpen, setIsEmailOpen] = useState(false);
+
+    // Success Animation State
+    const [successData, setSuccessData] = useState<{ visible: boolean; message: string; sub: string }>({
+        visible: false, message: "", sub: ""
+    });
+
+    // Handlers
+    const handleCounselingConfirm = (date: string, time: string, type: string) => {
+        setSuccessData({
+            visible: true,
+            message: "Session Scheduled!",
+            sub: `${type} set for ${date} at ${time}.`
+        });
+    };
+
+    const handleMentorConfirm = (mentorName: string) => {
+        setSuccessData({
+            visible: true,
+            message: "Mentor Assigned!",
+            sub: `${mentorName} has been assigned as a peer mentor.`
+        });
+    };
+
+    const handleEmailConfirm = () => {
+        setSuccessData({
+            visible: true,
+            message: "Email Sent!",
+            sub: "Your message has been sent to the student."
+        });
+    };
+
     return (
-        <div className="flex flex-col gap-6 h-full">
+        <div className="flex flex-col gap-6 h-full relative">
+            {/* Success Animation Overlay */}
+            {successData.visible && (
+                <SuccessAnimation
+                    message={successData.message}
+                    subMessage={successData.sub}
+                    onComplete={() => setSuccessData({ visible: false, message: "", sub: "" })}
+                />
+            )}
+
             {/* Recommended Actions */}
             <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm flex-1">
                 <div className="flex items-center gap-2 mb-2 text-blue-600">
@@ -16,7 +65,10 @@ export function RecommendedActions() {
                 </p>
 
                 <div className="space-y-3">
-                    <button className="w-full flex items-center justify-between px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm">
+                    <button
+                        onClick={() => setIsCounselingOpen(true)}
+                        className="w-full flex items-center justify-between px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm"
+                    >
                         <div className="flex items-center gap-3">
                             <Calendar size={18} />
                             <span>Schedule Counseling</span>
@@ -24,7 +76,10 @@ export function RecommendedActions() {
                         <span>→</span>
                     </button>
 
-                    <button className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-semibold text-sm">
+                    <button
+                        onClick={() => setIsMentorOpen(true)}
+                        className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-semibold text-sm"
+                    >
                         <div className="flex items-center gap-3">
                             <UserPlus size={18} />
                             <span>Assign Peer Mentor</span>
@@ -32,7 +87,10 @@ export function RecommendedActions() {
                         <span>+</span>
                     </button>
 
-                    <button className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-sm">
+                    <button
+                        onClick={() => setIsEmailOpen(true)}
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-sm"
+                    >
                         <Mail size={18} />
                         <span>Email Student</span>
                     </button>
@@ -73,6 +131,25 @@ export function RecommendedActions() {
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            <CounselingModal
+                isOpen={isCounselingOpen}
+                onClose={() => setIsCounselingOpen(false)}
+                onConfirm={handleCounselingConfirm}
+            />
+
+            <AssignMentorModal
+                isOpen={isMentorOpen}
+                onClose={() => setIsMentorOpen(false)}
+                onConfirm={handleMentorConfirm}
+            />
+
+            <EmailStudentModal
+                isOpen={isEmailOpen}
+                onClose={() => setIsEmailOpen(false)}
+                onConfirm={handleEmailConfirm}
+            />
         </div>
     );
 }

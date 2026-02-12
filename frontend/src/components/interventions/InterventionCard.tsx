@@ -39,7 +39,7 @@ const getStatusBorder = (status: string) => {
     }
 };
 
-export function InterventionCard({ data }: { data: InterventionCardProps }) {
+export function InterventionCard({ data, onAssign }: { data: InterventionCardProps; onAssign?: (id: string) => void }) {
     return (
         <div className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm border-l-4 ${getStatusBorder(data.status)} hover:shadow-md transition-shadow`}>
             {/* Header */}
@@ -116,10 +116,10 @@ export function InterventionCard({ data }: { data: InterventionCardProps }) {
                     </div>
 
                     <div className="flex gap-2">
-                        {data.status === 'In Progress' && (
-                            <button className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-md text-[10px] font-bold hover:bg-gray-50">Log Note</button>
-                        )}
-                        <button className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-[10px] font-bold hover:bg-blue-700 shadow-sm shadow-blue-200">
+
+                        <button
+                            onClick={() => data.status === 'Pending' && onAssign?.(data.id)}
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-[10px] font-bold hover:bg-blue-700 shadow-sm shadow-blue-200">
                             {data.status === 'Pending' ? 'Assign' : 'Complete'}
                         </button>
                     </div>

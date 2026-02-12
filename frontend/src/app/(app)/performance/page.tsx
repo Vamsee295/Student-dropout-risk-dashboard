@@ -9,6 +9,7 @@ import { CourseList } from "@/components/performance/CourseList";
 import { PlatformCard } from "@/components/performance/assessments/PlatformCard";
 import { SolvedQuestionsCard } from "@/components/performance/assessments/SolvedQuestionsCard";
 import { DomainPerformanceCard } from "@/components/performance/assessments/DomainPerformanceCard";
+import { exportToCSV } from "@/utils/exportUtils";
 
 // Mock data for export
 const PERFORMANCE_DATA = [
@@ -22,42 +23,25 @@ export default function PerformancePage() {
     const [year, setYear] = useState("2023 - 2024");
     const [department, setDepartment] = useState("All Departments");
 
+
+
     const handleExport = () => {
-        // Filter data based on department (mocking year filter as data is static for now)
+        // Filter data based on department
         const relevantData = department === "All Departments"
             ? PERFORMANCE_DATA
             : PERFORMANCE_DATA.filter(d => d.dept === department);
 
-        // CSV Header
-        const headers = ["Course Name", "Code", "Risk Status", "Attendance", "Grade", "Department", "Academic Year"];
+        const data = relevantData.map(d => ({
+            "Course Name": d.name,
+            "Code": d.code,
+            "Risk Status": d.risk,
+            "Attendance": d.attendance,
+            "Grade": d.grade,
+            "Department": d.dept,
+            "Academic Year": year
+        }));
 
-        // CSV Rows
-        const rows = relevantData.map(d => [
-            d.name,
-            d.code,
-            d.risk,
-            d.attendance,
-            d.grade,
-            d.dept,
-            year
-        ]);
-
-        // Construct CSV String
-        const csvContent = [
-            headers.join(","),
-            ...rows.map(row => row.join(","))
-        ].join("\n");
-
-        // Create Blob and Download
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `performance_report_${year.replace(/\s/g, '')}_${department.replace(/\s/g, '_')}.csv`);
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        exportToCSV(data, `performance_report_${year.replace(/\s/g, '')}`);
     };
 
     return (
