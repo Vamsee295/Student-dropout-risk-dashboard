@@ -9,18 +9,37 @@ interface QuestionStat {
     color: string;
 }
 
-const data = [
-    { name: "Solved", value: 74, fill: "#3b82f6" },
-    { name: "Unsolved", value: 45, fill: "#f3f4f6" },
-];
+interface DifficultyLevel {
+    solved: number;
+    total: number;
+}
 
-const stats: QuestionStat[] = [
-    { label: "Easy", solved: 41, total: 83, color: "bg-emerald-500" },
-    { label: "Medium", solved: 29, total: 31, color: "bg-yellow-400" },
-    { label: "Hard", solved: 4, total: 5, color: "bg-red-500" },
-];
+interface SolvedQuestionsCardProps {
+    easy?: DifficultyLevel;
+    medium?: DifficultyLevel;
+    hard?: DifficultyLevel;
+    totalSolved: number;
+    totalQuestions: number;
+}
 
-export function SolvedQuestionsCard() {
+export function SolvedQuestionsCard({
+    easy = { solved: 41, total: 83 },
+    medium = { solved: 29, total: 31 },
+    hard = { solved: 4, total: 5 },
+    totalSolved = 74,
+    totalQuestions = 119
+}: SolvedQuestionsCardProps) {
+    const data = [
+        { name: "Solved", value: totalSolved, fill: "#3b82f6" },
+        { name: "Unsolved", value: totalQuestions - totalSolved, fill: "#f3f4f6" },
+    ];
+
+    const stats: QuestionStat[] = [
+        { label: "Easy", solved: easy.solved, total: easy.total, color: "bg-emerald-500" },
+        { label: "Medium", solved: medium.solved, total: medium.total, color: "bg-yellow-400" },
+        { label: "Hard", solved: hard.solved, total: hard.total, color: "bg-red-500" },
+    ];
+
     return (
         <div className="h-full rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <h3 className="font-bold text-gray-900 mb-6">Solved Questions</h3>
@@ -45,7 +64,7 @@ export function SolvedQuestionsCard() {
                                     <Cell key={`cell-${index}`} fill={entry.fill} />
                                 ))}
                                 <Label
-                                    value="74/119"
+                                    value={`${totalSolved}/${totalQuestions}`}
                                     position="center"
                                     className="text-lg font-bold text-gray-900"
                                     dy={-5}
@@ -74,7 +93,7 @@ export function SolvedQuestionsCard() {
                             <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full ${stat.color}`}
-                                    style={{ width: `${(stat.solved / stat.total) * 100}%` }}
+                                    style={{ width: `${stat.total > 0 ? (stat.solved / stat.total) * 100 : 0}%` }}
                                 ></div>
                             </div>
                         </div>

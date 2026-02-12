@@ -1,54 +1,106 @@
 "use client";
 
-import { LogIn, Clock, FileCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, TrendingDown, Clock, CheckCircle, LogIn } from "lucide-react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+interface EngagementOverview {
+    avg_login_rate: number;
+    login_rate_trend: number;
+    avg_time_spent: number;
+    time_spent_trend: number;
+    assignment_completion: number;
+    completion_trend: number;
+}
 
 export function EngagementMetricCards() {
+    const [data, setData] = useState<EngagementOverview | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/engagement/overview`);
+            const result = await response.json();
+            setData(result);
+        } catch (error) {
+            console.error("Error fetching engagement overview:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return <div className="text-center py-8 text-gray-500">Loading metrics...</div>;
+    }
+
+    if (!data) {
+        return <div className="text-center py-8 text-gray-500">No data available</div>;
+    }
+
+    const metrics = [
+        {
+            title: "AVG. LOGIN RATE",
+            value: `${Math.round(data.avg_login_rate)}%`,
+            trend: data.login_rate_trend,
+            trendLabel: `${data.login_rate_trend > 0 ? '+' : ''}${data.login_rate_trend}%`,
+            description: "Vs. previous 30 days",
+            icon: LogIn,
+            color: "blue"
+        },
+        {
+            title: "AVG. TIME SPENT",
+            value: `${data.avg_time_spent.toFixed(1)}h`,
+            trend: data.time_spent_trend,
+            trendLabel: `${data.time_spent_trend > 0 ? '+' : ''}${data.time_spent_trend.toFixed(1)}h`,
+            description: "Per student / week",
+            icon: Clock,
+            color: "purple"
+        },
+        {
+            title: "ASSIGNMENT COMPLETION",
+            value: `${Math.round(data.assignment_completion)}%`,
+            trend: data.completion_trend,
+            trendLabel: `${data.completion_trend > 0 ? '+' : ''}${data.completion_trend}%`,
+            description: "Total submissions rate",
+            icon: CheckCircle,
+            color: "green"
+        }
+    ];
+
     return (
-        <div className="grid gap-6 md:grid-cols-3">
-            {/* Login Rate */}
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm relative overflow-hidden">
-                <div className="relative z-10">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Avg. Login Rate</h3>
-                    <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-gray-900">84%</span>
-                        <span className="text-xs font-bold text-emerald-600">↗ 5%</span>
+        <div className="grid gap-4 md:grid-cols-3">
+            {metrics.map((metric, i) => (
+                <div key={i} className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wide text-gray-500">
+                            {metric.title}
+                        </span>
+                        {metric.trend >= 0 ? (
+                            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600">
+                                <TrendingUp size={14} />
+                                {metric.trendLabel}
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600">
+                                <TrendingDown size={14} />
+                                {metric.trendLabel}
+                            </span>
+                        )}
                     </div>
-                    <p className="mt-1 text-xs font-medium text-gray-400">Vs. previous 30 days</p>
-                </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 p-4 text-gray-100">
-                    <LogIn size={64} strokeWidth={1.5} />
-                </div>
-            </div>
 
-            {/* Time Spent */}
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm relative overflow-hidden">
-                <div className="relative z-10">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Avg. Time Spent</h3>
-                    <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-gray-900">4.2h</span>
-                        <span className="text-xs font-bold text-emerald-600">↗ 1.2h</span>
+                    <div className="mb-2 flex items-end gap-3">
+                        <span className="text-4xl font-bold text-gray-900">{metric.value}</span>
+                        <metric.icon className="mb-1 text-gray-400" size={24} />
                     </div>
-                    <p className="mt-1 text-xs font-medium text-gray-400">Per student / week</p>
-                </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 p-4 text-gray-100">
-                    <Clock size={64} strokeWidth={1.5} />
-                </div>
-            </div>
 
-            {/* Assignment Completion */}
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm relative overflow-hidden">
-                <div className="relative z-10">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Assignment Completion</h3>
-                    <div className="mt-3 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-gray-900">92%</span>
-                        <span className="text-xs font-bold text-emerald-600">↗ 3%</span>
-                    </div>
-                    <p className="mt-1 text-xs font-medium text-gray-400">Total submissions rate</p>
+                    <p className="text-xs text-gray-400">{metric.description}</p>
                 </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 p-4 text-gray-100">
-                    <FileCheck size={64} strokeWidth={1.5} />
-                </div>
-            </div>
+            ))}
         </div>
     );
 }

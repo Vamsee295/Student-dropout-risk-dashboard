@@ -1,9 +1,12 @@
+"use client";
+
 import { Bell, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 interface AlertItemProps {
     name: string;
-    avatar: string; // URL or initials
+    avatar: string;
     time: string;
     title: string;
     description: string;
@@ -17,7 +20,6 @@ function AlertItem({ name, avatar, time, title, description, actions, isCritical
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-600">
-                        {/* Simple avatar placeholder using initials or image if available */}
                         {avatar.includes("/") ? <img src={avatar} alt={name} className="h-full w-full rounded-full object-cover" /> : avatar}
                     </div>
                     <div>
@@ -55,44 +57,49 @@ function AlertItem({ name, avatar, time, title, description, actions, isCritical
 }
 
 export function RecentCriticalAlerts() {
-    const alerts: AlertItemProps[] = [
-        {
-            name: "John Doe",
-            avatar: "JD",
-            time: "10m ago",
-            title: "Attendance dropped below 50%",
-            description: "Student has missed 3 consecutive math classes without excuse.",
-            actions: [{ label: "Send Email", href: "mailto:john.doe@student.edu" }, { label: "Inform Parent", primary: true, href: "mailto:parent.doe@gmail.com" }],
-            isCritical: true,
-        },
-        {
-            name: "Sarah Smith",
-            avatar: "SS",
-            time: "2h ago",
-            title: "LMS Inactivity Warning",
-            description: "No login activity detected for 7 days.",
-            actions: [{ label: "Send Email", href: "mailto:sarah.smith@student.edu" }, { label: "Inform Parent", href: "mailto:parent.smith@gmail.com" }],
-            isCritical: false, // Orange/Amber
-        },
-        {
-            name: "Michael Brown",
-            avatar: "MB",
-            time: "4h ago",
-            title: "Grade Drop Detected",
-            description: "Significant grade drop detected in 'Intro to CS'.",
-            actions: [{ label: "Send Email", href: "mailto:michael.brown@student.edu" }, { label: "Inform Parent", href: "mailto:parent.brown@gmail.com" }],
-            isCritical: false,
-        },
-        {
-            name: "Emily Davis",
-            avatar: "ED",
-            time: "1d ago",
-            title: "Assignment Missing",
-            description: "Failed to submit mid-term project.",
-            actions: [{ label: "Send Email", href: "mailto:emily.davis@student.edu" }, { label: "Inform Parent", href: "mailto:parent.davis@gmail.com" }],
-            isCritical: false,
-        },
-    ];
+    const [alerts, setAlerts] = useState<AlertItemProps[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchAlerts() {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${API_URL}/api/students/all`);
+                const students = await response.json();
+
+                // Filter for high-risk students and create alerts
+                const highRiskStudents = students
+                    .filter((s: any) => s.riskStatus === 'High Risk' || s.riskStatus === 'Moderate Risk')
+                    .sort((a: any, b: any) => parseFloat(b.riskValue) - parseFloat(a.riskValue))
+                    .slice(0, 4); // Top 4 at-risk students
+
+                const alertsData = highRiskStudents.map((student: any) => ({
+                    name: student.name,
+                    avatar: student.avatar,
+                    time: student.lastInteraction,
+                    title: student.riskStatus === 'High Risk' ? 'Critical Risk Detected' : 'Elevated Risk Warning',
+                    description: `AI prediction shows ${student.riskValue} dropout risk. Attendance: ${student.attendance}%, Engagement: ${student.engagementScore}%.`,
+                    actions: [
+                        { label: "Send Email", href: `mailto:${student.id}@student.edu` },
+                        { label: "Inform Parent", primary: true, href: "#" }
+                    ],
+                    isCritical: student.riskStatus === 'High Risk'
+                }));
+
+                setAlerts(alertsData);
+            } catch (error) {
+                console.error('Failed to fetch alerts:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchAlerts();
+    }, []);
+
+    if (loading) {
+        return <div className="p-6 text-center">Loading alerts...</div>;
+    }
 
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">

@@ -1,5 +1,8 @@
+"use client";
+
 import { Users, AlertTriangle, Clock, Activity } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 // Update MetricCardProps to include href
 interface MetricCardProps {
@@ -13,7 +16,7 @@ interface MetricCardProps {
     iconColor: string;
     iconBg: string;
     actionLabel: string;
-    href: string; // Added href
+    href: string;
     borderColor?: string;
 }
 
@@ -66,13 +69,55 @@ function MetricCard({
 }
 
 export function DashboardMetrics() {
+    const [loading, setLoading] = useState(true);
+    const [overview, setOverview] = useState<any>(null);
+    const [students, setStudents] = useState<any[]>([]);
+
+    useEffect(() => {
+        async function fetchMetrics() {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+                // Fetch overview analytics
+                const overviewRes = await fetch(`${API_URL}/api/analytics/overview`);
+                const overviewData = await overviewRes.json();
+
+                // Fetch students for attendance/engagement calculation
+                const studentsRes = await fetch(`${API_URL}/api/students/all`);
+                const studentsData = await studentsRes.json();
+
+                setOverview(overviewData);
+                setStudents(studentsData);
+            } catch (error) {
+                console.error('Failed to fetch metrics:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchMetrics();
+    }, []);
+
+    if (loading) {
+        return <div className="p-6 text-center">Loading metrics...</div>;
+    }
+
+    // Calculate attendance and engagement from real student data
+    const avgAttendance = students.length > 0
+        ? Math.round(students.reduce((sum, s) => sum + (s.attendance || 0), 0) / students.length)
+        : 0;
+
+    const avgEngagement = students.length > 0
+        ? (students.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / students.length / 10).toFixed(1)
+        : "0.0";
+
     const metrics = [
         {
             title: "Total Students",
-            value: "12,450",
+            value: overview?.total_students?.toLocaleString() || "0",
             trend: "+2.4%",
             trendLabel: "vs last semester",
-            trendDirection: "up",
+            trendDirection: "up" as const,
             trendColor: "text-emerald-600",
             icon: Users,
             iconColor: "text-blue-600",
@@ -82,37 +127,37 @@ export function DashboardMetrics() {
         },
         {
             title: "High Risk Students",
-            value: "842",
-            trend: "+12%",
-            trendLabel: "critical increase",
-            trendDirection: "up", // Actually bad, but numerically up
+            value: overview?.high_risk_count?.toString() || "0",
+            trend: `${overview?.high_risk_percentage?.toFixed(1) || 0}%`,
+            trendLabel: "of total students",
+            trendDirection: "up" as const,
             trendColor: "text-red-600",
             icon: AlertTriangle,
             iconColor: "text-red-600",
             iconBg: "bg-red-50",
             actionLabel: "Review at-risk list",
             href: "/risk-analysis",
-            borderColor: "border-l-4 border-l-red-500", // Special styling for risk
+            borderColor: "border-l-4 border-l-red-500",
         },
         {
             title: "Avg Attendance",
-            value: "88%",
-            trend: "-1.5%",
-            trendLabel: "below target",
-            trendDirection: "down",
-            trendColor: "text-red-600",
+            value: `${avgAttendance}%`,
+            trend: avgAttendance >= 85 ? "+1.5%" : "-1.5%",
+            trendLabel: avgAttendance >= 85 ? "above target" : "below target",
+            trendDirection: avgAttendance >= 85 ? "up" as const : "down" as const,
+            trendColor: avgAttendance >= 85 ? "text-emerald-600" : "text-red-600",
             icon: Clock,
             iconColor: "text-amber-600",
             iconBg: "bg-amber-50",
             actionLabel: "Analyze attendance",
-            href: "/reports", // Attendance analytics often in reports
+            href: "/reports",
         },
         {
             title: "Avg Engagement",
-            value: "7.2/10",
+            value: `${avgEngagement}/10`,
             trend: "+0.3",
             trendLabel: "improving",
-            trendDirection: "up",
+            trendDirection: "up" as const,
             trendColor: "text-emerald-600",
             icon: Activity,
             iconColor: "text-emerald-600",
@@ -125,7 +170,7 @@ export function DashboardMetrics() {
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {metrics.map((metric) => (
-                <MetricCard key={metric.title} {...metric} trendDirection={metric.trendDirection as "up" | "down"} />
+                <MetricCard key={metric.title} {...metric} />
             ))}
         </div>
     );

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AlertTriangle, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface AtRiskStudent {
     id: string;
@@ -13,37 +14,49 @@ interface AtRiskStudent {
     lastActivity: string;
 }
 
-const students: AtRiskStudent[] = [
-    {
-        id: "4521",
-        name: "John Doe",
-        avatar: "JD",
-        riskScore: 98,
-        riskLabel: "Critical",
-        primaryDriver: "Attendance < 50%",
-        lastActivity: "2 days ago",
-    },
-    {
-        id: "3382",
-        name: "Alice Smith",
-        avatar: "AS",
-        riskScore: 94,
-        riskLabel: "Critical",
-        primaryDriver: "Failed Mid-term",
-        lastActivity: "5 days ago",
-    },
-    {
-        id: "9012",
-        name: "Michael Brown",
-        avatar: "MB",
-        riskScore: 88,
-        riskLabel: "High",
-        primaryDriver: "LMS Inactivity",
-        lastActivity: "1 day ago",
-    },
-];
-
 export function AtRiskStudentsTable() {
+    const [students, setStudents] = useState<AtRiskStudent[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchAtRiskStudents() {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${API_URL}/api/students/all`);
+
+                if (!response.ok) throw new Error('Failed to fetch');
+
+                const data = await response.json();
+
+                // Filter high-risk students and format for display
+                const atRisk = data
+                    .filter((s: any) => s.riskStatus === 'High Risk' || s.riskStatus === 'Moderate Risk')
+                    .map((s: any) => ({
+                        id: s.id,
+                        name: s.name,
+                        avatar: s.avatar,
+                        riskScore: parseFloat(s.riskValue),
+                        riskLabel: s.riskStatus === 'High Risk' ? 'Critical' : s.riskStatus === 'Moderate Risk' ? 'High' : 'Medium',
+                        primaryDriver: "AI Prediction", // Can be enhanced with SHAP data
+                        lastActivity: s.lastInteraction
+                    }))
+                    .sort((a: any, b: any) => b.riskScore - a.riskScore)
+                    .slice(0, 10); // Top 10
+
+                setStudents(atRisk);
+            } catch (error) {
+                console.error('Failed to fetch at-risk students:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchAtRiskStudents();
+    }, []);
+
+    if (loading) {
+        return <div className="p-6 text-center">Loading students...</div>;
+    }
     return (
         <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">

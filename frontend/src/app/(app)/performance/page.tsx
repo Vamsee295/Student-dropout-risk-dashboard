@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PerformanceHeader } from "@/components/performance/PerformanceHeader";
 import { AlertBanner } from "@/components/performance/AlertBanner";
 import { PerformanceMetrics } from "@/components/performance/PerformanceMetrics";
@@ -11,38 +11,90 @@ import { SolvedQuestionsCard } from "@/components/performance/assessments/Solved
 import { DomainPerformanceCard } from "@/components/performance/assessments/DomainPerformanceCard";
 import { exportToCSV } from "@/utils/exportUtils";
 
-// Mock data for export
-const PERFORMANCE_DATA = [
-    { id: 101, name: "Intro to Macroeconomics", code: "ECON 101", risk: "High", attendance: "65%", grade: "1.8", dept: "CSE" },
-    { id: 102, name: "Computer Science 101", code: "CS 101", risk: "Medium", attendance: "72%", grade: "2.5", dept: "CS IT" },
-    { id: 103, name: "Linear Algebra", code: "MATH 201", risk: "Low", attendance: "78%", grade: "2.9", dept: "AI-DS" },
-    { id: 104, name: "Physics I", code: "PHYS 101", risk: "Low", attendance: "92%", grade: "3.8", dept: "AEROSPACE" },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+interface PerformanceData {
+    neo_pat_score: number;
+    neo_pat_level: string;
+    coding_stats: {
+        questions_attended: number;
+        solved_correctly: number;
+        your_score: number;
+        accuracy: number;
+    };
+    mcq_stats: {
+        questions_attended: number;
+        solved_correctly: number;
+        your_score: number;
+        accuracy: number;
+    };
+    projects_stats: {
+        major_attended: number;
+        minor_attended: number;
+        your_score: number;
+    };
+    solved_questions: {
+        easy: { solved: number; total: number };
+        medium: { solved: number; total: number };
+        hard: { solved: number; total: number };
+        total_solved: number;
+        total_questions: number;
+    };
+}
 
 export default function PerformancePage() {
     const [year, setYear] = useState("2023 - 2024");
     const [department, setDepartment] = useState("All Departments");
+    const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null);
+    const [loading, setLoading] = useState(true);
 
+    useEffect(() => {
+        fetchPerformanceData();
+    }, [department]); // Refetch when department changes
 
+    const fetchPerformanceData = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (department && department !== "All Departments") {
+                params.append("department", department);
+            }
+
+            const response = await fetch(`${API_URL}/api/performance/aggregate?${params.toString()}`);
+            const data = await response.json();
+            setPerformanceData(data);
+        } catch (error) {
+            console.error("Error fetching performance data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleExport = () => {
-        // Filter data based on department
-        const relevantData = department === "All Departments"
-            ? PERFORMANCE_DATA
-            : PERFORMANCE_DATA.filter(d => d.dept === department);
+        if (!performanceData) return;
 
-        const data = relevantData.map(d => ({
-            "Course Name": d.name,
-            "Code": d.code,
-            "Risk Status": d.risk,
-            "Attendance": d.attendance,
-            "Grade": d.grade,
-            "Department": d.dept,
-            "Academic Year": year
-        }));
+        const data = [{
+            "Neo-PAT Score": performanceData.neo_pat_score,
+            "Neo-PAT Level": performanceData.neo_pat_level,
+            "Coding Score": performanceData.coding_stats.your_score,
+            "Coding Accuracy": `${performanceData.coding_stats.accuracy}%`,
+            "MCQ Score": performanceData.mcq_stats.your_score,
+            "MCQ Accuracy": `${performanceData.mcq_stats.accuracy}%`,
+            "Projects": performanceData.projects_stats.major_attended,
+            "Academic Year": year,
+            "Department": department
+        }];
 
         exportToCSV(data, `performance_report_${year.replace(/\s/g, '')}`);
     };
+
+    if (loading) {
+        return (
+            <div className="space-y-8">
+                <div className="text-center py-8">Loading performance data...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -61,13 +113,23 @@ export default function PerformancePage() {
                     {/* Top Row: Platforms & Solved Stats */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
                         <div className="lg:col-span-3">
-                            <PlatformCard title="Neo-PAT" score={379} level={1} />
+                            <PlatformCard
+                                title="Neo-PAT"
+                                score={performanceData?.neo_pat_score || 0}
+                                level={parseInt(performanceData?.neo_pat_level?.split(' ')[1] || '0')}
+                            />
                         </div>
                         <div className="lg:col-span-4">
                             <PlatformCard title="Neo-Colab" isEmpty />
                         </div>
                         <div className="lg:col-span-5 h-[200px]">
-                            <SolvedQuestionsCard />
+                            <SolvedQuestionsCard
+                                easy={performanceData?.solved_questions.easy}
+                                medium={performanceData?.solved_questions.medium}
+                                hard={performanceData?.solved_questions.hard}
+                                totalSolved={performanceData?.solved_questions.total_solved || 0}
+                                totalQuestions={performanceData?.solved_questions.total_questions || 0}
+                            />
                         </div>
                     </div>
 
@@ -75,23 +137,23 @@ export default function PerformancePage() {
                     <div className="grid gap-6 md:grid-cols-3">
                         <DomainPerformanceCard
                             title="Coding"
-                            attended={39}
-                            solved={37}
-                            score={379}
-                            accuracy="97.05%"
+                            attended={performanceData?.coding_stats.questions_attended || 0}
+                            solved={performanceData?.coding_stats.solved_correctly || 0}
+                            score={performanceData?.coding_stats.your_score || 0}
+                            accuracy={`${performanceData?.coding_stats.accuracy || 0}%`}
                         />
                         <DomainPerformanceCard
                             title="Projects"
-                            attended={0}
-                            minorAttended={0}
-                            score={0}
+                            attended={performanceData?.projects_stats.major_attended || 0}
+                            minorAttended={performanceData?.projects_stats.minor_attended || 0}
+                            score={performanceData?.projects_stats.your_score || 0}
                         />
                         <DomainPerformanceCard
                             title="MCQ"
-                            attended={80}
-                            solved={37}
-                            score={37}
-                            accuracy="46.25%"
+                            attended={performanceData?.mcq_stats.questions_attended || 0}
+                            solved={performanceData?.mcq_stats.solved_correctly || 0}
+                            score={performanceData?.mcq_stats.your_score || 0}
+                            accuracy={`${performanceData?.mcq_stats.accuracy || 0}%`}
                         />
                     </div>
                 </div>
@@ -109,7 +171,7 @@ export default function PerformancePage() {
                 <div className="grid gap-6 lg:grid-cols-12">
                     {/* Metrics - 3/12 */}
                     <div className="lg:col-span-3">
-                        <PerformanceMetrics />
+                        <PerformanceMetrics department={department} />
                     </div>
 
                     {/* Correlation Chart - 9/12 */}

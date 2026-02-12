@@ -1,45 +1,59 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 const months = ["Sep", "Oct", "Nov", "Dec", "Jan"];
-const days = ["Mon", "", "Wed", "", "Fri"];
-
-// Generate deterministic data for approx 5 months (Sep to Jan)
-// 5 months * ~4.5 weeks = ~22-24 weeks. Let's do 28 weeks to fill the width.
-const generateHeatmapData = () => {
-    const data = [];
-    for (let i = 0; i < 35; i++) { // Increased to 35 weeks for full width look
-        const week = [];
-        for (let j = 0; j < 7; j++) {
-            // Deterministic intensity 0-4 using sine wave simulation
-            // Adjusting frequency for a more scattered look
-            const val = Math.floor(Math.abs(Math.sin(i * 0.5 + j * 0.8)) * 5);
-            // Ensure some empty spots (0) for realism
-            const finalVal = Math.random() > 0.8 ? 0 : val;
-            // Note: Math.random here will cause hydration mismatch again if not careful.
-            // Reverting to pure math for safety:
-            const pseudoRandom = Math.abs(Math.sin(i * 13 + j * 7));
-            const level = pseudoRandom > 0.8 ? 0 : Math.floor(pseudoRandom * 5);
-            week.push(level);
-        }
-        data.push(week);
-    }
-    return data;
-};
-
-const heatmapData = generateHeatmapData();
 
 const getColor = (level: number) => {
-    switch (level) {
-        case 0: return "bg-gray-100";
-        case 1: return "bg-emerald-200"; // Lighter
-        case 2: return "bg-emerald-300";
-        case 3: return "bg-teal-400";
-        case 4: return "bg-teal-500 text-white"; // Darkest
-        default: return "bg-gray-100";
-    }
+    if (level >= 80) return "bg-teal-500"; // High activity
+    if (level >= 60) return "bg-teal-400";
+    if (level >= 40) return "bg-emerald-300";
+    if (level >= 20) return "bg-emerald-200";
+    return "bg-gray-100"; // Low/no activity
 };
 
+interface WeeklyActivity {
+    week: string;
+    activity: number;
+}
+
+interface StudentFootprint {
+    student_id: string;
+    student_name: string;
+    weekly_activity: WeeklyActivity[];
+}
+
 export function LMSHeatmapChart() {
+    const [data, setData] = useState<StudentFootprint[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/engagement/digital-footprint`);
+            const result = await response.json();
+            setData(result.heatmap_data || []);
+        } catch (error) {
+            console.error("Error fetching digital footprint data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="text-center py-8 text-gray-500">Loading heatmap...</div>
+        </div>;
+    }
+
+    // Transpose data for heatmap visualization (weeks as columns, students as rows)
+    const weeks = data[0]?.weekly_activity?.length || 8;
+
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
@@ -61,39 +75,42 @@ export function LMSHeatmapChart() {
             </div>
 
             <div className="w-full overflow-x-auto custom-scrollbar">
-                <div className="min-w-[800px] w-full">
-                    {/* Month Labels - Approx spacing */}
-                    <div className="flex mb-2 pl-8 justify-between w-[95%]">
-                        {months.map((m) => (
-                            <div key={m} className="text-xs text-gray-400 font-medium">{m}</div>
+                <div className="min-w-[600px]">
+                    {/* Week Labels */}
+                    <div className="flex gap-2 mb-2 pl-32">
+                        {Array.from({ length: weeks }).map((_, i) => (
+                            <div key={i} className="text-xs text-gray-400 font-medium w-12 text-center">
+                                W{i + 1}
+                            </div>
                         ))}
                     </div>
 
-                    <div className="flex gap-2">
-                        {/* Day Labels */}
-                        <div className="flex flex-col justify-between pt-1 pb-1 text-[10px] text-gray-400 h-[110px] w-6 shrink-0">
-                            {days.map((d, i) => <span key={i} className="h-3 leading-3">{d}</span>)}
-                        </div>
+                    {/* Heatmap Grid */}
+                    <div className="space-y-1">
+                        {data.slice(0, 10).map((student) => (
+                            <div key={student.student_id} className="flex items-center gap-2">
+                                {/* Student Name */}
+                                <div className="w-28 text-xs text-gray-600 font-medium truncate">
+                                    {student.student_name}
+                                </div>
 
-                        {/* Heatmap Grid */}
-                        {/* We need to transpose the data matrix effectively to map rows as Days and columns as Weeks if using flex-row for weeks.
-                             Currently: Data is [Week1[Day1..7], Week2...].
-                             Rendering outer map as weeks (columns) works for visual matching of GitHub style.
-                         */}
-                        <div className="flex flex-1 gap-[3px]">
-                            {heatmapData.map((week, wIndex) => (
-                                <div key={wIndex} className="flex flex-col gap-[3px]">
-                                    {week.map((level, dIndex) => (
+                                {/* Activity Cells */}
+                                <div className="flex gap-1">
+                                    {student.weekly_activity.map((week, wIndex) => (
                                         <div
-                                            key={`${wIndex}-${dIndex}`}
-                                            className={`w-3.5 h-3.5 rounded-[2px] ${getColor(level)} hover:opacity-80 transition-opacity cursor-pointer`}
-                                            title={`Activity Level: ${level}`}
+                                            key={wIndex}
+                                            className={`w-12 h-6 rounded ${getColor(week.activity)} hover:opacity-80 transition-opacity cursor-pointer`}
+                                            title={`${student.student_name} - ${week.week}: ${week.activity}% activity`}
                                         />
                                     ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
+
+                    {data.length === 0 && (
+                        <div className="text-center py-8 text-gray-400">No activity data available</div>
+                    )}
                 </div>
             </div>
         </div>

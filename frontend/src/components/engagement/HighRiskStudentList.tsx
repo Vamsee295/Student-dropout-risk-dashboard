@@ -1,15 +1,48 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const students = [
-    { id: "8821", name: "Sarah J.", avatar: "https://ui-avatars.com/api/?name=Sarah+J&background=random", risk: 92 },
-    { id: "9932", name: "Mike T.", avatar: "https://ui-avatars.com/api/?name=Mike+T&background=random", risk: 88 },
-    { id: "7741", name: "Jessica L.", avatar: "https://ui-avatars.com/api/?name=Jessica+L&background=random", risk: 85 },
-    { id: "5521", name: "Tom H.", avatar: "https://ui-avatars.com/api/?name=Tom+H&background=random", risk: 78 },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export function HighRiskStudentList({ onIntervene }: { onIntervene?: (student: { name: string, id: string, risk: number }) => void }) {
+interface HighRiskStudent {
+    id: string;
+    name: string;
+    avatar: string;
+    risk_percentage: number;
+    risk_level: string;
+}
+
+interface HighRiskStudentListProps {
+    onIntervene?: (student: { name: string; id: string; risk: number }) => void;
+}
+
+export function HighRiskStudentList({ onIntervene }: HighRiskStudentListProps) {
+    const [students, setStudents] = useState<HighRiskStudent[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchStudents();
+    }, []);
+
+    const fetchStudents = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/engagement/high-risk-students`);
+            const data = await response.json();
+            setStudents(data.students || []);
+        } catch (error) {
+            console.error("Error fetching high-risk students:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">
+            <div className="text-center py-8 text-gray-500">Loading...</div>
+        </div>;
+    }
+
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">
             <div className="flex items-center justify-between mb-4">
@@ -17,7 +50,7 @@ export function HighRiskStudentList({ onIntervene }: { onIntervene?: (student: {
                     <span className="text-red-500">⚠️</span>
                     <h3 className="font-bold text-gray-900">High Risk Students</h3>
                 </div>
-                <Link href="/risk-analysis" className="text-xs font-semibold text-blue-600 hover:underline">View All</Link>
+                <Link href="/students" className="text-xs font-semibold text-blue-600 hover:underline">View All</Link>
             </div>
 
             <div className="space-y-4">
@@ -27,30 +60,44 @@ export function HighRiskStudentList({ onIntervene }: { onIntervene?: (student: {
                     <span className="col-span-3 text-right">Action</span>
                 </div>
 
-                {students.map((student) => (
-                    <div key={student.id} className="grid grid-cols-12 items-center">
-                        <div className="col-span-6 flex items-center gap-3">
-                            <img src={student.avatar} alt={student.name} className="w-8 h-8 rounded-full bg-gray-100" />
-                            <div>
-                                <h4 className="font-bold text-gray-900 text-xs">{student.name}</h4>
-                                <p className="text-[10px] text-gray-500">ID: #{student.id}</p>
+                {students.length === 0 ? (
+                    <div className="text-center py-4 text-gray-400 text-sm">No high-risk students</div>
+                ) : (
+                    students.map((student) => (
+                        <div key={student.id} className="grid grid-cols-12 items-center">
+                            <div className="col-span-6 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 overflow-hidden">
+                                    {student.avatar.startsWith('http') ? (
+                                        <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        student.avatar
+                                    )}
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-xs">{student.name}</h4>
+                                    <p className="text-[10px] text-gray-500">ID: #{student.id}</p>
+                                </div>
+                            </div>
+                            <div className="col-span-3 text-center">
+                                <span className="px-2 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-bold">
+                                    {student.risk_percentage}%
+                                </span>
+                            </div>
+                            <div className="col-span-3 text-right">
+                                <button
+                                    onClick={() => onIntervene?.({
+                                        name: student.name,
+                                        id: student.id,
+                                        risk: student.risk_percentage
+                                    })}
+                                    className="px-2 py-1 rounded border border-blue-200 text-blue-600 text-[10px] font-bold hover:bg-blue-50"
+                                >
+                                    Intervene
+                                </button>
                             </div>
                         </div>
-                        <div className="col-span-3 text-center">
-                            <span className="px-2 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-bold">
-                                {student.risk}%
-                            </span>
-                        </div>
-                        <div className="col-span-3 text-right">
-                            <button
-                                onClick={() => onIntervene?.(student)}
-                                className="px-2 py-1 rounded border border-blue-200 text-blue-600 text-[10px] font-bold hover:bg-blue-50"
-                            >
-                                Intervene
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );
