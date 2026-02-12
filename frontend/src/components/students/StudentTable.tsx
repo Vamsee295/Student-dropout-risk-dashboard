@@ -1,94 +1,18 @@
 "use client";
 
-import { MoreHorizontal, Mail, Calendar } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { Student } from "@/data/mockStudentData";
 
-interface Student {
-    id: string;
-    name: string;
-    avatar: string; // Initials or URL
-    course: string;
-    department: string;
-    riskTrend: "up" | "down" | "stable";
-    riskValue: string; // e.g. "+12% Risk"
-    attendance: number;
-    engagementScore: number;
-    lastInteraction: string;
-    lastInteractionType: string;
+interface StudentTableProps {
+    students: Student[];
+    selectedIds: Set<string>;
+    onToggleSelection: (id: string) => void;
+    onToggleAll: () => void;
 }
 
-const students: Student[] = [
-    {
-        id: "20248912",
-        name: "Marcus Chen",
-        avatar: "MC",
-        course: "B.Sc. Comp Sci",
-        department: "Engineering Dept",
-        riskTrend: "up",
-        riskValue: "+12% Risk",
-        attendance: 62,
-        engagementScore: 45,
-        lastInteraction: "Oct 24, 2025",
-        lastInteractionType: "Scheduled Meeting",
-    },
-    {
-        id: "20243301",
-        name: "Sarah Miller",
-        avatar: "SM",
-        course: "BA Psychology",
-        department: "Humanities Dept",
-        riskTrend: "stable",
-        riskValue: "Stable",
-        attendance: 78,
-        engagementScore: 68,
-        lastInteraction: "Oct 18, 2025",
-        lastInteractionType: "Email Warning",
-    },
-    {
-        id: "20245592",
-        name: "David Kim",
-        avatar: "DK",
-        course: "B.Eng Mechanical",
-        department: "Engineering Dept",
-        riskTrend: "down",
-        riskValue: "-5% Risk",
-        attendance: 92,
-        engagementScore: 88,
-        lastInteraction: "Oct 05, 2025",
-        lastInteractionType: "Check-in Call",
-    },
-    {
-        id: "20241109",
-        name: "Emma Wilson",
-        avatar: "EW",
-        course: "B.Sc. Data Sci",
-        department: "Engineering Dept",
-        riskTrend: "up",
-        riskValue: "+8% Risk",
-        attendance: 58,
-        engagementScore: 42,
-        lastInteraction: "Oct 26, 2025",
-        lastInteractionType: "None",
-    },
-    {
-        id: "20247721",
-        name: "James Rodriguez",
-        avatar: "JR",
-        course: "B.A. History",
-        department: "Humanities Dept",
-        riskTrend: "down",
-        riskValue: "-2% Risk",
-        attendance: 81,
-        engagementScore: 71,
-        lastInteraction: "Oct 10, 2025",
-        lastInteractionType: "Counseling Session",
-    },
-];
-
 function SparklineMock({ trend }: { trend: "up" | "down" | "stable" }) {
-    // Simple SVG mock for sparkline
     const color = trend === "up" ? "text-red-500" : trend === "down" ? "text-emerald-500" : "text-gray-400";
-
     if (trend === "up") {
         return (
             <svg width="40" height="16" viewBox="0 0 40 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={color}>
@@ -128,21 +52,28 @@ function EngagementBar({ score }: { score: number }) {
     );
 }
 
-export function StudentTable() {
+export function StudentTable({ students, selectedIds, onToggleSelection, onToggleAll }: StudentTableProps) {
+    const allSelected = students.length > 0 && students.every(s => selectedIds.has(s.id));
+
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <table className="min-w-full text-left text-sm">
                 <thead className="bg-gray-50 text-xs font-semibold uppercase text-gray-500">
                     <tr>
                         <th className="px-6 py-4 w-10">
-                            <input type="checkbox" className="rounded border-gray-300" />
+                            <input
+                                type="checkbox"
+                                className="rounded border-gray-300"
+                                checked={allSelected}
+                                onChange={onToggleAll}
+                            />
                         </th>
                         <th className="px-6 py-4">Student Name</th>
                         <th className="px-6 py-4">Course / Dept</th>
                         <th className="px-6 py-4">Risk Trend</th>
                         <th className="px-6 py-4 text-center">Attendance</th>
                         <th className="px-6 py-4">Engagement</th>
-                        <th className="px-6 py-4">Last Interaction</th>
+                        <th className="px-6 py-4">Advisor</th>
                         <th className="px-6 py-4 w-10"></th>
                     </tr>
                 </thead>
@@ -150,7 +81,12 @@ export function StudentTable() {
                     {students.map((student) => (
                         <tr key={student.id} className="group hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4">
-                                <input type="checkbox" className="rounded border-gray-300" />
+                                <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300"
+                                    checked={selectedIds.has(student.id)}
+                                    onChange={() => onToggleSelection(student.id)}
+                                />
                             </td>
                             <td className="px-6 py-4">
                                 <Link href={`/students/${student.id}`} className="block">
@@ -172,8 +108,9 @@ export function StudentTable() {
                             <td className="px-6 py-4">
                                 <div className="flex flex-col items-center gap-1 w-20">
                                     <SparklineMock trend={student.riskTrend} />
-                                    <span className={`text-[10px] font-bold ${student.riskTrend === 'up' ? 'text-red-600' :
-                                        student.riskTrend === 'down' ? 'text-emerald-600' : 'text-gray-500'
+                                    <span className={`text-[10px] font-bold ${student.riskStatus === 'High Risk' ? 'text-red-600' :
+                                        student.riskStatus === 'Safe' ? 'text-emerald-600' :
+                                            student.riskStatus === 'Stable' ? 'text-blue-600' : 'text-amber-600'
                                         }`}>
                                         {student.riskValue}
                                     </span>
@@ -188,8 +125,8 @@ export function StudentTable() {
                                 <EngagementBar score={student.engagementScore} />
                             </td>
                             <td className="px-6 py-4">
-                                <div className="text-sm font-medium text-gray-900">{student.lastInteraction}</div>
-                                <div className="text-xs text-gray-500">{student.lastInteractionType}</div>
+                                <div className="text-sm font-medium text-gray-900">{student.advisor || "Unassigned"}</div>
+                                <div className="text-xs text-gray-500">{student.lastInteraction}</div>
                             </td>
                             <td className="px-6 py-4 text-right">
                                 <button className="text-gray-400 hover:text-gray-600">
@@ -200,22 +137,6 @@ export function StudentTable() {
                     ))}
                 </tbody>
             </table>
-
-            {/* Pagination Mock */}
-            <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
-                <p className="text-sm text-gray-500">
-                    Showing <span className="font-medium text-gray-900">1</span> to <span className="font-medium text-gray-900">5</span> of <span className="font-medium text-gray-900">1,240</span> results
-                </p>
-                <div className="flex gap-1">
-                    <button className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50" disabled>&lt;</button>
-                    <button className="rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white">1</button>
-                    <button className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">2</button>
-                    <button className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">3</button>
-                    <span className="px-2 py-1 text-gray-400">...</span>
-                    <button className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">8</button>
-                    <button className="rounded border border-gray-200 px-3 py-1 text-sm text-gray-600 hover:bg-gray-50">&gt;</button>
-                </div>
-            </div>
         </div>
     );
 }

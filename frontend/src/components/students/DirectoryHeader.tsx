@@ -3,7 +3,14 @@
 import { UserPlus, Users, Download } from "lucide-react";
 import Link from "next/link";
 
-export function DirectoryHeader() {
+interface DirectoryHeaderProps {
+    onAssignAdvisor: () => void;
+    onGroupCounseling: () => void;
+    onExport: () => void;
+    selectedCount: number;
+}
+
+export function DirectoryHeader({ onAssignAdvisor, onGroupCounseling, onExport, selectedCount }: DirectoryHeaderProps) {
     return (
         <div className="space-y-4">
             {/* Breadcrumbs */}
@@ -39,15 +46,26 @@ export function DirectoryHeader() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <button className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button
+                        onClick={onAssignAdvisor}
+                        disabled={selectedCount === 0}
+                        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         <UserPlus className="h-4 w-4" />
                         Assign Advisor
                     </button>
-                    <button className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button
+                        onClick={onGroupCounseling}
+                        disabled={selectedCount === 0}
+                        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         <Users className="h-4 w-4" />
                         Schedule Group Counseling
                     </button>
-                    <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+                    <button
+                        onClick={onExport}
+                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    >
                         <Download className="h-4 w-4" />
                         Export Selected
                     </button>
