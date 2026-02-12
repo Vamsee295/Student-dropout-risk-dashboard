@@ -22,13 +22,15 @@ export function PlatformCard({ title, score, level, isEmpty }: PlatformCardProps
                         No {title.replace("Neo-", "")} Courses Taken
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-6">
-                        <div className="relative">
-                            <div className="absolute -top-3 left-0 text-[10px] text-gray-400 font-medium bg-white px-1">
+                    <div className="flex flex-col gap-6 pt-2">
+                        <div>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">
                                 Your Score
+                            </p>
+                            <div className="relative">
+                                <div className="text-5xl font-extrabold text-gray-900 tracking-tight leading-none">{score}</div>
+                                <div className="absolute inset-0 bg-blue-50/30 -z-10 blur-xl rounded-full w-20 h-20 -translate-x-4 -translate-y-4"></div>
                             </div>
-                            <div className="text-4xl font-bold text-gray-900">{score}</div>
-                            <div className="absolute inset-0 bg-blue-50/30 -z-10 blur-xl rounded-full w-20 h-20 -translate-x-4 -translate-y-4"></div>
                         </div>
 
                         {level !== undefined && (

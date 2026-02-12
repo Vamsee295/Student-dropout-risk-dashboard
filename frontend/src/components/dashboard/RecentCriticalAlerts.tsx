@@ -1,4 +1,5 @@
 import { Bell, ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 interface AlertItemProps {
     name: string;
@@ -6,7 +7,7 @@ interface AlertItemProps {
     time: string;
     title: string;
     description: string;
-    actions: { label: string; primary?: boolean }[];
+    actions: { label: string; primary?: boolean; href?: string }[];
     isCritical?: boolean;
 }
 
@@ -37,15 +38,16 @@ function AlertItem({ name, avatar, time, title, description, actions, isCritical
 
             <div className="mt-3 flex gap-2">
                 {actions.map((action) => (
-                    <button
+                    <a
                         key={action.label}
+                        href={action.href || "#"}
                         className={`rounded px-3 py-1 text-xs font-semibold transition-colors ${action.primary
-                                ? "bg-blue-600 text-white hover:bg-blue-700"
-                                : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                            ? "bg-black text-white hover:bg-neutral-800"
+                            : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                             }`}
                     >
                         {action.label}
-                    </button>
+                    </a>
                 ))}
             </div>
         </div>
@@ -60,7 +62,7 @@ export function RecentCriticalAlerts() {
             time: "10m ago",
             title: "Attendance dropped below 50%",
             description: "Student has missed 3 consecutive math classes without excuse.",
-            actions: [{ label: "Contact" }, { label: "Flag Review", primary: true }],
+            actions: [{ label: "Send Email", href: "mailto:john.doe@student.edu" }, { label: "Inform Parent", primary: true, href: "mailto:parent.doe@gmail.com" }],
             isCritical: true,
         },
         {
@@ -69,7 +71,7 @@ export function RecentCriticalAlerts() {
             time: "2h ago",
             title: "LMS Inactivity Warning",
             description: "No login activity detected for 7 days.",
-            actions: [], // Explicitly empty or maybe add "View Log"
+            actions: [{ label: "Send Email", href: "mailto:sarah.smith@student.edu" }, { label: "Inform Parent", href: "mailto:parent.smith@gmail.com" }],
             isCritical: false, // Orange/Amber
         },
         {
@@ -78,7 +80,7 @@ export function RecentCriticalAlerts() {
             time: "4h ago",
             title: "Grade Drop Detected",
             description: "Significant grade drop detected in 'Intro to CS'.",
-            actions: [],
+            actions: [{ label: "Send Email", href: "mailto:michael.brown@student.edu" }, { label: "Inform Parent", href: "mailto:parent.brown@gmail.com" }],
             isCritical: false,
         },
         {
@@ -87,7 +89,7 @@ export function RecentCriticalAlerts() {
             time: "1d ago",
             title: "Assignment Missing",
             description: "Failed to submit mid-term project.",
-            actions: [],
+            actions: [{ label: "Send Email", href: "mailto:emily.davis@student.edu" }, { label: "Inform Parent", href: "mailto:parent.davis@gmail.com" }],
             isCritical: false,
         },
     ];
@@ -96,7 +98,7 @@ export function RecentCriticalAlerts() {
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">
             <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-gray-900">Recent Critical Alerts</h3>
-                <button className="text-xs font-semibold text-blue-600 hover:text-blue-700">View All</button>
+                <Link href="/students" className="text-xs font-semibold text-blue-600 hover:text-blue-700">View All</Link>
             </div>
 
             <div className="space-y-1">

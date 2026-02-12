@@ -81,13 +81,7 @@ export function Sidebar({ activePath }: SidebarProps) {
         })}
       </nav>
 
-      <div className="border-t px-4 py-4 text-xs font-medium text-neutral-500">
-        <div className="mb-1 text-[11px] uppercase tracking-wide">
-          Signed in as
-        </div>
-        <div className="text-sm font-semibold text-neutral-900">Jane Doe</div>
-        <div className="text-xs text-neutral-500">Admin</div>
-      </div>
+
     </aside>
   );
 }

@@ -1,25 +1,26 @@
 "use client";
 
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell } from "recharts";
+import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const data = [
-    { x: 65, y: 2.1, z: 20, name: "Intro to CS", risk: "High" },
-    { x: 72, y: 2.5, z: 15, name: "Math 101", risk: "High" },
-    { x: 85, y: 3.2, z: 10, name: "History", risk: "Low" },
-    { x: 92, y: 3.8, z: 30, name: "Physics", risk: "Low" },
-    { x: 55, y: 1.8, z: 25, name: "Macroeconomics", risk: "High" }, // High risk outlier
-    { x: 88, y: 3.5, z: 18, name: "Art", risk: "Low" },
-    { x: 78, y: 2.9, z: 12, name: "Chemistry", risk: "Medium" },
+    { name: "Intro to CS", attendance: 65, gpa: 2.1, risk: "High" },
+    { name: "Math 101", attendance: 72, gpa: 2.5, risk: "Medium" },
+    { name: "History", attendance: 85, gpa: 3.2, risk: "Low" },
+    { name: "Physics", attendance: 92, gpa: 3.8, risk: "Low" },
+    { name: "Macroecon", attendance: 55, gpa: 1.8, risk: "High" },
+    { name: "Art", attendance: 88, gpa: 3.5, risk: "Low" },
+    { name: "Chemistry", attendance: 78, gpa: 2.9, risk: "Medium" },
 ];
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-        const data = payload[0].payload;
         return (
-            <div className="rounded-lg border border-gray-100 bg-white p-2 shadow-lg text-xs">
-                <p className="font-bold text-gray-900">{data.name}</p>
-                <p className="text-gray-500">Attendance: {data.x}%</p>
-                <p className="text-gray-500">GPA: {data.y}</p>
+            <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-xl text-xs">
+                <p className="font-bold text-gray-900 mb-1">{label}</p>
+                <div className="space-y-1">
+                    <p className="text-blue-600 font-medium">Attendance: {payload[0].value}%</p>
+                    <p className="text-emerald-600 font-medium">GPA: {payload[1].value}</p>
+                </div>
             </div>
         );
     }
@@ -31,63 +32,47 @@ export function CorrelationChart() {
         <div className="h-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h3 className="font-bold text-gray-900">Correlation Analysis</h3>
-                    <p className="text-xs text-gray-500">Avg Grade vs. Attendance Rate</p>
-                </div>
-                <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-red-400"></span>
-                        <span className="text-gray-600">High Risk</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                        <span className="text-gray-600">Low Risk</span>
-                    </div>
+                    <h3 className="font-bold text-gray-900">Performance Overview</h3>
+                    <p className="text-xs text-gray-500">Attendance vs. GPA by Course</p>
                 </div>
             </div>
 
-            <div className="h-[250px] w-full relative">
-                {/* Background Zone Labels */}
-                <div className="absolute left-2 bottom-2 text-[10px] font-bold text-red-300 z-0">Risk Zone</div>
-                <div className="absolute right-2 top-2 text-[10px] font-bold text-green-300 z-0">High Performance</div>
-
+            <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                    <ComposedChart
+                        data={data}
+                        margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                    >
+                        <CartesianGrid stroke="#f3f4f6" vertical={false} />
                         <XAxis
-                            type="number"
-                            dataKey="x"
-                            name="Attendance"
-                            unit="%"
-                            domain={[40, 100]}
+                            dataKey="name"
+                            scale="band"
+                            tick={{ fontSize: 10, fill: '#6b7280' }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={0}
+                        />
+                        <YAxis
+                            yAxisId="left"
+                            label={{ value: 'Attendance (%)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#3b82f6' }}
                             tick={{ fontSize: 10, fill: '#9ca3af' }}
                             axisLine={false}
                             tickLine={false}
-                            label={{ value: 'Attendance Rate (%)', position: 'bottom', fontSize: 10, fill: '#9ca3af', offset: 0 }}
                         />
                         <YAxis
-                            type="number"
-                            dataKey="y"
-                            name="GPA"
+                            yAxisId="right"
+                            orientation="right"
+                            label={{ value: 'GPA', angle: 90, position: 'insideRight', fontSize: 10, fill: '#10b981' }}
                             domain={[0, 4]}
                             tick={{ fontSize: 10, fill: '#9ca3af' }}
                             axisLine={false}
                             tickLine={false}
-                            label={{ value: 'Avg Grade (GPA)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }}
                         />
-                        <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                        <Scatter name="Courses" data={data}>
-                            {data.map((entry, index) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={entry.risk === 'High' ? '#f87171' : (entry.risk === 'Medium' ? '#fbbf24' : '#60a5fa')}
-                                    fillOpacity={0.6}
-                                    stroke={entry.risk === 'High' ? '#ef4444' : (entry.risk === 'Medium' ? '#f59e0b' : '#3b82f6')}
-                                />
-                            ))}
-                            <LabelList dataKey="z" position="top" /> {/* Placeholder size mapping */}
-                        </Scatter>
-                    </ScatterChart>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                        <Bar yAxisId="left" dataKey="attendance" name="Attendance %" barSize={20} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        <Line yAxisId="right" type="monotone" dataKey="gpa" name="GPA" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                    </ComposedChart>
                 </ResponsiveContainer>
             </div>
         </div>

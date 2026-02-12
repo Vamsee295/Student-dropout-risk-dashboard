@@ -1,5 +1,7 @@
 import { Users, AlertTriangle, Clock, Activity } from "lucide-react";
+import Link from "next/link";
 
+// Update MetricCardProps to include href
 interface MetricCardProps {
     title: string;
     value: string;
@@ -11,6 +13,7 @@ interface MetricCardProps {
     iconColor: string;
     iconBg: string;
     actionLabel: string;
+    href: string; // Added href
     borderColor?: string;
 }
 
@@ -25,6 +28,7 @@ function MetricCard({
     iconColor,
     iconBg,
     actionLabel,
+    href,
     borderColor = "border-transparent",
 }: MetricCardProps) {
     return (
@@ -50,9 +54,12 @@ function MetricCard({
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-50">
-                <button className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
+                <Link
+                    href={href}
+                    className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
                     {actionLabel} <span className="ml-1">→</span>
-                </button>
+                </Link>
             </div>
         </div>
     );
@@ -71,6 +78,7 @@ export function DashboardMetrics() {
             iconColor: "text-blue-600",
             iconBg: "bg-blue-50",
             actionLabel: "View enrollment details",
+            href: "/students",
         },
         {
             title: "High Risk Students",
@@ -83,6 +91,7 @@ export function DashboardMetrics() {
             iconColor: "text-red-600",
             iconBg: "bg-red-50",
             actionLabel: "Review at-risk list",
+            href: "/risk-analysis",
             borderColor: "border-l-4 border-l-red-500", // Special styling for risk
         },
         {
@@ -96,6 +105,7 @@ export function DashboardMetrics() {
             iconColor: "text-amber-600",
             iconBg: "bg-amber-50",
             actionLabel: "Analyze attendance",
+            href: "/reports", // Attendance analytics often in reports
         },
         {
             title: "Avg Engagement",
@@ -108,6 +118,7 @@ export function DashboardMetrics() {
             iconColor: "text-emerald-600",
             iconBg: "bg-emerald-50",
             actionLabel: "Check engagement report",
+            href: "/engagement",
         },
     ];
 

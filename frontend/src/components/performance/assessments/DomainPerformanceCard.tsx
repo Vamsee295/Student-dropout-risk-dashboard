@@ -41,19 +41,19 @@ export function DomainPerformanceCard({
             </div>
 
             <div className="flex items-end justify-between mt-auto">
-                <div className="relative">
-                    <div className="absolute -top-3 left-0 text-[10px] text-gray-400 font-medium bg-white px-1">
+                <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">
                         Your Score
-                    </div>
-                    <div className="text-3xl font-bold text-blue-600">{score}</div>
+                    </p>
+                    <div className="text-4xl font-extrabold text-blue-600 tracking-tight leading-none">{score}</div>
                 </div>
 
                 {accuracy && (
                     <div className="text-right">
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Accuracy</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Accuracy</p>
                         <div className="flex flex-col items-end">
-                            <span className="text-lg font-bold text-emerald-500">{accuracy}</span>
-                            <TrendingUp size={16} className="text-emerald-400 mt-1" />
+                            <span className="text-xl font-bold text-emerald-500">{accuracy}</span>
+                            <TrendingUp size={18} className="text-emerald-500 mt-1" />
                         </div>
                     </div>
                 )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { PerformanceHeader } from "@/components/performance/PerformanceHeader";
 import { AlertBanner } from "@/components/performance/AlertBanner";
 import { PerformanceMetrics } from "@/components/performance/PerformanceMetrics";
@@ -9,10 +10,65 @@ import { PlatformCard } from "@/components/performance/assessments/PlatformCard"
 import { SolvedQuestionsCard } from "@/components/performance/assessments/SolvedQuestionsCard";
 import { DomainPerformanceCard } from "@/components/performance/assessments/DomainPerformanceCard";
 
+// Mock data for export
+const PERFORMANCE_DATA = [
+    { id: 101, name: "Intro to Macroeconomics", code: "ECON 101", risk: "High", attendance: "65%", grade: "1.8", dept: "CSE" },
+    { id: 102, name: "Computer Science 101", code: "CS 101", risk: "Medium", attendance: "72%", grade: "2.5", dept: "CS IT" },
+    { id: 103, name: "Linear Algebra", code: "MATH 201", risk: "Low", attendance: "78%", grade: "2.9", dept: "AI-DS" },
+    { id: 104, name: "Physics I", code: "PHYS 101", risk: "Low", attendance: "92%", grade: "3.8", dept: "AEROSPACE" },
+];
+
 export default function PerformancePage() {
+    const [year, setYear] = useState("2023 - 2024");
+    const [department, setDepartment] = useState("All Departments");
+
+    const handleExport = () => {
+        // Filter data based on department (mocking year filter as data is static for now)
+        const relevantData = department === "All Departments"
+            ? PERFORMANCE_DATA
+            : PERFORMANCE_DATA.filter(d => d.dept === department);
+
+        // CSV Header
+        const headers = ["Course Name", "Code", "Risk Status", "Attendance", "Grade", "Department", "Academic Year"];
+
+        // CSV Rows
+        const rows = relevantData.map(d => [
+            d.name,
+            d.code,
+            d.risk,
+            d.attendance,
+            d.grade,
+            d.dept,
+            year
+        ]);
+
+        // Construct CSV String
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        // Create Blob and Download
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `performance_report_${year.replace(/\s/g, '')}_${department.replace(/\s/g, '_')}.csv`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="space-y-8">
-            <PerformanceHeader />
+            <PerformanceHeader
+                selectedYear={year}
+                onYearChange={setYear}
+                selectedDept={department}
+                onDeptChange={setDepartment}
+                onExport={handleExport}
+            />
 
             {/* Assessment/Skills Section */}
             <section>

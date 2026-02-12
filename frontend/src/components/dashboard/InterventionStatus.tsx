@@ -1,4 +1,5 @@
-"use client";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 interface InterventionItemProps {
     label: string;
@@ -45,6 +46,13 @@ export function InterventionStatus() {
                     color="bg-emerald-500"
                 />
             </div>
-        </div>
+
+
+            <div className="mt-6 pt-4 border-t border-gray-50">
+                <Link href="/interventions" className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                    Go to Intervention Board <ArrowRight size={16} className="ml-1" />
+                </Link>
+            </div>
+        </div >
     );
 }
