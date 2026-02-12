@@ -1,52 +1,35 @@
-const columns = ["Pending Actions", "In Progress", "Completed"];
+"use client";
+
+import { Plus } from "lucide-react";
+import { InterventionFilters } from "@/components/interventions/InterventionFilters";
+import { InterventionBoard } from "@/components/interventions/InterventionBoard";
 
 export default function InterventionsPage() {
   return (
-    <div className="space-y-5">
-      <section className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex h-full flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="text-sm font-bold tracking-tight">Intervention Board</h2>
-          <p className="text-xs font-medium text-neutral-500">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Intervention Board
+          </h1>
+          <p className="text-sm text-slate-500">
             Manage and track student support actions based on risk predictions.
           </p>
         </div>
-        <button className="rounded-full bg-black px-3 py-1.5 text-xs font-semibold text-white">
+        <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 shadow-sm transition-colors">
+          <Plus size={18} />
           New Intervention
         </button>
-      </section>
+      </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {columns.map((column) => (
-          <div
-            key={column}
-            className="flex flex-col card-surface p-3 text-xs font-semibold"
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-bold tracking-tight">{column}</h3>
-              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-600">
-                Sample
-              </span>
-            </div>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-                <div className="flex items-center justify-between">
-                  <span>Isabella Chen</span>
-                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] text-red-600">
-                    High Risk
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-neutral-600">
-                  Attendance dropped by 15% over last 3 weeks.
-                </p>
-                <p className="mt-1 text-[11px] text-neutral-700">
-                  Suggested: Schedule counseling session.
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
+      {/* Filters */}
+      <InterventionFilters />
+
+      {/* Board (Scrollable if needed) */}
+      <div className="flex-1 overflow-x-auto pb-4">
+        <InterventionBoard />
+      </div>
     </div>
   );
 }
-
