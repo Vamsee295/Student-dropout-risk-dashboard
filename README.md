@@ -53,39 +53,21 @@ A comprehensive, real-time analytics platform designed to identify, monitor, and
 
 ## ⚡ Getting Started
 
-### Prerequisites
-- Node.js (v18 or higher)
-- Python (v3.9 or higher)
+### 🚀 New to this project?
 
-### 1. Backend Setup
+For **complete setup instructions** including database setup and troubleshooting:
+- 📖 **[SETUP.md](./SETUP.md)** - Detailed setup guide for first-time setup
+- ⚡ **[QUICK_START.md](./QUICK_START.md)** - Quick reference for running the app
 
-```bash
-cd backend
+### Quick Overview
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+1. **Prerequisites**: Node.js (v18+), Python (3.9+), MySQL (8.0+)
+2. **Backend**: Create virtual environment → Install dependencies → Start server
+3. **Frontend**: Install dependencies → Start dev server
+4. **Database**: Create MySQL database → Initialize tables → Load sample data
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-uvicorn app.main:app --reload
-```
-The API will be available at `http://localhost:8000`. API docs at `http://localhost:8000/docs`.
-
-### 2. Frontend Setup
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
-```
-The application will be running at `http://localhost:3000`.
+**Backend runs on**: `http://localhost:8000` (API docs at `/docs`)  
+**Frontend runs on**: `http://localhost:3000`
 
 ## 🤖 Machine Learning Pipeline
 

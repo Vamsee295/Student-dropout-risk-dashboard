@@ -28,12 +28,25 @@ export function RiskDistributionChart() {
         return <div className="p-6 text-center">Loading...</div>;
     }
 
-    // Convert API response to chart format
+    // Show empty state if no distribution data
+    if (!distribution || Object.keys(distribution).length === 0) {
+        return (
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-bold text-gray-900">Risk Distribution</h3>
+                <div className="p-6 text-center text-gray-500">
+                    <p>No risk distribution data available</p>
+                    <p className="text-sm mt-2">Please ensure students are enrolled and risk scores are calculated.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Convert API response to chart format with null safety
     const chartData = [
-        { name: "Safe", value: distribution['Safe'] || 0, color: "#10b981" },
-        { name: "Stable", value: distribution['Stable'] || 0, color: "#3b82f6" },
-        { name: "Moderate Risk", value: distribution['Moderate Risk'] || 0, color: "#f59e0b" },
-        { name: "High Risk", value: distribution['High Risk'] || 0, color: "#ef4444" },
+        { name: "Safe", value: distribution?.['Safe'] || 0, color: "#10b981" },
+        { name: "Stable", value: distribution?.['Stable'] || 0, color: "#3b82f6" },
+        { name: "Moderate Risk", value: distribution?.['Moderate Risk'] || 0, color: "#f59e0b" },
+        { name: "High Risk", value: distribution?.['High Risk'] || 0, color: "#ef4444" },
     ].filter(item => item.value > 0); // Only show non-zero categories
 
     const highRiskPercentage = chartData.length > 0

@@ -67,7 +67,6 @@ export function RecentCriticalAlerts() {
                 const response = await fetch(`${API_URL}/api/students/all`);
                 const students = await response.json();
 
-                // Filter for high-risk students and create alerts
                 const highRiskStudents = students
                     .filter((s: any) => s.riskStatus === 'High Risk' || s.riskStatus === 'Moderate Risk')
                     .sort((a: any, b: any) => parseFloat(b.riskValue) - parseFloat(a.riskValue))

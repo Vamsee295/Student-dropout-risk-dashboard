@@ -102,13 +102,13 @@ export function DashboardMetrics() {
         return <div className="p-6 text-center">Loading metrics...</div>;
     }
 
-    // Calculate attendance and engagement from real student data
-    const avgAttendance = students.length > 0
-        ? Math.round(students.reduce((sum, s) => sum + (s.attendance || 0), 0) / students.length)
+    // Calculate attendance and engagement from real student data with null safety
+    const avgAttendance = students && students.length > 0
+        ? Math.round(students.reduce((sum, s) => sum + (s?.attendance || 0), 0) / students.length)
         : 0;
 
-    const avgEngagement = students.length > 0
-        ? (students.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / students.length / 10).toFixed(1)
+    const avgEngagement = students && students.length > 0
+        ? (students.reduce((sum, s) => sum + (s?.engagementScore || 0), 0) / students.length / 10).toFixed(1)
         : "0.0";
 
     const metrics = [

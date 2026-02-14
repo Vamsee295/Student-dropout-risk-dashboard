@@ -17,7 +17,7 @@ import sys
 
 from app.config import get_settings
 from app.database import init_db
-from app.routes import students, prediction, analytics, interventions, performance, engagement
+from app.routes import students, prediction, analytics, performance, engagement
 
 # Configure logging
 logger.remove()
@@ -93,7 +93,7 @@ app.add_middleware(
 app.include_router(students.router, prefix="/api", tags=["Students"])
 app.include_router(prediction.router, prefix="/api", tags=["Prediction"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
-app.include_router(interventions.router, prefix="/api/interventions", tags=["Interventions"])
+# app.include_router(interventions.router, prefix="/api/interventions", tags=["Interventions"])  # TODO: Create interventions.py route file
 app.include_router(performance.router, prefix="/api/performance", tags=["Performance"])
 app.include_router(engagement.router, prefix="/api/engagement", tags=["Engagement"])
 

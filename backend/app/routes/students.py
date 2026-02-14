@@ -11,7 +11,7 @@ from loguru import logger
 
 router = APIRouter()
 
-@router.get("/students", response_model=List[StudentResponse])
+@router.get("/students")
 def get_all_students(db: Session = Depends(get_db)):
     """
     Get all students with their risk scores.
@@ -33,16 +33,16 @@ def get_all_students(db: Session = Depends(get_db)):
                 # Format for frontend
                 student_data = {
                     "id": str(student.id),
-                    "name": f"Student {student.id}",  # You can enhance this with actual names if available
-                    "avatar": "",  # Placeholder
+                    "name": student.name if hasattr(student, 'name') and student.name else f"Student {student.id}",
+                    "avatar": student.avatar if hasattr(student, 'avatar') and student.avatar else "",
                     "course": student.course,
                     "department": map_department(student.course),
-                    "section": "A",  # Default, can be enhanced
-                    "riskStatus": risk_score.risk_level,
-                    "riskTrend": "stable",  # Can be computed from risk_history
+                    "section": student.section.value if hasattr(student, 'section') else "A",
+                    "riskStatus": risk_score.risk_level.value if hasattr(risk_score.risk_level, 'value') else str(risk_score.risk_level),
+                    "riskTrend": risk_score.risk_trend.value if hasattr(risk_score, 'risk_trend') and hasattr(risk_score.risk_trend, 'value') else "stable",
                     "riskValue": f"{risk_score.risk_score:.1f}%",
-                    "attendance": int(getattr(metrics, 'attendance_rate', 0) * 100) if hasattr(metrics, 'attendance_rate') else 85,
-                    "engagementScore": int(getattr(metrics, 'engagement_score', 0) * 100) if hasattr(metrics, 'engagement_score') else 75,
+                    "attendance": int(getattr(metrics, 'attendance_rate', 85)),  # Already 0-100 scale
+                    "engagementScore": int(getattr(metrics, 'engagement_score', 75)),  # Already 0-100 scale
                     "lastInteraction": student.updated_at.strftime("%Y-%m-%d") if student.updated_at else "2024-01-01"
                 }
                 result.append(student_data)
@@ -53,6 +53,14 @@ def get_all_students(db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error fetching students: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/students/all")
+def get_all_students_endpoint(db: Session = Depends(get_db)):
+    """
+    Alias endpoint for get_all_students to match frontend expectations.
+    Frontend components call /api/students/all
+    """
+    return get_all_students(db)
 
 @router.get("/students/{student_id}/risk", response_model=RiskExplanation)
 def get_student_risk(student_id: str, db: Session = Depends(get_db)):
