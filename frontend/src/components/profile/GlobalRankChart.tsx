@@ -2,7 +2,7 @@
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
-const data = [
+const defaultData = [
     { date: "Apr 25", rank: 35000 },
     { date: "May 10", rank: 28000 },
     { date: "Jun 15", rank: 28000 },
@@ -16,7 +16,16 @@ const data = [
     { date: "Jan 25", rank: 14200 }, // Slight dip to match image curve
 ];
 
-export function GlobalRankChart() {
+export interface RankData {
+    date: string;
+    rank: number;
+}
+
+interface GlobalRankChartProps {
+    data?: RankData[];
+}
+
+export function GlobalRankChart({ data = defaultData }: GlobalRankChartProps) {
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full flex flex-col">
             <h3 className="mb-6 font-bold text-gray-900">Global Rankings</h3>

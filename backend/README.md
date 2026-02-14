@@ -103,7 +103,11 @@ This will:
 #### 7. Start API Server
 
 ```bash
+# Standard
 uvicorn app.main:app --reload --port 8000
+
+# Windows (Directly with venv Python)
+.\venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
 API will be available at http://localhost:8000

@@ -17,7 +17,8 @@ import sys
 
 from app.config import get_settings
 from app.database import init_db
-from app.routes import students, prediction, analytics, performance, engagement
+from app.database import init_db
+from app.routes import students, prediction, analytics, performance, engagement, auth, student_dashboard, faculty_dashboard
 
 # Configure logging
 logger.remove()
@@ -96,6 +97,9 @@ app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"]
 # app.include_router(interventions.router, prefix="/api/interventions", tags=["Interventions"])  # TODO: Create interventions.py route file
 app.include_router(performance.router, prefix="/api/performance", tags=["Performance"])
 app.include_router(engagement.router, prefix="/api/engagement", tags=["Engagement"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(student_dashboard.router)
+app.include_router(faculty_dashboard.router)
 
 # Frontend integration router
 from app.routes import frontend

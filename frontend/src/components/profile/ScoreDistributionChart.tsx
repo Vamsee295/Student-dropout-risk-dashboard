@@ -2,7 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-const data = [
+const defaultData = [
     { name: "HackerRank", value: 35, color: "#10b981", url: "https://www.hackerrank.com/" }, // Emerald
     { name: "SmartInterviews", value: 15, color: "#fbbf24", url: "https://smartinterviews.in/" }, // Amber
     { name: "LeetCode", value: 20, color: "#f97316", url: "https://leetcode.com/" }, // Orange
@@ -12,7 +12,18 @@ const data = [
     { name: "Spoj", value: 5, color: "#78350f", url: "https://www.spoj.com/" }, // Brown
 ];
 
-export function ScoreDistributionChart() {
+export interface ScoreData {
+    name: string;
+    value: number;
+    color: string;
+    url: string;
+}
+
+interface ScoreDistributionChartProps {
+    data?: ScoreData[];
+}
+
+export function ScoreDistributionChart({ data = defaultData }: ScoreDistributionChartProps) {
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full flex flex-col">
             <h3 className="font-bold text-gray-900 mb-4">Score Distribution</h3>

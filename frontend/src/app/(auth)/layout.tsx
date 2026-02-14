@@ -6,18 +6,22 @@ export default function AuthLayout({
     return (
         <div className="min-h-screen grid lg:grid-cols-2">
             {/* Left: Branding & Visual */}
-            <div className="hidden lg:flex flex-col justify-between bg-black text-white p-12 relative overflow-hidden">
+            {/* Left: Branding & Visual */}
+            <div className="hidden lg:flex flex-col bg-black text-white p-12 relative overflow-hidden">
+                {/* Logo */}
                 <div className="z-10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white text-black rounded-lg flex items-center justify-center font-bold text-lg">ER</div>
                         <span className="font-bold text-xl tracking-tight">EduRisk AI</span>
                     </div>
-                    <div className="mt-20 max-w-md">
-                        <h1 className="text-4xl font-bold leading-tight mb-6">Predict. Intervene. Succeed.</h1>
-                        <p className="text-gray-400 text-lg">
-                            The most advanced student success platform powered by machine learning. Identify at-risk students before it's too late.
-                        </p>
-                    </div>
+                </div>
+
+                {/* Centered Hero Content */}
+                <div className="flex-1 flex flex-col justify-center z-10 max-w-lg">
+                    <h1 className="text-5xl font-bold leading-tight mb-6">Predict. Intervene. Succeed.</h1>
+                    <p className="text-gray-400 text-xl leading-relaxed">
+                        The most advanced student success platform powered by machine learning. Identify at-risk students before it's too late.
+                    </p>
                 </div>
 
                 {/* Abstract Pattern */}

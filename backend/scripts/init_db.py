@@ -34,7 +34,9 @@ def main():
         
         expected_tables = [
             'students', 'student_metrics', 'risk_scores',
-            'risk_history', 'interventions', 'model_versions'
+            'risk_history', 'interventions', 'model_versions',
+            'courses', 'enrollments', 'attendance_records',
+            'assessments', 'student_assessments'
         ]
         
         missing = set(expected_tables) - set(tables)

@@ -1,10 +1,12 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Sidebar } from "@/components/Sidebar";
 import { Bell, User, LogOut, Settings } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const pathTitleMap: Record<string, string> = {
   "/dashboard": "ML Risk Analysis Insights",
@@ -31,6 +33,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout, isAuthenticated } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  useEffect(() => {
+    // Basic Auth Check
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Role-based Access Control
+    if (user?.role === "STUDENT") {
+      // Students should not access faculty routes
+      const studentAllowedRoutes = ["/student-dashboard", "/profile", "/reports", "/settings"];
+      const isAllowed = studentAllowedRoutes.some(route => pathname.startsWith(route));
+
+      if (!isAllowed) {
+        router.push("/student-dashboard");
+      }
+    } else if (user?.role === "FACULTY" || user?.role === "ADMIN") {
+      // Faculty should not access student dashboard (optional, but good for clarity)
+      if (pathname === "/student-dashboard") {
+        router.push("/dashboard");
+      }
+    }
+  }, [isAuthenticated, user, pathname, router]);
+
+  if (!isAuthenticated) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -49,29 +85,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search students, courses, alerts..."
-                  className="w-72 rounded-full border border-neutral-200 px-4 py-2 text-xs font-medium placeholder:text-neutral-400 focus:border-black focus:outline-none"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const target = e.target as HTMLInputElement;
-                      router.push(`/students?q=${encodeURIComponent(target.value)}`);
-                    }
-                  }}
-                />
-              </div>
-              <button
-                type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-xs font-bold transition-colors hover:bg-neutral-100"
-                aria-label="Notifications"
-              >
-                <Bell size={16} className="text-neutral-600" />
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  3
-                </span>
-              </button>
+
+              <NotificationBell />
 
               <div className="relative">
                 <button
@@ -84,8 +99,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="px-4 py-3 border-b border-gray-50">
-                      <p className="text-sm font-semibold text-gray-900">Jane Doe</p>
-                      <p className="text-xs text-gray-500 truncate">jane@university.edu</p>
+                      <p className="text-sm font-semibold text-gray-900">{user?.name || "Guest"}</p>
+                      <p className="text-xs text-gray-500 truncate">{user?.email || "guest@example.com"}</p>
                     </div>
 
                     <div className="py-1">
@@ -106,12 +121,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </div>
 
                     <div className="border-t border-gray-50 py-1">
-                      <Link
-                        href="/login"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium text-left"
                       >
                         <LogOut size={14} /> Logout
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 )}

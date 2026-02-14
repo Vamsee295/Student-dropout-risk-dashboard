@@ -71,6 +71,14 @@ class InterventionStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class Role(str, enum.Enum):
+    """User roles."""
+    STUDENT = "STUDENT"
+    FACULTY = "FACULTY"
+    ADMIN = "ADMIN"
+
+
+
 # Models
 class Student(Base):
     """Student demographic and enrollment information."""
@@ -89,16 +97,47 @@ class Student(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     # Relationships
+    # Relationships
     metrics = relationship("StudentMetric", back_populates="student", uselist=False, cascade="all, delete-orphan")
     risk_score = relationship("RiskScore", back_populates="student", uselist=False, cascade="all, delete-orphan")
     risk_history = relationship("RiskHistory", back_populates="student", cascade="all, delete-orphan")
     interventions = relationship("Intervention", back_populates="student", cascade="all, delete-orphan")
+    coding_profile = relationship("StudentCodingProfile", back_populates="student", uselist=False, cascade="all, delete-orphan")
     
     # Indexes
     __table_args__ = (
         Index('idx_student_department', 'department'),
         Index('idx_student_section', 'section'),
     )
+
+
+class StudentCodingProfile(Base):
+    """Student performance on coding platforms."""
+    __tablename__ = "student_coding_profiles"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), unique=True, nullable=False)
+    
+    # Platform Scores
+    hackerrank_score = Column(Float, default=0.0)
+    hackerrank_solved = Column(Integer, default=0)
+    
+    leetcode_rating = Column(Float, default=0.0)
+    leetcode_solved = Column(Integer, default=0)
+    
+    codechef_rating = Column(Float, default=0.0)
+    codeforces_rating = Column(Float, default=0.0)
+    
+    interviewbit_score = Column(Float, default=0.0)
+    spoj_score = Column(Float, default=0.0)
+    
+    # Aggregated Score (for sorting/ranking)
+    overall_score = Column(Float, default=0.0)
+    
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    student = relationship("Student", back_populates="coding_profile")
 
 
 class StudentMetric(Base):
@@ -253,3 +292,141 @@ class ModelVersion(Base):
     __table_args__ = (
         Index('idx_model_versions_is_active', 'is_active'),
     )
+
+
+class AssessmentType(str, enum.Enum):
+    """Type of assessment."""
+    INTERNAL = "Internal"
+    EXTERNAL = "External"
+    ASSIGNMENT = "Assignment"
+    PROJECT = "Project"
+
+
+class AttendanceStatus(str, enum.Enum):
+    """Attendance status."""
+    PRESENT = "Present"
+    ABSENT = "Absent"
+    LATE = "Late"
+    EXCUSED = "Excused"
+
+
+class SubmissionStatus(str, enum.Enum):
+    """Assignment submission status."""
+    SUBMITTED = "Submitted"
+    PENDING = "Pending"
+    OVERDUE = "Overdue"
+    GRADED = "Graded"
+
+
+class User(Base):
+    """User account for authentication."""
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    name = Column(String(200), nullable=False)
+    role = Column(SQLEnum(Role), nullable=False, default=Role.STUDENT)
+    is_active = Column(Boolean, default=True)
+    
+    # Optional link to student profile if role is STUDENT
+    student_id = Column(String(50), ForeignKey("students.id"), nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    student = relationship("Student", backref="user_account")
+
+
+class Course(Base):
+    """Course information."""
+    __tablename__ = "courses"
+
+    id = Column(String(50), primary_key=True)  # Course Code e.g. CS101
+    name = Column(String(200), nullable=False)
+    department = Column(SQLEnum(Department), nullable=False)
+    credits = Column(Integer, nullable=False)
+    semester = Column(Integer, nullable=False)
+
+    # Relationships
+    enrollments = relationship("Enrollment", back_populates="course")
+    assessments = relationship("Assessment", back_populates="course")
+
+
+class Enrollment(Base):
+    """Student enrollment in a course."""
+    __tablename__ = "enrollments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    course_id = Column(String(50), ForeignKey("courses.id"), nullable=False)
+    semester = Column(Integer, nullable=False)
+    
+    # Timestamps
+    enrolled_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    student = relationship("Student", backref="enrollments")
+    course = relationship("Course", back_populates="enrollments")
+
+    __table_args__ = (
+        UniqueConstraint('student_id', 'course_id', name='idx_unique_enrollment'),
+    )
+
+
+class AttendanceRecord(Base):
+    """Daily attendance record for a student in a course."""
+    __tablename__ = "attendance_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    course_id = Column(String(50), ForeignKey("courses.id"), nullable=False)
+    date = Column(DateTime, nullable=False)
+    status = Column(SQLEnum(AttendanceStatus), nullable=False)
+
+    # Relationships
+    student = relationship("Student", backref="attendance_records")
+    course = relationship("Course", backref="attendance_records")
+
+    __table_args__ = (
+        Index('idx_attendance_student_course', 'student_id', 'course_id'),
+    )
+
+
+class Assessment(Base):
+    """Assessment definition for a course."""
+    __tablename__ = "assessments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    course_id = Column(String(50), ForeignKey("courses.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    type = Column(SQLEnum(AssessmentType), nullable=False)
+    total_marks = Column(Float, nullable=False)
+    weightage = Column(Float, nullable=False)  # Percentage contribution to final grade
+    due_date = Column(DateTime, nullable=True)
+
+    # Relationships
+    course = relationship("Course", back_populates="assessments")
+    student_assessments = relationship("StudentAssessment", back_populates="assessment")
+
+
+class StudentAssessment(Base):
+    """Student score for an assessment."""
+    __tablename__ = "student_assessments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    assessment_id = Column(Integer, ForeignKey("assessments.id"), nullable=False)
+    
+    obtained_marks = Column(Float, nullable=True)
+    status = Column(SQLEnum(SubmissionStatus), nullable=False, default=SubmissionStatus.PENDING)
+    submission_date = Column(DateTime, nullable=True)
+
+    # Relationships
+    student = relationship("Student", backref="student_assessments")
+    assessment = relationship("Assessment", back_populates="student_assessments")
+
+    __table_args__ = (
+        UniqueConstraint('student_id', 'assessment_id', name='idx_unique_student_assessment'),
+    )
+

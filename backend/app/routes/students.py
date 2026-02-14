@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models import Student, StudentMetric, RiskScore
 from app.schemas import StudentResponse, RiskExplanation
 from loguru import logger
+from datetime import datetime
 
 router = APIRouter()
 
@@ -61,6 +62,49 @@ def get_all_students_endpoint(db: Session = Depends(get_db)):
     Frontend components call /api/students/all
     """
     return get_all_students(db)
+
+
+@router.get("/students/{student_id}")
+def get_student_by_id(student_id: str, db: Session = Depends(get_db)):
+    """
+    Get a specific student by ID with metrics and risk score.
+    """
+    try:
+        # Get student
+        student = db.query(Student).filter(Student.id == student_id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail=f"Student {student_id} not found")
+        
+        # Get risk score
+        risk_score = db.query(RiskScore).filter(RiskScore.student_id == student_id).first()
+        
+        # Get metrics
+        metrics = db.query(StudentMetric).filter(StudentMetric.student_id == student_id).first()
+        
+        # Format response
+        student_data = {
+            "id": str(student.id),
+            "name": student.name,
+            "avatar": student.avatar or "",
+            "course": student.course,
+            "department": map_department(student.course),
+            "section": student.section.value if hasattr(student, 'section') else "A",
+            "advisor": student.advisor_id, # Or lookup name
+            "riskStatus": str(risk_score.risk_level.value) if risk_score else "Unknown",
+            "riskTrend": str(risk_score.risk_trend.value) if risk_score and hasattr(risk_score, 'risk_trend') else "stable",
+            "riskValue": f"{risk_score.risk_score:.1f}%" if risk_score else "0.0%",
+            "attendance": int(getattr(metrics, 'attendance_rate', 0)) if metrics else 0,
+            "engagementScore": int(getattr(metrics, 'engagement_score', 0)) if metrics else 0,
+            "lastInteraction": student.updated_at.strftime("%Y-%m-%d") if student.updated_at else datetime.utcnow().strftime("%Y-%m-%d")
+        }
+        
+        return student_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching student {student_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/students/{student_id}/risk", response_model=RiskExplanation)
 def get_student_risk(student_id: str, db: Session = Depends(get_db)):

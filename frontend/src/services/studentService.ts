@@ -36,3 +36,22 @@ export async function fetchStudents(): Promise<Student[]> {
         return [];
     }
 }
+
+/**
+ * Fetch a single student by ID
+ */
+export async function getStudentById(id: string): Promise<Student | null> {
+    try {
+        const response = await fetch(`${API_URL}/api/students/${id}`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch student: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`Error fetching student ${id}:`, error);
+        return null;
+    }
+}

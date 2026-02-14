@@ -1,0 +1,195 @@
+from datetime import timedelta
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import User, Role
+from app.schemas import Token, UserResponse, UserCreate
+from app.security import verify_password, create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
+from jose import JWTError, jwt
+from app.security import SECRET_KEY, ALGORITHM
+
+router = APIRouter()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+@router.post("/login", response_model=Token)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.email == form_data.username).first()
+    
+    # Auto-Registration Logic for Testing Phase
+    if not user:
+        try:
+            print(f"Attempting auto-signup for {form_data.username}")
+            # Create new user on the fly
+            hashed_password = get_password_hash(form_data.password)
+            
+            # Determine role: faculty1@, faculty.test@, etc. -> FACULTY, else STUDENT
+            role = Role.FACULTY if "faculty" in form_data.username.lower() else Role.STUDENT
+            
+            import random
+            import string
+            
+            def generate_id(prefix):
+                return f"{prefix}{''.join(random.choices(string.digits, k=4))}"
+
+            student_id = generate_id("ST") if role == Role.STUDENT else None
+            
+            user = User(
+                email=form_data.username,
+                password_hash=hashed_password,
+                name=form_data.username.split("@")[0].replace(".", " ").replace("_", " ").title(),
+                role=role,
+                student_id=student_id
+            )
+            db.add(user)
+            db.flush() # Get user.id without committing yet
+            
+            # If Student, sow default data so dashboard doesn't crash
+            if role == Role.STUDENT:
+                from app.models import Student, Department, Section, StudentMetric, RiskScore, RiskLevel, RiskTrend, ModelVersion
+                
+                # Ensure Model Version exists for Risk Score FK
+                model_v = db.query(ModelVersion).filter(ModelVersion.is_active == True).first()
+                if not model_v:
+                    model_v = ModelVersion(
+                        version="v1.0-auto",
+                        model_path="dummy",
+                        is_active=True,
+                        accuracy=0.85,
+                        precision=0.85,
+                        recall=0.85,
+                        f1_score=0.85,
+                        training_samples=100,
+                        feature_importance={}
+                    )
+                    db.add(model_v)
+                    db.flush()
+
+                # 1. Create Student Profile
+                student_profile = Student(
+                    id=student_id,
+                    name=user.name,
+                    avatar=user.name[:2].upper(),
+                    course="B.Tech Computer Science",
+                    department=Department.CSE,
+                    section=Section.A,
+                    advisor_id="FAC001" 
+                )
+                db.add(student_profile)
+                
+                # 2. Create Default Metrics
+                metrics = StudentMetric(
+                    student_id=student_id,
+                    attendance_rate=85.0, # Default to healthy for new users
+                    engagement_score=75.0,
+                    academic_performance_index=7.5,
+                    login_gap_days=0,
+                    failure_ratio=0.0,
+                    financial_risk_flag=False,
+                    commute_risk_score=1.0,
+                    semester_performance_trend=0.0
+                )
+                db.add(metrics)
+                
+                # 3. Create Default Risk Score (Safe by default)
+                risk = RiskScore(
+                    student_id=student_id,
+                    risk_score=15.0,
+                    risk_level=RiskLevel.SAFE,
+                    risk_trend=RiskTrend.STABLE,
+                    risk_value="15% (New)",
+                    model_version_id=model_v.id,
+                    shap_explanation={"top_factors": []}
+                )
+                db.add(risk)
+                
+            db.commit()
+            db.refresh(user)
+            print(f"Auto-signup success: {user.email}")
+                
+        except Exception as e:
+            print(f"Auto-signup failed for {form_data.username}: {e}")
+            import traceback
+            traceback.print_exc()
+            db.rollback()
+            # If auto-signup fails, user remains None and handled by verify_password below
+
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email, "role": user.role},
+        expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "role": user.role,
+        "user_id": user.id,
+        "student_id": user.student_id
+    }
+
+@router.post("/forgot-password")
+async def forgot_password(email: str, db: Session = Depends(get_db)):
+    """Mock forgot password endpoint."""
+    user = db.query(User).filter(User.email == email).first()
+    # For security, standard practice is to return success even if user not found
+    return {"message": "If an account exists for this email, a reset link has been sent."}
+
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+    return current_user
+
+@router.post("/register", response_model=UserResponse)
+async def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_password = get_password_hash(user.password)
+    new_user = User(
+        email=user.email,
+        password_hash=hashed_password,
+        name=user.name,
+        role=user.role,
+        student_id=user.student_id
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user

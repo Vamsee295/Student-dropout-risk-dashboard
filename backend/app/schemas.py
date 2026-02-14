@@ -5,10 +5,41 @@ Pydantic schemas for request/response validation.
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
-from app.models import Department, Section, RiskLevel, RiskTrend, InterventionType, InterventionStatus
+from app.models import Department, Section, RiskLevel, RiskTrend, InterventionType, InterventionStatus, Role
 
 
 # Base Schemas
+class UserBase(BaseModel):
+    """Base user schema."""
+    email: str = Field(..., pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    name: str = Field(..., min_length=1, max_length=200)
+    role: Role = Role.STUDENT
+    student_id: Optional[str] = None
+
+
+class UserCreate(UserBase):
+    """Schema for creating a new user."""
+    password: str = Field(..., min_length=6)
+
+
+class UserResponse(UserBase):
+    """Response schema for user."""
+    id: int
+    is_active: bool
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Token(BaseModel):
+    """JWT token schema."""
+    access_token: str
+    token_type: str
+    role: str
+    user_id: int
+    student_id: Optional[str] = None
+
+
 class StudentBase(BaseModel):
     """Base student schema."""
     name: str = Field(..., min_length=1, max_length=200)
@@ -141,10 +172,26 @@ class StudentResponse(StudentBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CodingProfileResponse(BaseModel):
+    """Response schema for student coding profile."""
+    hackerrank_score: float
+    hackerrank_solved: int
+    leetcode_rating: float
+    leetcode_solved: int
+    codechef_rating: float
+    codeforces_rating: float
+    interviewbit_score: float
+    spoj_score: float
+    overall_score: float
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
 class StudentDetailResponse(StudentResponse):
     """Detailed student response with metrics and risk."""
     metrics: Optional[StudentMetricResponse] = None
     risk_score: Optional[RiskScoreResponse] = None
+    coding_profile: Optional[CodingProfileResponse] = None
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -206,6 +253,9 @@ class ModelVersionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+
+
+
 # Analytics Schemas
 class AnalyticsOverview(BaseModel):
     """Dashboard overview metrics."""
@@ -213,6 +263,8 @@ class AnalyticsOverview(BaseModel):
     high_risk_count: int
     high_risk_percentage: float
     average_risk_score: float
+    average_attendance: float
+    high_risk_department: Optional[str] = None
     risk_distribution: dict  # {level: count}
 
 
@@ -264,3 +316,98 @@ class StudentFrontendResponse(BaseModel):
     advisor: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)
+
+
+# Course & Academic Schemas
+class CourseBase(BaseModel):
+    """Base course schema."""
+    id: str
+    name: str
+    department: Department
+    credits: int
+    semester: int
+
+
+class CourseResponse(CourseBase):
+    """Response schema for course."""
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AttendanceRecordResponse(BaseModel):
+    """Response schema for attendance."""
+    id: int
+    course_id: str
+    course_name: Optional[str] = None
+    date: datetime
+    status: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AssessmentResponse(BaseModel):
+    """Response schema for assessment."""
+    id: int
+    course_id: str
+    course_name: Optional[str] = None
+    title: str
+    type: str
+    total_marks: float
+    weightage: float
+    due_date: Optional[datetime] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StudentAssessmentResponse(BaseModel):
+    """Response schema for student assessment."""
+    id: int
+    assessment_id: int
+    assessment: Optional[AssessmentResponse] = None
+    obtained_marks: Optional[float] = None
+    status: str
+    submission_date: Optional[datetime] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StudentDashboardOverview(BaseModel):
+    """Overview data for student dashboard."""
+    attendance_rate: float
+    avg_marks: float
+    engagement_score: float
+    risk_level: RiskLevel
+    risk_trend: RiskTrend
+    risk_value: str
+    dropout_probability: float
+    upcoming_deadlines: List[AssessmentResponse]
+    recent_attendance: List[AttendanceRecordResponse]
+
+
+class SubjectPerformance(BaseModel):
+    """Subject-wise performance metrics."""
+    course_id: str
+    course_name: str
+    credits: int
+    internal_marks: float
+    external_marks: float
+    total_marks: float
+    grade: str
+    attendance_percentage: float
+
+
+class SemesterPerformance(BaseModel):
+    """Semester-wise performance."""
+    semester: int
+    gpa: float
+    subjects: List[SubjectPerformance]
+
+
+class AssignmentProgress(BaseModel):
+    """Assignment completion stats."""
+    total: int
+    completed: int
+    pending: int
+    completion_percentage: float
+    overdue_count: int
+    assignments: List[StudentAssessmentResponse]
+
