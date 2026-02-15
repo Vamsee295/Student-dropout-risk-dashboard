@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "mysql+pymysql://root:Sanjith_2005@localhost:3306/healthcare_db"
     
-    # CORS
-    cors_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # CORS - Allow all origins for development. In production, specify exact origins.
+    cors_origins: List[str] = ["*"]
 
     # JWT
     secret_key: str = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"

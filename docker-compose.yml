@@ -1,25 +1,28 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:14-alpine
-    container_name: student_dropout_db
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: student_dropout_mysql
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: student_dropout_db
+      MYSQL_ROOT_PASSWORD: Sanjith_2005
+      MYSQL_DATABASE: student_dropout_db
+      MYSQL_USER: student_app
+      MYSQL_PASSWORD: student123
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pSanjith_2005" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - app_network
+    command: --default-authentication-plugin=mysql_native_password
 
   # FastAPI Backend
   backend:
@@ -28,21 +31,22 @@ services:
       dockerfile: Dockerfile
     container_name: student_dropout_backend
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/student_dropout_db
-      CORS_ORIGINS: http://localhost:3000
+      DATABASE_URL: mysql+pymysql://root:Sanjith_2005@mysql:3306/student_dropout_db
+      CORS_ORIGINS: '["http://localhost:3000"]'
       LOG_LEVEL: INFO
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
       - backend_models:/app/models
+      - backend_logs:/app/logs
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
     networks:
       - app_network
     command: >
-      sh -c " echo 'Waiting for database...' && sleep 5 && echo 'Initializing database...' && python scripts/init_db.py && echo 'Starting server...' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload "
+      sh -c " echo 'Waiting for database...' && sleep 10 && echo 'Initializing database...' && python scripts/init_db.py && echo 'Loading student data...' && python scripts/load_custom_dataset.py && echo 'Training ML model...' && python scripts/train_model.py && echo 'Computing risk scores...' && python scripts/compute_all_risks.py && echo 'Seeding users...' && python scripts/seed_users.py && echo 'Starting server...' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload "
   # Next.js Frontend (optional, for production)
   # frontend:
   #   build:
@@ -59,8 +63,9 @@ services:
   #     - app_network
 
 volumes:
-  postgres_data:
+  mysql_data:
   backend_models:
+  backend_logs:
 
 
 networks:

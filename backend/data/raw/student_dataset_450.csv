@@ -1,0 +1,451 @@
+ID,Name,Father_Name,Mother_Name,Address,College,CGPA,Sem1_GPA,Sem2_GPA,Attendance_%,Department,Subject1,Subject2,Subject3,MID1_Subject1,MID1_Subject2,MID1_Subject3
+2300031000,Rohit Gupta,Krishna,Sita,Rajasthan,KL University,9.0,6.08,9.26,21,ECE,Embedded Systems,Processors and Controllers,Digital Signals,20,16,8
+2300031001,Nikhil Patel,Mohan,Sita,Delhi,KL University,7.58,5.66,7.81,56,ECE,Embedded Systems,Processors and Controllers,Digital Signals,17,30,19
+2300031002,Deepika Singh,Ramesh,Rekha,Tamil Nadu,KL University,7.95,8.03,6.03,23,CSIT,Cloud Computing,Web Technologies,Cyber Security,18,23,22
+2300031003,Pooja Sharma,Venkatesh,Padma,Maharashtra,KL University,9.56,8.26,8.01,68,EEE,Power Systems,Control Systems,Electrical Machines,18,18,21
+2300031004,Priya Patel,Srinivas,Radha,Maharashtra,KL University,8.33,9.18,7.21,4,AIDS,AIML,NLP,Data Communication,11,17,10
+2300031005,Suresh Mehta,Mohan,Sita,Rajasthan,KL University,9.08,7.42,8.09,10,ECE,Embedded Systems,Processors and Controllers,Digital Signals,20,9,5
+2300031006,Mahesh Gupta,Ramesh,Anitha,Andhra Pradesh,KL University,8.98,8.09,5.36,78,AIDS,AIML,NLP,Data Communication,5,8,7
+2300031007,Karthik Iyer,Mohan,Sita,Andhra Pradesh,KL University,9.28,8.1,5.43,68,EEE,Power Systems,Control Systems,Electrical Machines,24,18,22
+2300031008,Swathi Mehta,Prakash,Kavitha,Delhi,KL University,8.66,8.01,7.23,99,CSIT,Cloud Computing,Web Technologies,Cyber Security,9,23,11
+2300031009,Deepika Rao,Ashok,Lakshmi,Maharashtra,KL University,7.41,8.5,6.64,83,CSIT,Cloud Computing,Web Technologies,Cyber Security,12,25,16
+2300031010,Nikhil Patel,Venkatesh,Anitha,Telangana,KL University,8.29,7.1,7.27,16,CSIT,Cloud Computing,Web Technologies,Cyber Security,19,9,29
+2300031011,Akhil Rao,Ramesh,Rekha,Maharashtra,KL University,8.69,8.33,7.34,42,CSE,Operating Systems,DBMS,Java,20,19,16
+2300031012,Suresh Singh,Venkatesh,Kavitha,West Bengal,KL University,6.92,8.04,7.16,95,ECE,Embedded Systems,Processors and Controllers,Digital Signals,9,16,12
+2300031013,Vijay Reddy,Ramesh,Lakshmi,Andhra Pradesh,KL University,8.13,8.35,6.46,54,CSE,Operating Systems,DBMS,Java,9,11,7
+2300031014,Sanjith Patel,Ramesh,Sunitha,Gujarat,KL University,7.86,7.6,8.79,63,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,29,20
+2300031015,Pooja Naidu,Anil,Padma,West Bengal,KL University,6.62,7.89,6.37,29,CSE,Operating Systems,DBMS,Java,27,23,19
+2300031016,Nikhil Gupta,Srinivas,Rekha,Andhra Pradesh,KL University,8.21,8.74,5.03,66,CSIT,Cloud Computing,Web Technologies,Cyber Security,17,17,9
+2300031017,Kiran Gupta,Suresh,Radha,Kerala,KL University,8.7,7.01,6.25,26,CSIT,Cloud Computing,Web Technologies,Cyber Security,7,14,14
+2300031018,Vijay Iyer,Mohan,Padma,Telangana,KL University,8.42,6.23,7.36,97,AIDS,AIML,NLP,Data Communication,5,7,27
+2300031019,Pooja Sharma,Mohan,Lakshmi,Delhi,KL University,7.72,8.04,6.08,88,EEE,Power Systems,Control Systems,Electrical Machines,25,19,8
+2300031020,Aarav Reddy,Ramesh,Anitha,Maharashtra,KL University,9.56,6.16,5.37,6,ECE,Embedded Systems,Processors and Controllers,Digital Signals,20,27,8
+2300031021,Akhil Reddy,Mohan,Rekha,Delhi,KL University,6.36,8.66,7.9,16,CSE,Operating Systems,DBMS,Java,6,13,11
+2300031022,Priya Mehta,Krishna,Geetha,Delhi,KL University,5.88,7.15,5.48,24,EEE,Power Systems,Control Systems,Electrical Machines,27,18,25
+2300031023,Rahul Rao,Venkatesh,Geetha,Andhra Pradesh,KL University,7.84,6.26,5.57,10,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,28,25
+2300031024,Manoj Rao,Venkatesh,Sarita,Andhra Pradesh,KL University,8.48,6.46,9.09,68,ECE,Embedded Systems,Processors and Controllers,Digital Signals,13,15,16
+2300031025,Ananya Singh,Prakash,Rekha,Karnataka,KL University,9.51,8.89,7.04,52,EEE,Power Systems,Control Systems,Electrical Machines,7,30,17
+2300031026,Vijay Rao,Krishna,Rekha,Delhi,KL University,8.23,9.48,6.52,27,CSE,Operating Systems,DBMS,Java,21,29,8
+2300031027,Sneha Sharma,Anil,Rekha,Karnataka,KL University,7.46,8.17,6.21,63,CSE,Operating Systems,DBMS,Java,8,21,15
+2300031028,Priya Singh,Ashok,Lakshmi,Tamil Nadu,KL University,6.78,6.77,7.73,51,EEE,Power Systems,Control Systems,Electrical Machines,18,25,14
+2300031029,Deepika Mehta,Rajesh,Kavitha,Andhra Pradesh,KL University,9.14,8.5,7.42,33,CSIT,Cloud Computing,Web Technologies,Cyber Security,21,22,26
+2300031030,Mahesh Mehta,Venkatesh,Padma,Telangana,KL University,8.77,7.57,6.94,59,AIDS,AIML,NLP,Data Communication,5,19,19
+2300031031,Varun Sharma,Suresh,Rekha,Gujarat,KL University,8.18,6.99,6.35,57,AIDS,AIML,NLP,Data Communication,17,9,22
+2300031032,Rohit Reddy,Srinivas,Anitha,Rajasthan,KL University,9.19,6.59,5.55,83,AIDS,AIML,NLP,Data Communication,10,18,15
+2300031033,Rahul Verma,Mohan,Sita,Rajasthan,KL University,7.95,6.43,5.25,78,CSE,Operating Systems,DBMS,Java,9,20,13
+2300031034,Pooja Sharma,Mohan,Sunitha,West Bengal,KL University,5.61,6.38,5.53,81,CSIT,Cloud Computing,Web Technologies,Cyber Security,9,5,26
+2300031035,Ravi Sharma,Rajesh,Padma,Gujarat,KL University,6.81,7.25,5.79,9,EEE,Power Systems,Control Systems,Electrical Machines,26,28,17
+2300031036,Vijay Singh,Ramesh,Rekha,Gujarat,KL University,7.05,6.5,9.2,31,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,14,7
+2300031037,Pooja Sharma,Srinivas,Geetha,Tamil Nadu,KL University,8.18,5.43,5.29,68,CSE,Operating Systems,DBMS,Java,12,7,9
+2300031038,Pooja Singh,Suresh,Rekha,Gujarat,KL University,6.58,6.57,5.49,41,EEE,Power Systems,Control Systems,Electrical Machines,24,22,30
+2300031039,Rohit Rao,Anil,Rekha,West Bengal,KL University,5.52,5.28,6.99,22,CSE,Operating Systems,DBMS,Java,27,12,24
+2300031040,Swathi Patel,Mohan,Lakshmi,Tamil Nadu,KL University,7.66,8.81,7.44,15,CSE,Operating Systems,DBMS,Java,8,24,7
+2300031041,Pooja Rao,Ashok,Rekha,Maharashtra,KL University,9.0,9.12,6.37,27,CSE,Operating Systems,DBMS,Java,8,30,25
+2300031042,Sneha Patel,Ashok,Geetha,Kerala,KL University,5.87,7.79,8.19,15,AIDS,AIML,NLP,Data Communication,10,6,8
+2300031043,Kiran Reddy,Suresh,Sarita,Kerala,KL University,6.13,8.33,6.49,81,AIDS,AIML,NLP,Data Communication,30,23,17
+2300031044,Aarav Iyer,Anil,Sunitha,Delhi,KL University,9.78,8.52,5.68,30,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,5,23
+2300031045,Karthik Patel,Mohan,Radha,Maharashtra,KL University,6.75,7.57,6.99,36,AIDS,AIML,NLP,Data Communication,13,21,25
+2300031046,Ananya Verma,Suresh,Sunitha,West Bengal,KL University,6.94,6.44,9.46,18,AIDS,AIML,NLP,Data Communication,9,6,7
+2300031047,Deepika Naidu,Anil,Lakshmi,Telangana,KL University,7.07,6.11,8.74,52,AIDS,AIML,NLP,Data Communication,10,29,17
+2300031048,Rohit Verma,Prakash,Sita,Andhra Pradesh,KL University,8.35,9.33,5.92,78,AIDS,AIML,NLP,Data Communication,22,18,14
+2300031049,Rohit Naidu,Suresh,Padma,Maharashtra,KL University,9.04,6.15,6.96,85,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,29,8
+2300031050,Rahul Rao,Suresh,Lakshmi,Telangana,KL University,9.38,5.39,7.41,14,AIDS,AIML,NLP,Data Communication,24,17,30
+2300031051,Manoj Singh,Ashok,Padma,Telangana,KL University,6.38,7.88,5.82,75,AIDS,AIML,NLP,Data Communication,21,5,28
+2300031052,Sneha Naidu,Ashok,Sarita,Karnataka,KL University,7.93,5.75,7.22,99,EEE,Power Systems,Control Systems,Electrical Machines,16,6,29
+2300031053,Varun Verma,Ramesh,Geetha,West Bengal,KL University,8.52,5.95,6.41,66,CSIT,Cloud Computing,Web Technologies,Cyber Security,19,27,21
+2300031054,Aarav Patel,Mohan,Sunitha,Gujarat,KL University,8.79,6.29,5.68,87,CSE,Operating Systems,DBMS,Java,27,20,14
+2300031055,Nikhil Reddy,Prakash,Sita,Karnataka,KL University,6.01,8.76,5.3,21,CSIT,Cloud Computing,Web Technologies,Cyber Security,15,29,30
+2300031056,Kiran Patel,Rajesh,Kavitha,Delhi,KL University,7.31,6.53,9.11,62,CSIT,Cloud Computing,Web Technologies,Cyber Security,10,28,27
+2300031057,Kiran Patel,Mohan,Sunitha,Tamil Nadu,KL University,7.26,5.59,5.1,92,EEE,Power Systems,Control Systems,Electrical Machines,14,25,16
+2300031058,Sanjith Rao,Mohan,Rekha,Andhra Pradesh,KL University,6.54,9.36,9.07,11,CSE,Operating Systems,DBMS,Java,23,7,8
+2300031059,Ananya Gupta,Rajesh,Sarita,Karnataka,KL University,8.15,7.01,7.33,5,CSE,Operating Systems,DBMS,Java,22,26,21
+2300031060,Priya Sharma,Ashok,Padma,Tamil Nadu,KL University,6.37,5.81,7.68,5,CSE,Operating Systems,DBMS,Java,8,16,12
+2300031061,Ananya Mehta,Rajesh,Lakshmi,Kerala,KL University,7.4,5.25,8.14,40,EEE,Power Systems,Control Systems,Electrical Machines,13,30,17
+2300031062,Deepika Reddy,Ashok,Geetha,Rajasthan,KL University,5.71,9.2,8.66,90,EEE,Power Systems,Control Systems,Electrical Machines,10,16,13
+2300031063,Manoj Sharma,Rajesh,Geetha,Delhi,KL University,9.09,7.66,8.11,17,ECE,Embedded Systems,Processors and Controllers,Digital Signals,27,28,24
+2300031064,Kiran Naidu,Anil,Sarita,Telangana,KL University,8.92,6.38,7.99,16,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,17,9
+2300031065,Varun Verma,Ramesh,Sita,Kerala,KL University,6.25,7.93,8.35,63,EEE,Power Systems,Control Systems,Electrical Machines,29,9,9
+2300031066,Manoj Iyer,Ashok,Lakshmi,Kerala,KL University,8.8,5.17,8.98,5,CSE,Operating Systems,DBMS,Java,12,8,7
+2300031067,Deepika Verma,Suresh,Lakshmi,Gujarat,KL University,5.8,8.24,7.76,12,CSE,Operating Systems,DBMS,Java,15,15,7
+2300031068,Karthik Patel,Mohan,Radha,Andhra Pradesh,KL University,8.88,5.07,8.17,12,CSE,Operating Systems,DBMS,Java,28,26,16
+2300031069,Swathi Naidu,Krishna,Padma,West Bengal,KL University,8.87,5.21,6.86,3,CSIT,Cloud Computing,Web Technologies,Cyber Security,30,9,6
+2300031070,Vijay Rao,Mohan,Padma,Karnataka,KL University,7.07,5.64,7.31,48,CSE,Operating Systems,DBMS,Java,17,28,7
+2300031071,Kiran Verma,Rajesh,Padma,Delhi,KL University,7.21,7.38,8.71,80,ECE,Embedded Systems,Processors and Controllers,Digital Signals,5,25,11
+2300031072,Manoj Singh,Ramesh,Sita,Kerala,KL University,9.58,7.9,8.5,96,CSIT,Cloud Computing,Web Technologies,Cyber Security,24,10,19
+2300031073,Rohit Naidu,Rajesh,Sita,Tamil Nadu,KL University,7.51,6.44,9.2,89,ECE,Embedded Systems,Processors and Controllers,Digital Signals,23,14,30
+2300031074,Vijay Reddy,Prakash,Lakshmi,Karnataka,KL University,8.01,6.76,6.43,84,CSIT,Cloud Computing,Web Technologies,Cyber Security,10,24,30
+2300031075,Vijay Naidu,Rajesh,Kavitha,Maharashtra,KL University,6.31,6.87,5.16,58,CSIT,Cloud Computing,Web Technologies,Cyber Security,16,18,18
+2300031076,Sneha Iyer,Krishna,Lakshmi,Karnataka,KL University,9.11,6.33,7.47,94,ECE,Embedded Systems,Processors and Controllers,Digital Signals,12,19,29
+2300031077,Nikhil Gupta,Mohan,Kavitha,Maharashtra,KL University,6.27,8.32,6.06,9,EEE,Power Systems,Control Systems,Electrical Machines,6,27,27
+2300031078,Varun Sharma,Prakash,Sarita,Karnataka,KL University,6.41,5.39,6.8,91,CSE,Operating Systems,DBMS,Java,15,21,12
+2300031079,Pooja Iyer,Prakash,Geetha,Gujarat,KL University,7.58,6.97,8.02,77,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,16,26
+2300031080,Swathi Sharma,Suresh,Rekha,Gujarat,KL University,9.26,5.17,5.77,11,ECE,Embedded Systems,Processors and Controllers,Digital Signals,11,11,26
+2300031081,Mahesh Singh,Anil,Rekha,Gujarat,KL University,8.34,6.55,8.41,39,CSIT,Cloud Computing,Web Technologies,Cyber Security,10,16,17
+2300031082,Mahesh Rao,Prakash,Rekha,West Bengal,KL University,8.37,6.05,5.2,10,CSE,Operating Systems,DBMS,Java,25,5,20
+2300031083,Vijay Verma,Rajesh,Kavitha,Gujarat,KL University,6.73,7.78,7.46,76,ECE,Embedded Systems,Processors and Controllers,Digital Signals,19,27,27
+2300031084,Sanjith Verma,Anil,Radha,Karnataka,KL University,9.29,5.71,6.15,30,CSE,Operating Systems,DBMS,Java,28,27,16
+2300031085,Deepika Iyer,Suresh,Kavitha,Maharashtra,KL University,8.47,5.48,6.07,42,AIDS,AIML,NLP,Data Communication,14,13,18
+2300031086,Ravi Iyer,Mohan,Radha,Kerala,KL University,9.48,9.16,9.4,93,EEE,Power Systems,Control Systems,Electrical Machines,10,9,28
+2300031087,Sneha Rao,Rajesh,Radha,Delhi,KL University,8.22,8.92,8.71,5,CSE,Operating Systems,DBMS,Java,14,25,6
+2300031088,Akhil Mehta,Ashok,Kavitha,Rajasthan,KL University,8.51,5.33,7.66,13,EEE,Power Systems,Control Systems,Electrical Machines,9,21,28
+2300031089,Rohit Naidu,Suresh,Radha,Delhi,KL University,7.25,8.41,7.97,34,CSIT,Cloud Computing,Web Technologies,Cyber Security,17,29,19
+2300031090,Rahul Naidu,Prakash,Sarita,Maharashtra,KL University,5.74,5.79,8.11,90,CSE,Operating Systems,DBMS,Java,28,7,20
+2300031091,Pooja Reddy,Venkatesh,Rekha,Karnataka,KL University,9.03,8.45,5.94,74,CSIT,Cloud Computing,Web Technologies,Cyber Security,17,6,26
+2300031092,Ananya Reddy,Venkatesh,Sita,Gujarat,KL University,9.72,5.42,6.61,2,AIDS,AIML,NLP,Data Communication,9,24,16
+2300031093,Sneha Verma,Srinivas,Lakshmi,Tamil Nadu,KL University,8.4,8.65,8.29,34,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,27,25
+2300031094,Priya Reddy,Ramesh,Sunitha,West Bengal,KL University,8.14,8.23,5.35,28,AIDS,AIML,NLP,Data Communication,9,20,14
+2300031095,Mahesh Singh,Ramesh,Anitha,West Bengal,KL University,6.71,9.2,5.74,59,AIDS,AIML,NLP,Data Communication,27,26,18
+2300031096,Pooja Singh,Venkatesh,Padma,Tamil Nadu,KL University,5.62,9.29,6.7,11,CSE,Operating Systems,DBMS,Java,27,19,22
+2300031097,Swathi Verma,Rajesh,Radha,Rajasthan,KL University,8.2,7.66,6.68,44,ECE,Embedded Systems,Processors and Controllers,Digital Signals,11,15,30
+2300031098,Ravi Reddy,Ashok,Radha,Karnataka,KL University,6.02,8.34,5.78,87,EEE,Power Systems,Control Systems,Electrical Machines,14,12,22
+2300031099,Pooja Reddy,Anil,Rekha,Tamil Nadu,KL University,8.24,7.2,8.56,79,AIDS,AIML,NLP,Data Communication,9,12,5
+2300031100,Ananya Sharma,Venkatesh,Radha,Rajasthan,KL University,9.65,8.85,7.95,79,EEE,Power Systems,Control Systems,Electrical Machines,21,18,10
+2300031101,Pooja Rao,Krishna,Rekha,Tamil Nadu,KL University,8.05,6.48,5.04,61,AIDS,AIML,NLP,Data Communication,9,8,11
+2300031102,Deepika Gupta,Ashok,Padma,Gujarat,KL University,9.23,7.83,7.62,88,AIDS,AIML,NLP,Data Communication,8,11,11
+2300031103,Akhil Singh,Rajesh,Sunitha,Karnataka,KL University,9.59,7.46,6.22,90,EEE,Power Systems,Control Systems,Electrical Machines,25,21,22
+2300031104,Deepika Reddy,Srinivas,Radha,Andhra Pradesh,KL University,6.02,6.6,9.15,7,AIDS,AIML,NLP,Data Communication,26,26,28
+2300031105,Rahul Iyer,Suresh,Sunitha,Gujarat,KL University,7.45,6.49,5.5,69,ECE,Embedded Systems,Processors and Controllers,Digital Signals,7,18,7
+2300031106,Nikhil Naidu,Ramesh,Geetha,Maharashtra,KL University,9.11,6.47,6.63,86,AIDS,AIML,NLP,Data Communication,6,11,7
+2300031107,Ravi Singh,Suresh,Sita,Gujarat,KL University,6.91,5.51,9.28,6,CSIT,Cloud Computing,Web Technologies,Cyber Security,20,27,17
+2300031108,Rahul Sharma,Prakash,Sarita,Delhi,KL University,9.6,7.28,5.7,81,ECE,Embedded Systems,Processors and Controllers,Digital Signals,9,12,20
+2300031109,Mahesh Reddy,Suresh,Radha,Delhi,KL University,5.62,5.4,7.92,25,ECE,Embedded Systems,Processors and Controllers,Digital Signals,19,21,24
+2300031110,Rahul Rao,Mohan,Anitha,Karnataka,KL University,8.23,6.75,7.41,21,CSIT,Cloud Computing,Web Technologies,Cyber Security,18,28,25
+2300031111,Sneha Sharma,Ashok,Sarita,Tamil Nadu,KL University,6.75,5.89,7.43,50,AIDS,AIML,NLP,Data Communication,26,12,18
+2300031112,Sanjith Patel,Anil,Sarita,Rajasthan,KL University,7.61,6.48,6.38,79,CSIT,Cloud Computing,Web Technologies,Cyber Security,14,28,5
+2300031113,Ananya Iyer,Mohan,Kavitha,Karnataka,KL University,7.3,9.43,6.89,7,AIDS,AIML,NLP,Data Communication,9,11,26
+2300031114,Pooja Gupta,Ramesh,Sarita,Delhi,KL University,6.98,8.4,8.69,92,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,6,7
+2300031115,Karthik Verma,Rajesh,Sita,Delhi,KL University,9.09,5.01,6.34,55,AIDS,AIML,NLP,Data Communication,10,7,30
+2300031116,Ananya Sharma,Krishna,Sita,Gujarat,KL University,9.64,8.56,5.28,87,AIDS,AIML,NLP,Data Communication,12,17,5
+2300031117,Manoj Sharma,Srinivas,Rekha,Tamil Nadu,KL University,7.62,6.51,7.59,56,CSE,Operating Systems,DBMS,Java,20,26,22
+2300031118,Rohit Sharma,Mohan,Rekha,Delhi,KL University,8.39,8.65,7.63,27,ECE,Embedded Systems,Processors and Controllers,Digital Signals,12,25,22
+2300031119,Nikhil Naidu,Rajesh,Lakshmi,Delhi,KL University,9.6,7.75,6.97,57,CSE,Operating Systems,DBMS,Java,27,25,10
+2300031120,Rohit Verma,Venkatesh,Anitha,Rajasthan,KL University,6.36,6.41,5.33,32,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,20,27
+2300031121,Manoj Verma,Venkatesh,Sarita,Karnataka,KL University,5.7,6.72,6.39,35,EEE,Power Systems,Control Systems,Electrical Machines,18,24,16
+2300031122,Nikhil Verma,Suresh,Padma,Kerala,KL University,7.77,8.74,8.42,67,CSIT,Cloud Computing,Web Technologies,Cyber Security,13,18,5
+2300031123,Swathi Verma,Krishna,Lakshmi,Andhra Pradesh,KL University,7.98,8.31,8.11,80,EEE,Power Systems,Control Systems,Electrical Machines,26,29,28
+2300031124,Karthik Reddy,Rajesh,Kavitha,Delhi,KL University,8.51,6.62,5.29,95,EEE,Power Systems,Control Systems,Electrical Machines,26,21,6
+2300031125,Varun Sharma,Srinivas,Lakshmi,Tamil Nadu,KL University,8.96,7.22,7.86,69,CSIT,Cloud Computing,Web Technologies,Cyber Security,11,20,23
+2300031126,Mahesh Gupta,Ramesh,Sarita,Karnataka,KL University,6.85,5.87,5.7,29,AIDS,AIML,NLP,Data Communication,27,12,27
+2300031127,Swathi Rao,Suresh,Lakshmi,Telangana,KL University,7.28,7.07,5.92,47,CSIT,Cloud Computing,Web Technologies,Cyber Security,14,7,24
+2300031128,Ravi Sharma,Rajesh,Lakshmi,Telangana,KL University,9.52,6.12,5.43,65,CSIT,Cloud Computing,Web Technologies,Cyber Security,10,7,12
+2300031129,Kiran Mehta,Rajesh,Rekha,Tamil Nadu,KL University,6.55,6.93,8.67,4,ECE,Embedded Systems,Processors and Controllers,Digital Signals,10,24,11
+2300031130,Sanjith Iyer,Srinivas,Lakshmi,West Bengal,KL University,5.89,5.28,9.36,35,ECE,Embedded Systems,Processors and Controllers,Digital Signals,28,11,24
+2300031131,Sanjith Verma,Mohan,Anitha,Maharashtra,KL University,7.56,9.35,8.42,46,CSE,Operating Systems,DBMS,Java,5,22,22
+2300031132,Swathi Sharma,Srinivas,Padma,Delhi,KL University,9.64,6.2,8.04,85,AIDS,AIML,NLP,Data Communication,28,30,26
+2300031133,Manoj Verma,Suresh,Radha,Delhi,KL University,9.72,8.14,6.39,36,CSIT,Cloud Computing,Web Technologies,Cyber Security,13,5,28
+2300031134,Sanjith Reddy,Ramesh,Sita,Andhra Pradesh,KL University,5.76,8.42,8.48,53,CSE,Operating Systems,DBMS,Java,10,11,25
+2300031135,Pooja Naidu,Venkatesh,Anitha,Rajasthan,KL University,5.99,8.13,6.41,30,ECE,Embedded Systems,Processors and Controllers,Digital Signals,30,14,16
+2300031136,Suresh Iyer,Mohan,Radha,Karnataka,KL University,6.42,6.65,5.46,3,CSE,Operating Systems,DBMS,Java,26,17,18
+2300031137,Mahesh Singh,Rajesh,Sarita,Telangana,KL University,7.48,6.62,9.24,44,EEE,Power Systems,Control Systems,Electrical Machines,6,10,26
+2300031138,Deepika Sharma,Anil,Rekha,West Bengal,KL University,6.34,9.03,7.07,38,EEE,Power Systems,Control Systems,Electrical Machines,25,13,16
+2300031139,Vijay Iyer,Venkatesh,Sunitha,Andhra Pradesh,KL University,6.18,7.99,5.71,8,CSIT,Cloud Computing,Web Technologies,Cyber Security,9,9,20
+2300031140,Ravi Mehta,Prakash,Lakshmi,Kerala,KL University,9.08,6.88,5.25,21,ECE,Embedded Systems,Processors and Controllers,Digital Signals,19,9,17
+2300031141,Ravi Iyer,Prakash,Lakshmi,Rajasthan,KL University,9.12,8.4,8.25,80,CSIT,Cloud Computing,Web Technologies,Cyber Security,20,5,29
+2300031142,Rohit Patel,Mohan,Anitha,Maharashtra,KL University,6.71,9.36,7.65,47,CSE,Operating Systems,DBMS,Java,25,10,28
+2300031143,Akhil Rao,Suresh,Sunitha,Kerala,KL University,7.26,7.79,7.31,47,ECE,Embedded Systems,Processors and Controllers,Digital Signals,5,17,19
+2300031144,Ananya Sharma,Mohan,Sarita,Karnataka,KL University,7.6,5.3,5.26,95,EEE,Power Systems,Control Systems,Electrical Machines,14,19,9
+2300031145,Ravi Mehta,Ramesh,Padma,Andhra Pradesh,KL University,9.34,7.63,7.08,1,AIDS,AIML,NLP,Data Communication,10,23,26
+2300031146,Sneha Iyer,Anil,Radha,Tamil Nadu,KL University,7.87,7.53,7.66,52,CSIT,Cloud Computing,Web Technologies,Cyber Security,30,7,28
+2300031147,Aarav Naidu,Krishna,Rekha,Delhi,KL University,8.06,6.06,6.33,12,EEE,Power Systems,Control Systems,Electrical Machines,15,25,7
+2300031148,Ravi Rao,Ashok,Rekha,Maharashtra,KL University,8.8,8.77,6.47,81,EEE,Power Systems,Control Systems,Electrical Machines,26,22,18
+2300031149,Nikhil Singh,Suresh,Kavitha,Karnataka,KL University,8.67,5.89,6.76,10,EEE,Power Systems,Control Systems,Electrical Machines,7,7,13
+2300031150,Rahul Rao,Rajesh,Geetha,Delhi,KL University,7.72,8.11,6.93,72,CSE,Operating Systems,DBMS,Java,21,19,6
+2300031151,Akhil Verma,Ashok,Geetha,Kerala,KL University,7.86,5.03,6.09,27,AIDS,AIML,NLP,Data Communication,10,23,16
+2300031152,Kiran Singh,Ashok,Rekha,Rajasthan,KL University,6.91,5.99,6.34,70,CSIT,Cloud Computing,Web Technologies,Cyber Security,28,11,23
+2300031153,Mahesh Mehta,Srinivas,Geetha,Andhra Pradesh,KL University,7.26,8.5,5.37,42,CSIT,Cloud Computing,Web Technologies,Cyber Security,22,14,22
+2300031154,Sneha Gupta,Mohan,Rekha,Andhra Pradesh,KL University,7.17,9.46,6.31,1,AIDS,AIML,NLP,Data Communication,22,15,22
+2300031155,Priya Patel,Rajesh,Rekha,Rajasthan,KL University,5.82,5.77,8.82,20,CSIT,Cloud Computing,Web Technologies,Cyber Security,19,18,15
+2300031156,Aarav Verma,Srinivas,Sunitha,Rajasthan,KL University,6.28,8.73,8.34,94,AIDS,AIML,NLP,Data Communication,6,24,26
+2300031157,Aarav Naidu,Ramesh,Rekha,West Bengal,KL University,7.86,6.85,7.22,6,CSE,Operating Systems,DBMS,Java,19,12,29
+2300031158,Vijay Singh,Srinivas,Anitha,Telangana,KL University,7.49,8.07,8.08,4,ECE,Embedded Systems,Processors and Controllers,Digital Signals,23,7,6
+2300031159,Kiran Singh,Prakash,Sunitha,Telangana,KL University,6.49,6.21,7.17,46,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,17,12
+2300031160,Karthik Reddy,Krishna,Sunitha,Maharashtra,KL University,7.25,5.9,6.89,70,CSIT,Cloud Computing,Web Technologies,Cyber Security,29,6,22
+2300031161,Karthik Singh,Krishna,Sita,Karnataka,KL University,6.51,7.15,8.78,53,CSE,Operating Systems,DBMS,Java,29,8,21
+2300031162,Mahesh Verma,Krishna,Anitha,Kerala,KL University,5.7,8.24,8.34,63,EEE,Power Systems,Control Systems,Electrical Machines,14,30,10
+2300031163,Sanjith Patel,Prakash,Kavitha,Rajasthan,KL University,8.11,6.41,7.89,13,CSE,Operating Systems,DBMS,Java,8,28,24
+2300031164,Rohit Rao,Krishna,Geetha,Maharashtra,KL University,8.76,5.1,7.12,86,CSIT,Cloud Computing,Web Technologies,Cyber Security,20,11,6
+2300031165,Varun Iyer,Rajesh,Sunitha,Telangana,KL University,7.65,7.77,9.42,73,AIDS,AIML,NLP,Data Communication,24,19,10
+2300031166,Suresh Rao,Ramesh,Anitha,Andhra Pradesh,KL University,8.49,5.73,8.85,15,ECE,Embedded Systems,Processors and Controllers,Digital Signals,8,9,12
+2300031167,Deepika Rao,Srinivas,Geetha,Rajasthan,KL University,7.8,5.34,8.66,97,AIDS,AIML,NLP,Data Communication,14,30,8
+2300031168,Ravi Mehta,Srinivas,Sita,Maharashtra,KL University,8.79,6.15,9.3,51,ECE,Embedded Systems,Processors and Controllers,Digital Signals,24,26,12
+2300031169,Kiran Iyer,Prakash,Sunitha,Telangana,KL University,9.61,6.55,6.12,38,EEE,Power Systems,Control Systems,Electrical Machines,19,13,11
+2300031170,Suresh Rao,Ashok,Rekha,Maharashtra,KL University,9.26,7.78,5.61,66,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,24,16
+2300031171,Sanjith Verma,Ramesh,Sunitha,Delhi,KL University,8.19,7.68,7.7,12,ECE,Embedded Systems,Processors and Controllers,Digital Signals,28,21,9
+2300031172,Pooja Mehta,Anil,Sarita,Karnataka,KL University,6.22,8.33,5.3,68,CSIT,Cloud Computing,Web Technologies,Cyber Security,21,23,11
+2300031173,Ananya Mehta,Venkatesh,Sita,Rajasthan,KL University,7.78,8.57,9.36,87,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,5,13
+2300031174,Pooja Iyer,Rajesh,Anitha,Tamil Nadu,KL University,8.17,7.93,8.44,46,EEE,Power Systems,Control Systems,Electrical Machines,27,29,16
+2300031175,Swathi Iyer,Prakash,Sita,West Bengal,KL University,5.76,7.67,8.69,85,CSE,Operating Systems,DBMS,Java,8,29,18
+2300031176,Swathi Singh,Ramesh,Padma,Tamil Nadu,KL University,9.16,6.25,5.17,43,EEE,Power Systems,Control Systems,Electrical Machines,23,28,17
+2300031177,Aarav Naidu,Mohan,Lakshmi,Tamil Nadu,KL University,5.87,5.73,8.78,70,AIDS,AIML,NLP,Data Communication,18,26,9
+2300031178,Priya Rao,Mohan,Anitha,Karnataka,KL University,7.13,5.89,8.65,41,CSIT,Cloud Computing,Web Technologies,Cyber Security,15,9,25
+2300031179,Karthik Singh,Rajesh,Lakshmi,West Bengal,KL University,5.66,5.79,8.94,69,AIDS,AIML,NLP,Data Communication,21,13,8
+2300031180,Rahul Patel,Mohan,Sarita,Karnataka,KL University,5.64,5.03,9.21,40,ECE,Embedded Systems,Processors and Controllers,Digital Signals,10,9,16
+2300031181,Ananya Iyer,Krishna,Anitha,Maharashtra,KL University,7.11,8.66,7.17,31,CSE,Operating Systems,DBMS,Java,8,28,5
+2300031182,Karthik Iyer,Krishna,Sunitha,Karnataka,KL University,6.91,6.38,8.91,96,CSIT,Cloud Computing,Web Technologies,Cyber Security,30,28,20
+2300031183,Ravi Singh,Srinivas,Lakshmi,West Bengal,KL University,8.19,6.68,8.34,36,CSIT,Cloud Computing,Web Technologies,Cyber Security,20,14,27
+2300031184,Karthik Sharma,Krishna,Sunitha,Gujarat,KL University,7.34,5.32,6.76,96,CSE,Operating Systems,DBMS,Java,7,24,7
+2300031185,Swathi Naidu,Srinivas,Sarita,Tamil Nadu,KL University,7.67,7.6,8.31,28,EEE,Power Systems,Control Systems,Electrical Machines,9,8,9
+2300031186,Akhil Verma,Srinivas,Lakshmi,Rajasthan,KL University,8.72,6.05,9.33,23,CSE,Operating Systems,DBMS,Java,26,30,10
+2300031187,Rohit Gupta,Ashok,Sita,Andhra Pradesh,KL University,7.99,5.45,8.1,23,EEE,Power Systems,Control Systems,Electrical Machines,20,24,25
+2300031188,Kiran Gupta,Mohan,Anitha,Kerala,KL University,8.28,8.22,6.99,4,CSIT,Cloud Computing,Web Technologies,Cyber Security,27,17,9
+2300031189,Pooja Gupta,Ashok,Kavitha,Delhi,KL University,8.07,8.79,8.4,80,CSIT,Cloud Computing,Web Technologies,Cyber Security,11,22,16
+2300031190,Vijay Iyer,Mohan,Sunitha,Maharashtra,KL University,9.61,6.22,5.3,89,ECE,Embedded Systems,Processors and Controllers,Digital Signals,27,23,14
+2300031191,Aarav Rao,Srinivas,Anitha,Telangana,KL University,7.33,8.58,6.14,31,CSE,Operating Systems,DBMS,Java,11,17,30
+2300031192,Rohit Mehta,Venkatesh,Kavitha,West Bengal,KL University,6.73,7.12,6.09,3,AIDS,AIML,NLP,Data Communication,21,12,23
+2300031193,Vijay Singh,Ramesh,Rekha,Kerala,KL University,7.64,5.57,6.28,22,CSIT,Cloud Computing,Web Technologies,Cyber Security,7,6,26
+2300031194,Pooja Singh,Venkatesh,Kavitha,Maharashtra,KL University,6.39,8.91,7.16,60,ECE,Embedded Systems,Processors and Controllers,Digital Signals,7,11,11
+2300031195,Swathi Sharma,Venkatesh,Padma,Kerala,KL University,7.22,5.95,9.36,79,CSIT,Cloud Computing,Web Technologies,Cyber Security,14,28,10
+2300031196,Varun Reddy,Mohan,Sita,West Bengal,KL University,7.57,7.92,8.11,32,CSIT,Cloud Computing,Web Technologies,Cyber Security,29,11,28
+2300031197,Kiran Mehta,Krishna,Rekha,Karnataka,KL University,5.61,8.72,7.9,18,CSIT,Cloud Computing,Web Technologies,Cyber Security,17,18,24
+2300031198,Sneha Rao,Suresh,Kavitha,Rajasthan,KL University,6.54,6.53,5.14,40,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,15,11
+2300031199,Sanjith Patel,Anil,Sarita,Karnataka,KL University,8.55,9.31,5.87,33,CSE,Operating Systems,DBMS,Java,9,11,15
+2300031200,Rohit Rao,Venkatesh,Sunitha,Kerala,KL University,7.79,8.43,6.63,94,AIDS,AIML,NLP,Data Communication,13,16,6
+2300031201,Varun Sharma,Mohan,Padma,Kerala,KL University,7.04,5.32,7.38,5,CSE,Operating Systems,DBMS,Java,7,21,24
+2300031202,Kiran Patel,Krishna,Lakshmi,Tamil Nadu,KL University,9.14,8.01,9.1,3,ECE,Embedded Systems,Processors and Controllers,Digital Signals,13,19,26
+2300031203,Aarav Gupta,Prakash,Rekha,Kerala,KL University,5.95,7.96,6.31,35,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,11,14
+2300031204,Deepika Rao,Krishna,Radha,Telangana,KL University,7.54,7.17,6.27,10,CSIT,Cloud Computing,Web Technologies,Cyber Security,9,18,20
+2300031205,Sneha Sharma,Krishna,Anitha,Kerala,KL University,9.73,9.12,7.18,34,AIDS,AIML,NLP,Data Communication,12,27,12
+2300031206,Rahul Verma,Ashok,Sita,Rajasthan,KL University,6.93,5.41,8.28,75,ECE,Embedded Systems,Processors and Controllers,Digital Signals,13,6,30
+2300031207,Swathi Naidu,Suresh,Kavitha,Rajasthan,KL University,8.37,5.44,9.2,19,AIDS,AIML,NLP,Data Communication,7,27,17
+2300031208,Karthik Reddy,Srinivas,Sita,Kerala,KL University,8.87,5.13,6.87,69,CSIT,Cloud Computing,Web Technologies,Cyber Security,5,13,28
+2300031209,Pooja Sharma,Prakash,Sita,West Bengal,KL University,9.75,6.44,8.69,17,ECE,Embedded Systems,Processors and Controllers,Digital Signals,18,18,28
+2300031210,Deepika Rao,Anil,Sunitha,Telangana,KL University,6.64,6.64,8.17,20,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,30,24
+2300031211,Karthik Mehta,Krishna,Sita,Andhra Pradesh,KL University,6.61,7.89,8.15,80,CSIT,Cloud Computing,Web Technologies,Cyber Security,27,29,18
+2300031212,Rahul Sharma,Prakash,Radha,Maharashtra,KL University,7.63,6.91,5.65,78,ECE,Embedded Systems,Processors and Controllers,Digital Signals,16,6,20
+2300031213,Kiran Iyer,Ashok,Rekha,Gujarat,KL University,6.43,9.45,5.62,30,AIDS,AIML,NLP,Data Communication,29,21,21
+2300031214,Suresh Rao,Ashok,Radha,Andhra Pradesh,KL University,8.52,8.34,5.71,80,AIDS,AIML,NLP,Data Communication,9,26,5
+2300031215,Rohit Iyer,Venkatesh,Lakshmi,Maharashtra,KL University,8.46,6.94,7.15,83,CSIT,Cloud Computing,Web Technologies,Cyber Security,18,23,9
+2300031216,Akhil Reddy,Rajesh,Geetha,Gujarat,KL University,9.72,9.45,9.32,92,CSE,Operating Systems,DBMS,Java,26,24,7
+2300031217,Swathi Naidu,Prakash,Sarita,Andhra Pradesh,KL University,9.17,5.59,8.01,36,ECE,Embedded Systems,Processors and Controllers,Digital Signals,22,30,9
+2300031218,Mahesh Reddy,Ashok,Sarita,Telangana,KL University,9.35,7.64,8.87,9,AIDS,AIML,NLP,Data Communication,22,5,19
+2300031219,Suresh Naidu,Ashok,Radha,Telangana,KL University,5.67,8.09,5.41,26,CSE,Operating Systems,DBMS,Java,18,16,28
+2300031220,Sneha Mehta,Mohan,Lakshmi,Telangana,KL University,5.75,5.49,7.09,1,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,13,24
+2300031221,Nikhil Verma,Mohan,Lakshmi,Gujarat,KL University,9.17,6.14,6.62,4,CSE,Operating Systems,DBMS,Java,9,19,26
+2300031222,Ananya Iyer,Mohan,Lakshmi,Telangana,KL University,9.41,6.8,7.37,43,EEE,Power Systems,Control Systems,Electrical Machines,13,14,10
+2300031223,Suresh Singh,Anil,Lakshmi,Karnataka,KL University,7.39,6.88,5.65,13,CSE,Operating Systems,DBMS,Java,6,28,6
+2300031224,Pooja Rao,Venkatesh,Rekha,Delhi,KL University,6.51,8.71,9.19,24,ECE,Embedded Systems,Processors and Controllers,Digital Signals,17,6,7
+2300031225,Rohit Mehta,Srinivas,Anitha,Maharashtra,KL University,6.57,5.96,8.98,90,ECE,Embedded Systems,Processors and Controllers,Digital Signals,22,7,8
+2300031226,Rahul Patel,Mohan,Geetha,Maharashtra,KL University,5.76,5.47,7.58,82,ECE,Embedded Systems,Processors and Controllers,Digital Signals,13,13,16
+2300031227,Vijay Verma,Venkatesh,Sarita,Andhra Pradesh,KL University,6.75,9.22,6.47,77,AIDS,AIML,NLP,Data Communication,23,25,6
+2300031228,Manoj Verma,Ramesh,Padma,Kerala,KL University,7.39,5.09,5.06,76,CSE,Operating Systems,DBMS,Java,9,29,6
+2300031229,Rahul Mehta,Krishna,Padma,Rajasthan,KL University,6.41,7.36,6.26,98,CSE,Operating Systems,DBMS,Java,28,14,7
+2300031230,Sneha Iyer,Venkatesh,Padma,Karnataka,KL University,9.44,9.07,8.17,26,AIDS,AIML,NLP,Data Communication,10,25,11
+2300031231,Ravi Sharma,Rajesh,Padma,Telangana,KL University,6.39,8.45,9.0,27,AIDS,AIML,NLP,Data Communication,15,21,28
+2300031232,Suresh Sharma,Mohan,Radha,West Bengal,KL University,6.9,7.03,5.57,9,CSIT,Cloud Computing,Web Technologies,Cyber Security,21,9,24
+2300031233,Sanjith Patel,Rajesh,Anitha,Tamil Nadu,KL University,9.03,5.35,6.19,0,EEE,Power Systems,Control Systems,Electrical Machines,7,28,15
+2300031234,Aarav Mehta,Prakash,Anitha,Tamil Nadu,KL University,6.64,8.05,8.86,37,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,21,8
+2300031235,Swathi Mehta,Venkatesh,Sunitha,Gujarat,KL University,5.75,8.61,8.11,10,EEE,Power Systems,Control Systems,Electrical Machines,28,6,24
+2300031236,Karthik Sharma,Venkatesh,Anitha,Rajasthan,KL University,9.6,5.33,7.59,37,ECE,Embedded Systems,Processors and Controllers,Digital Signals,18,11,23
+2300031237,Ananya Gupta,Srinivas,Radha,Kerala,KL University,5.88,7.57,6.58,10,AIDS,AIML,NLP,Data Communication,22,5,25
+2300031238,Swathi Patel,Ashok,Rekha,Delhi,KL University,7.97,8.78,8.45,2,AIDS,AIML,NLP,Data Communication,17,13,25
+2300031239,Pooja Mehta,Prakash,Radha,Kerala,KL University,6.94,8.78,6.92,51,AIDS,AIML,NLP,Data Communication,30,13,10
+2300031240,Pooja Sharma,Rajesh,Anitha,Rajasthan,KL University,8.43,5.85,8.17,60,CSE,Operating Systems,DBMS,Java,30,25,17
+2300031241,Sanjith Rao,Srinivas,Radha,Gujarat,KL University,6.3,6.73,5.26,8,EEE,Power Systems,Control Systems,Electrical Machines,12,5,25
+2300031242,Priya Naidu,Krishna,Geetha,Rajasthan,KL University,8.94,7.43,5.73,89,EEE,Power Systems,Control Systems,Electrical Machines,23,6,13
+2300031243,Varun Singh,Anil,Rekha,Andhra Pradesh,KL University,6.35,9.32,6.38,94,EEE,Power Systems,Control Systems,Electrical Machines,7,24,24
+2300031244,Vijay Reddy,Srinivas,Sarita,Andhra Pradesh,KL University,8.06,9.42,8.76,78,CSIT,Cloud Computing,Web Technologies,Cyber Security,29,10,30
+2300031245,Rahul Mehta,Ramesh,Geetha,Delhi,KL University,7.61,6.18,5.19,27,AIDS,AIML,NLP,Data Communication,21,20,11
+2300031246,Aarav Iyer,Mohan,Lakshmi,Kerala,KL University,6.63,5.25,9.42,91,EEE,Power Systems,Control Systems,Electrical Machines,27,6,25
+2300031247,Ananya Reddy,Rajesh,Anitha,Karnataka,KL University,6.13,5.9,6.55,29,CSE,Operating Systems,DBMS,Java,28,24,8
+2300031248,Ravi Iyer,Suresh,Kavitha,Kerala,KL University,7.51,6.27,8.27,40,EEE,Power Systems,Control Systems,Electrical Machines,19,15,24
+2300031249,Nikhil Singh,Mohan,Sita,Rajasthan,KL University,9.6,6.08,8.41,74,CSIT,Cloud Computing,Web Technologies,Cyber Security,13,15,27
+2300031250,Ravi Naidu,Venkatesh,Kavitha,Gujarat,KL University,8.84,8.35,6.88,3,CSE,Operating Systems,DBMS,Java,26,10,5
+2300031251,Vijay Sharma,Mohan,Sunitha,Delhi,KL University,6.66,9.47,8.59,9,EEE,Power Systems,Control Systems,Electrical Machines,8,24,21
+2300031252,Swathi Patel,Krishna,Kavitha,Telangana,KL University,6.88,9.12,5.11,80,CSE,Operating Systems,DBMS,Java,25,30,18
+2300031253,Suresh Reddy,Srinivas,Sunitha,Tamil Nadu,KL University,7.53,5.79,7.97,68,EEE,Power Systems,Control Systems,Electrical Machines,6,21,18
+2300031254,Rahul Singh,Krishna,Sunitha,Kerala,KL University,8.76,5.04,6.37,48,ECE,Embedded Systems,Processors and Controllers,Digital Signals,16,7,29
+2300031255,Varun Naidu,Anil,Radha,Maharashtra,KL University,6.65,8.41,5.9,62,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,12,9
+2300031256,Ravi Naidu,Krishna,Geetha,Rajasthan,KL University,7.34,6.25,8.27,30,CSE,Operating Systems,DBMS,Java,17,12,13
+2300031257,Priya Reddy,Ashok,Lakshmi,Maharashtra,KL University,8.15,6.55,5.58,96,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,17,30
+2300031258,Priya Mehta,Ashok,Sita,Maharashtra,KL University,7.23,9.0,7.0,91,CSE,Operating Systems,DBMS,Java,9,21,21
+2300031259,Mahesh Rao,Mohan,Lakshmi,Kerala,KL University,7.53,7.9,6.9,14,ECE,Embedded Systems,Processors and Controllers,Digital Signals,16,25,21
+2300031260,Mahesh Patel,Ramesh,Sunitha,Karnataka,KL University,9.09,7.95,8.72,37,ECE,Embedded Systems,Processors and Controllers,Digital Signals,11,23,7
+2300031261,Deepika Patel,Anil,Sita,Telangana,KL University,7.44,8.68,8.37,100,AIDS,AIML,NLP,Data Communication,27,28,24
+2300031262,Sneha Naidu,Prakash,Sita,Maharashtra,KL University,6.26,7.6,7.84,39,AIDS,AIML,NLP,Data Communication,20,7,14
+2300031263,Priya Naidu,Prakash,Radha,Kerala,KL University,8.09,7.95,5.0,77,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,17,7
+2300031264,Ananya Reddy,Mohan,Sita,Tamil Nadu,KL University,7.37,6.68,5.23,58,AIDS,AIML,NLP,Data Communication,17,28,19
+2300031265,Ravi Singh,Mohan,Lakshmi,West Bengal,KL University,6.95,8.98,5.02,81,CSIT,Cloud Computing,Web Technologies,Cyber Security,21,20,9
+2300031266,Swathi Gupta,Ramesh,Anitha,Maharashtra,KL University,5.6,6.46,6.09,75,CSE,Operating Systems,DBMS,Java,16,15,13
+2300031267,Swathi Mehta,Mohan,Anitha,Gujarat,KL University,7.76,5.25,7.57,69,ECE,Embedded Systems,Processors and Controllers,Digital Signals,9,29,5
+2300031268,Swathi Patel,Krishna,Radha,Rajasthan,KL University,8.75,8.7,9.39,70,AIDS,AIML,NLP,Data Communication,8,8,10
+2300031269,Rohit Iyer,Mohan,Sarita,Delhi,KL University,6.07,6.55,5.87,96,AIDS,AIML,NLP,Data Communication,27,22,23
+2300031270,Akhil Mehta,Krishna,Radha,Delhi,KL University,6.66,9.16,5.38,77,EEE,Power Systems,Control Systems,Electrical Machines,20,7,22
+2300031271,Priya Iyer,Rajesh,Sita,Kerala,KL University,9.61,8.82,6.99,66,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,10,29
+2300031272,Kiran Sharma,Ashok,Lakshmi,Tamil Nadu,KL University,8.87,8.99,6.76,34,CSE,Operating Systems,DBMS,Java,26,9,29
+2300031273,Aarav Patel,Ashok,Sunitha,Andhra Pradesh,KL University,8.73,9.25,7.05,13,CSIT,Cloud Computing,Web Technologies,Cyber Security,28,30,26
+2300031274,Vijay Patel,Ashok,Geetha,Gujarat,KL University,5.85,6.55,6.22,50,CSE,Operating Systems,DBMS,Java,15,19,5
+2300031275,Rohit Rao,Srinivas,Sita,Maharashtra,KL University,8.16,8.69,9.31,75,AIDS,AIML,NLP,Data Communication,17,26,6
+2300031276,Sneha Rao,Mohan,Anitha,Tamil Nadu,KL University,8.73,8.74,9.11,31,AIDS,AIML,NLP,Data Communication,22,10,30
+2300031277,Varun Singh,Prakash,Padma,Karnataka,KL University,6.54,8.31,6.37,67,ECE,Embedded Systems,Processors and Controllers,Digital Signals,23,8,29
+2300031278,Manoj Naidu,Prakash,Lakshmi,Gujarat,KL University,7.57,6.09,5.0,58,CSE,Operating Systems,DBMS,Java,17,30,24
+2300031279,Manoj Verma,Prakash,Sita,Karnataka,KL University,8.75,5.27,8.85,59,EEE,Power Systems,Control Systems,Electrical Machines,30,7,17
+2300031280,Ravi Patel,Srinivas,Anitha,Andhra Pradesh,KL University,9.73,7.16,8.41,4,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,30,27
+2300031281,Swathi Patel,Suresh,Kavitha,Andhra Pradesh,KL University,7.56,5.64,8.12,15,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,13,24
+2300031282,Kiran Patel,Anil,Sunitha,Rajasthan,KL University,5.98,7.25,9.39,75,EEE,Power Systems,Control Systems,Electrical Machines,30,16,27
+2300031283,Pooja Patel,Prakash,Radha,Andhra Pradesh,KL University,9.42,9.37,6.74,86,CSE,Operating Systems,DBMS,Java,14,11,26
+2300031284,Priya Sharma,Mohan,Geetha,Andhra Pradesh,KL University,8.89,5.29,8.1,99,AIDS,AIML,NLP,Data Communication,25,19,9
+2300031285,Akhil Patel,Ramesh,Rekha,Kerala,KL University,9.3,6.13,5.14,49,AIDS,AIML,NLP,Data Communication,15,27,11
+2300031286,Rahul Reddy,Srinivas,Padma,Rajasthan,KL University,6.97,6.32,5.86,10,AIDS,AIML,NLP,Data Communication,6,25,10
+2300031287,Akhil Patel,Krishna,Sunitha,Tamil Nadu,KL University,6.31,6.42,8.78,35,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,26,27
+2300031288,Varun Mehta,Anil,Radha,West Bengal,KL University,7.74,8.79,8.37,64,CSE,Operating Systems,DBMS,Java,27,30,17
+2300031289,Deepika Naidu,Srinivas,Radha,Rajasthan,KL University,7.97,7.21,7.72,55,EEE,Power Systems,Control Systems,Electrical Machines,13,8,21
+2300031290,Akhil Gupta,Venkatesh,Sunitha,Gujarat,KL University,7.89,9.18,6.54,0,CSE,Operating Systems,DBMS,Java,23,15,19
+2300031291,Manoj Gupta,Krishna,Geetha,Kerala,KL University,8.01,8.31,9.45,25,CSIT,Cloud Computing,Web Technologies,Cyber Security,10,25,28
+2300031292,Sneha Singh,Ashok,Kavitha,Maharashtra,KL University,6.24,9.14,8.01,13,AIDS,AIML,NLP,Data Communication,27,6,21
+2300031293,Deepika Iyer,Krishna,Radha,Tamil Nadu,KL University,7.17,6.27,5.74,22,EEE,Power Systems,Control Systems,Electrical Machines,8,26,20
+2300031294,Swathi Rao,Mohan,Radha,Tamil Nadu,KL University,7.59,6.78,5.77,99,CSE,Operating Systems,DBMS,Java,15,16,5
+2300031295,Deepika Reddy,Ramesh,Sunitha,Andhra Pradesh,KL University,8.22,8.27,7.46,75,CSE,Operating Systems,DBMS,Java,14,11,18
+2300031296,Varun Mehta,Suresh,Padma,West Bengal,KL University,6.8,7.53,8.4,22,CSE,Operating Systems,DBMS,Java,8,6,7
+2300031297,Aarav Mehta,Rajesh,Anitha,Maharashtra,KL University,5.63,6.25,9.34,56,CSIT,Cloud Computing,Web Technologies,Cyber Security,18,21,7
+2300031298,Rahul Iyer,Rajesh,Sarita,Rajasthan,KL University,8.16,6.34,5.99,20,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,25,14
+2300031299,Sneha Mehta,Mohan,Lakshmi,West Bengal,KL University,9.18,9.2,5.8,31,AIDS,AIML,NLP,Data Communication,9,18,20
+2300031300,Rahul Patel,Suresh,Rekha,Andhra Pradesh,KL University,8.4,8.86,9.27,12,EEE,Power Systems,Control Systems,Electrical Machines,21,8,19
+2300031301,Aarav Singh,Anil,Padma,Gujarat,KL University,9.69,8.62,5.97,57,ECE,Embedded Systems,Processors and Controllers,Digital Signals,27,19,14
+2300031302,Aarav Naidu,Ashok,Radha,Tamil Nadu,KL University,5.89,5.36,5.64,19,CSE,Operating Systems,DBMS,Java,20,18,23
+2300031303,Mahesh Naidu,Ashok,Sarita,Tamil Nadu,KL University,6.54,5.28,5.86,8,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,18,13
+2300031304,Nikhil Verma,Prakash,Geetha,Rajasthan,KL University,8.66,5.63,5.75,100,CSIT,Cloud Computing,Web Technologies,Cyber Security,18,18,7
+2300031305,Aarav Reddy,Suresh,Sunitha,Karnataka,KL University,9.34,5.51,5.14,32,EEE,Power Systems,Control Systems,Electrical Machines,20,23,21
+2300031306,Manoj Gupta,Anil,Geetha,Tamil Nadu,KL University,8.69,7.69,7.18,86,CSIT,Cloud Computing,Web Technologies,Cyber Security,28,10,16
+2300031307,Mahesh Reddy,Anil,Radha,Gujarat,KL University,6.69,7.68,8.3,24,ECE,Embedded Systems,Processors and Controllers,Digital Signals,9,7,21
+2300031308,Ananya Sharma,Anil,Sita,Rajasthan,KL University,8.78,5.38,8.89,63,AIDS,AIML,NLP,Data Communication,21,9,7
+2300031309,Varun Sharma,Rajesh,Lakshmi,Tamil Nadu,KL University,8.54,9.28,7.24,59,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,25,15
+2300031310,Varun Naidu,Ramesh,Sarita,West Bengal,KL University,9.55,8.17,5.3,32,ECE,Embedded Systems,Processors and Controllers,Digital Signals,27,30,7
+2300031311,Mahesh Verma,Rajesh,Rekha,Andhra Pradesh,KL University,6.07,5.04,8.53,7,ECE,Embedded Systems,Processors and Controllers,Digital Signals,28,17,13
+2300031312,Deepika Rao,Mohan,Sunitha,West Bengal,KL University,9.23,8.74,6.85,60,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,18,13
+2300031313,Pooja Patel,Prakash,Rekha,Delhi,KL University,8.88,8.98,5.72,57,EEE,Power Systems,Control Systems,Electrical Machines,29,16,24
+2300031314,Akhil Patel,Krishna,Sunitha,Maharashtra,KL University,7.15,8.29,7.56,65,AIDS,AIML,NLP,Data Communication,14,22,11
+2300031315,Ravi Reddy,Anil,Sunitha,Kerala,KL University,7.08,7.07,7.11,68,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,24,8
+2300031316,Sneha Patel,Anil,Sita,Telangana,KL University,6.17,6.45,8.71,51,ECE,Embedded Systems,Processors and Controllers,Digital Signals,15,17,6
+2300031317,Vijay Sharma,Ashok,Radha,Karnataka,KL University,6.37,6.07,6.48,62,EEE,Power Systems,Control Systems,Electrical Machines,10,15,11
+2300031318,Manoj Singh,Anil,Sita,West Bengal,KL University,7.52,9.22,8.15,52,CSIT,Cloud Computing,Web Technologies,Cyber Security,24,14,28
+2300031319,Vijay Verma,Ashok,Geetha,Gujarat,KL University,6.71,9.34,8.34,62,EEE,Power Systems,Control Systems,Electrical Machines,17,21,12
+2300031320,Kiran Patel,Venkatesh,Sunitha,Delhi,KL University,7.19,6.12,8.13,32,AIDS,AIML,NLP,Data Communication,14,21,14
+2300031321,Swathi Gupta,Rajesh,Rekha,Rajasthan,KL University,9.77,7.37,6.75,38,AIDS,AIML,NLP,Data Communication,13,6,28
+2300031322,Ananya Singh,Krishna,Rekha,Andhra Pradesh,KL University,9.53,6.4,8.99,83,CSE,Operating Systems,DBMS,Java,27,17,13
+2300031323,Manoj Verma,Prakash,Sunitha,Andhra Pradesh,KL University,7.53,7.21,5.11,44,EEE,Power Systems,Control Systems,Electrical Machines,14,15,25
+2300031324,Swathi Singh,Rajesh,Anitha,Andhra Pradesh,KL University,8.57,6.6,8.4,11,EEE,Power Systems,Control Systems,Electrical Machines,17,16,21
+2300031325,Vijay Verma,Suresh,Lakshmi,Andhra Pradesh,KL University,8.94,6.17,9.2,10,CSE,Operating Systems,DBMS,Java,24,5,26
+2300031326,Mahesh Singh,Prakash,Radha,Maharashtra,KL University,8.76,8.96,5.72,33,AIDS,AIML,NLP,Data Communication,16,6,5
+2300031327,Ananya Gupta,Rajesh,Padma,Telangana,KL University,9.58,7.78,8.34,26,EEE,Power Systems,Control Systems,Electrical Machines,23,19,6
+2300031328,Rohit Iyer,Srinivas,Rekha,Telangana,KL University,7.53,6.68,7.38,10,EEE,Power Systems,Control Systems,Electrical Machines,21,21,20
+2300031329,Karthik Iyer,Krishna,Lakshmi,Karnataka,KL University,9.76,6.98,8.33,83,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,22,16
+2300031330,Ananya Iyer,Ramesh,Geetha,Delhi,KL University,7.56,6.97,9.14,34,CSE,Operating Systems,DBMS,Java,29,22,10
+2300031331,Vijay Gupta,Mohan,Radha,Delhi,KL University,9.44,5.29,8.88,16,CSE,Operating Systems,DBMS,Java,28,20,30
+2300031332,Sneha Sharma,Ramesh,Radha,Telangana,KL University,9.72,7.94,7.74,33,AIDS,AIML,NLP,Data Communication,19,25,8
+2300031333,Sneha Singh,Rajesh,Anitha,Andhra Pradesh,KL University,8.54,5.55,8.86,71,CSIT,Cloud Computing,Web Technologies,Cyber Security,29,6,22
+2300031334,Suresh Iyer,Rajesh,Anitha,Tamil Nadu,KL University,6.81,8.96,7.17,65,CSE,Operating Systems,DBMS,Java,21,27,13
+2300031335,Sneha Singh,Rajesh,Kavitha,Telangana,KL University,8.01,8.18,6.89,91,EEE,Power Systems,Control Systems,Electrical Machines,10,14,13
+2300031336,Pooja Singh,Rajesh,Anitha,Tamil Nadu,KL University,5.92,7.65,6.26,28,AIDS,AIML,NLP,Data Communication,5,9,12
+2300031337,Sneha Patel,Anil,Anitha,Telangana,KL University,5.99,7.92,8.68,64,AIDS,AIML,NLP,Data Communication,7,17,12
+2300031338,Mahesh Sharma,Ramesh,Sunitha,Telangana,KL University,7.56,7.01,6.27,80,EEE,Power Systems,Control Systems,Electrical Machines,20,10,26
+2300031339,Deepika Patel,Anil,Kavitha,West Bengal,KL University,9.52,5.74,6.79,69,EEE,Power Systems,Control Systems,Electrical Machines,30,7,23
+2300031340,Mahesh Naidu,Venkatesh,Radha,Tamil Nadu,KL University,6.69,7.86,7.01,75,CSIT,Cloud Computing,Web Technologies,Cyber Security,19,27,20
+2300031341,Manoj Mehta,Krishna,Anitha,Tamil Nadu,KL University,5.99,8.22,5.43,22,ECE,Embedded Systems,Processors and Controllers,Digital Signals,25,25,16
+2300031342,Ananya Patel,Ashok,Kavitha,Gujarat,KL University,6.92,8.66,8.74,63,CSE,Operating Systems,DBMS,Java,20,30,13
+2300031343,Priya Rao,Ashok,Sita,Karnataka,KL University,6.07,7.64,5.04,46,ECE,Embedded Systems,Processors and Controllers,Digital Signals,15,16,27
+2300031344,Kiran Gupta,Srinivas,Radha,Maharashtra,KL University,8.26,5.63,5.03,44,ECE,Embedded Systems,Processors and Controllers,Digital Signals,11,19,27
+2300031345,Mahesh Gupta,Anil,Geetha,Telangana,KL University,9.55,6.83,8.13,55,EEE,Power Systems,Control Systems,Electrical Machines,7,5,5
+2300031346,Priya Sharma,Mohan,Sarita,West Bengal,KL University,7.51,8.08,7.82,73,AIDS,AIML,NLP,Data Communication,7,22,5
+2300031347,Varun Singh,Ashok,Rekha,Delhi,KL University,6.99,9.01,5.33,34,AIDS,AIML,NLP,Data Communication,5,18,24
+2300031348,Varun Gupta,Anil,Lakshmi,Telangana,KL University,7.95,9.17,7.17,30,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,30,7
+2300031349,Sneha Singh,Ashok,Sita,West Bengal,KL University,7.17,6.04,8.49,51,CSIT,Cloud Computing,Web Technologies,Cyber Security,18,30,7
+2300031350,Rohit Iyer,Ashok,Rekha,Rajasthan,KL University,9.02,8.7,8.6,72,CSE,Operating Systems,DBMS,Java,11,30,5
+2300031351,Kiran Verma,Mohan,Sunitha,Telangana,KL University,9.31,7.76,6.07,65,CSE,Operating Systems,DBMS,Java,20,28,19
+2300031352,Ananya Mehta,Venkatesh,Sunitha,Andhra Pradesh,KL University,8.06,7.66,6.14,86,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,15,11
+2300031353,Karthik Naidu,Venkatesh,Anitha,Maharashtra,KL University,8.64,9.14,7.87,30,AIDS,AIML,NLP,Data Communication,12,22,27
+2300031354,Rohit Singh,Anil,Geetha,Tamil Nadu,KL University,8.98,8.79,8.78,8,CSIT,Cloud Computing,Web Technologies,Cyber Security,17,5,22
+2300031355,Mahesh Mehta,Rajesh,Rekha,Maharashtra,KL University,7.23,7.09,6.64,84,CSE,Operating Systems,DBMS,Java,23,23,17
+2300031356,Ananya Patel,Suresh,Anitha,Kerala,KL University,8.99,8.72,5.85,20,CSE,Operating Systems,DBMS,Java,19,7,18
+2300031357,Pooja Naidu,Krishna,Sunitha,Andhra Pradesh,KL University,5.66,7.46,5.84,6,CSIT,Cloud Computing,Web Technologies,Cyber Security,20,24,22
+2300031358,Akhil Sharma,Suresh,Lakshmi,Telangana,KL University,9.35,9.04,6.6,4,EEE,Power Systems,Control Systems,Electrical Machines,13,29,14
+2300031359,Deepika Sharma,Suresh,Sita,West Bengal,KL University,9.54,7.53,5.71,14,ECE,Embedded Systems,Processors and Controllers,Digital Signals,16,9,6
+2300031360,Karthik Reddy,Ashok,Rekha,Delhi,KL University,6.76,7.4,5.85,65,EEE,Power Systems,Control Systems,Electrical Machines,30,21,30
+2300031361,Suresh Verma,Ramesh,Anitha,Karnataka,KL University,9.79,6.55,7.67,40,CSE,Operating Systems,DBMS,Java,25,9,26
+2300031362,Varun Mehta,Suresh,Lakshmi,Maharashtra,KL University,7.86,8.07,6.28,99,CSE,Operating Systems,DBMS,Java,21,6,13
+2300031363,Priya Iyer,Rajesh,Rekha,Telangana,KL University,7.88,8.16,7.43,52,CSE,Operating Systems,DBMS,Java,6,25,5
+2300031364,Ravi Sharma,Prakash,Geetha,Gujarat,KL University,7.7,7.86,5.88,76,AIDS,AIML,NLP,Data Communication,26,12,7
+2300031365,Sneha Patel,Rajesh,Lakshmi,Tamil Nadu,KL University,8.67,8.7,7.45,76,ECE,Embedded Systems,Processors and Controllers,Digital Signals,27,23,29
+2300031366,Aarav Reddy,Suresh,Sunitha,Karnataka,KL University,9.1,8.89,7.36,94,EEE,Power Systems,Control Systems,Electrical Machines,9,5,18
+2300031367,Ananya Iyer,Rajesh,Lakshmi,West Bengal,KL University,8.13,8.8,8.76,56,ECE,Embedded Systems,Processors and Controllers,Digital Signals,23,11,22
+2300031368,Manoj Sharma,Anil,Kavitha,Andhra Pradesh,KL University,8.97,9.24,8.29,63,ECE,Embedded Systems,Processors and Controllers,Digital Signals,13,11,24
+2300031369,Karthik Iyer,Suresh,Sunitha,Tamil Nadu,KL University,6.99,5.15,6.09,93,AIDS,AIML,NLP,Data Communication,25,29,13
+2300031370,Ananya Mehta,Venkatesh,Radha,Telangana,KL University,8.06,9.46,6.05,0,CSE,Operating Systems,DBMS,Java,26,26,17
+2300031371,Priya Reddy,Suresh,Radha,Kerala,KL University,8.29,8.53,7.88,40,CSE,Operating Systems,DBMS,Java,5,25,26
+2300031372,Rohit Singh,Ramesh,Kavitha,Maharashtra,KL University,6.05,5.5,8.35,68,CSIT,Cloud Computing,Web Technologies,Cyber Security,9,17,16
+2300031373,Akhil Rao,Mohan,Radha,Karnataka,KL University,8.66,8.54,6.68,37,AIDS,AIML,NLP,Data Communication,23,20,10
+2300031374,Manoj Verma,Ashok,Sarita,Gujarat,KL University,5.72,8.06,8.92,14,AIDS,AIML,NLP,Data Communication,10,21,12
+2300031375,Rohit Naidu,Krishna,Sita,Karnataka,KL University,9.14,5.56,8.92,53,CSE,Operating Systems,DBMS,Java,30,15,20
+2300031376,Nikhil Rao,Krishna,Anitha,Andhra Pradesh,KL University,9.15,6.35,5.66,39,CSE,Operating Systems,DBMS,Java,5,17,20
+2300031377,Deepika Patel,Ashok,Sita,Tamil Nadu,KL University,7.67,6.46,5.55,1,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,24,17
+2300031378,Deepika Sharma,Ramesh,Sita,West Bengal,KL University,7.8,7.15,7.71,32,CSE,Operating Systems,DBMS,Java,9,8,20
+2300031379,Mahesh Singh,Ashok,Sita,Maharashtra,KL University,9.54,6.72,9.32,91,AIDS,AIML,NLP,Data Communication,27,23,15
+2300031380,Manoj Iyer,Srinivas,Rekha,Kerala,KL University,7.86,9.06,5.0,44,AIDS,AIML,NLP,Data Communication,14,7,21
+2300031381,Mahesh Naidu,Rajesh,Radha,Kerala,KL University,6.82,8.97,8.06,68,EEE,Power Systems,Control Systems,Electrical Machines,26,9,5
+2300031382,Deepika Verma,Srinivas,Kavitha,Telangana,KL University,5.98,8.76,9.5,25,CSE,Operating Systems,DBMS,Java,23,13,28
+2300031383,Suresh Naidu,Ashok,Padma,Maharashtra,KL University,6.11,7.18,8.12,55,ECE,Embedded Systems,Processors and Controllers,Digital Signals,16,14,16
+2300031384,Priya Sharma,Ashok,Sita,Gujarat,KL University,9.32,6.12,7.24,77,CSE,Operating Systems,DBMS,Java,13,15,14
+2300031385,Sneha Naidu,Ramesh,Sunitha,Gujarat,KL University,7.76,9.34,8.34,78,AIDS,AIML,NLP,Data Communication,10,14,13
+2300031386,Ravi Sharma,Anil,Sunitha,West Bengal,KL University,9.36,7.94,5.99,85,CSIT,Cloud Computing,Web Technologies,Cyber Security,30,23,26
+2300031387,Pooja Naidu,Prakash,Sunitha,Maharashtra,KL University,6.79,7.2,5.42,81,AIDS,AIML,NLP,Data Communication,26,24,23
+2300031388,Varun Naidu,Srinivas,Sita,Maharashtra,KL University,9.54,9.02,9.26,64,CSIT,Cloud Computing,Web Technologies,Cyber Security,23,17,22
+2300031389,Aarav Gupta,Venkatesh,Sunitha,Karnataka,KL University,6.37,8.2,5.68,90,AIDS,AIML,NLP,Data Communication,7,28,17
+2300031390,Aarav Reddy,Suresh,Sarita,West Bengal,KL University,7.01,8.94,6.27,5,EEE,Power Systems,Control Systems,Electrical Machines,23,24,19
+2300031391,Akhil Gupta,Anil,Radha,Tamil Nadu,KL University,8.41,6.86,8.07,42,AIDS,AIML,NLP,Data Communication,29,6,8
+2300031392,Akhil Sharma,Ramesh,Lakshmi,Andhra Pradesh,KL University,7.95,5.63,6.39,38,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,28,6
+2300031393,Suresh Patel,Srinivas,Sarita,West Bengal,KL University,9.46,9.03,6.97,86,ECE,Embedded Systems,Processors and Controllers,Digital Signals,28,18,14
+2300031394,Kiran Reddy,Mohan,Anitha,Tamil Nadu,KL University,5.62,6.24,6.88,32,ECE,Embedded Systems,Processors and Controllers,Digital Signals,17,9,10
+2300031395,Aarav Sharma,Anil,Geetha,Gujarat,KL University,6.0,6.65,5.91,75,AIDS,AIML,NLP,Data Communication,30,14,21
+2300031396,Deepika Singh,Anil,Sita,Telangana,KL University,9.46,6.18,6.63,32,CSIT,Cloud Computing,Web Technologies,Cyber Security,11,12,14
+2300031397,Akhil Sharma,Venkatesh,Sunitha,Telangana,KL University,5.68,7.79,9.36,99,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,25,30
+2300031398,Pooja Reddy,Rajesh,Radha,West Bengal,KL University,8.55,8.81,7.17,0,ECE,Embedded Systems,Processors and Controllers,Digital Signals,19,16,24
+2300031399,Pooja Rao,Ashok,Lakshmi,Gujarat,KL University,9.11,8.75,7.79,48,AIDS,AIML,NLP,Data Communication,28,19,6
+2300031400,Karthik Reddy,Srinivas,Sunitha,Delhi,KL University,7.52,8.29,7.13,35,CSIT,Cloud Computing,Web Technologies,Cyber Security,14,24,22
+2300031401,Manoj Singh,Rajesh,Radha,Maharashtra,KL University,8.59,5.48,5.05,72,CSIT,Cloud Computing,Web Technologies,Cyber Security,26,21,12
+2300031402,Aarav Reddy,Venkatesh,Geetha,Telangana,KL University,6.35,9.31,8.63,36,EEE,Power Systems,Control Systems,Electrical Machines,6,18,7
+2300031403,Manoj Naidu,Mohan,Radha,Telangana,KL University,6.74,8.83,6.59,38,EEE,Power Systems,Control Systems,Electrical Machines,30,11,19
+2300031404,Priya Naidu,Suresh,Rekha,Delhi,KL University,8.24,6.13,6.29,98,AIDS,AIML,NLP,Data Communication,20,24,6
+2300031405,Sneha Verma,Venkatesh,Padma,Tamil Nadu,KL University,8.14,8.93,7.25,64,EEE,Power Systems,Control Systems,Electrical Machines,17,10,30
+2300031406,Ananya Reddy,Rajesh,Geetha,Rajasthan,KL University,6.45,6.21,6.02,47,AIDS,AIML,NLP,Data Communication,18,20,11
+2300031407,Nikhil Sharma,Suresh,Geetha,Rajasthan,KL University,7.74,6.28,8.36,100,EEE,Power Systems,Control Systems,Electrical Machines,10,14,11
+2300031408,Swathi Mehta,Prakash,Kavitha,Andhra Pradesh,KL University,6.87,7.81,8.08,33,AIDS,AIML,NLP,Data Communication,10,11,20
+2300031409,Rahul Patel,Rajesh,Padma,Karnataka,KL University,7.07,5.64,6.2,44,CSE,Operating Systems,DBMS,Java,5,30,26
+2300031410,Rahul Naidu,Rajesh,Sarita,Tamil Nadu,KL University,8.51,7.39,6.09,97,AIDS,AIML,NLP,Data Communication,7,27,16
+2300031411,Pooja Sharma,Ashok,Sunitha,Andhra Pradesh,KL University,9.39,7.08,8.12,60,CSIT,Cloud Computing,Web Technologies,Cyber Security,23,16,10
+2300031412,Suresh Patel,Suresh,Anitha,Karnataka,KL University,8.9,6.05,5.57,16,CSE,Operating Systems,DBMS,Java,9,25,23
+2300031413,Rohit Gupta,Krishna,Rekha,Telangana,KL University,6.18,5.83,8.78,95,EEE,Power Systems,Control Systems,Electrical Machines,15,24,19
+2300031414,Varun Singh,Prakash,Lakshmi,Karnataka,KL University,6.17,7.02,5.25,65,CSIT,Cloud Computing,Web Technologies,Cyber Security,14,28,15
+2300031415,Vijay Singh,Suresh,Rekha,Kerala,KL University,7.81,6.25,6.37,23,ECE,Embedded Systems,Processors and Controllers,Digital Signals,13,16,14
+2300031416,Suresh Gupta,Prakash,Rekha,West Bengal,KL University,8.31,5.48,6.93,95,EEE,Power Systems,Control Systems,Electrical Machines,29,27,29
+2300031417,Ananya Singh,Suresh,Geetha,Andhra Pradesh,KL University,8.0,7.83,7.51,52,CSIT,Cloud Computing,Web Technologies,Cyber Security,12,22,18
+2300031418,Manoj Iyer,Venkatesh,Sita,Rajasthan,KL University,9.08,7.53,5.7,83,AIDS,AIML,NLP,Data Communication,15,5,28
+2300031419,Sneha Iyer,Ashok,Lakshmi,Rajasthan,KL University,5.53,7.73,9.38,78,EEE,Power Systems,Control Systems,Electrical Machines,5,7,20
+2300031420,Sanjith Mehta,Ashok,Rekha,Gujarat,KL University,6.94,9.25,6.46,100,AIDS,AIML,NLP,Data Communication,16,29,18
+2300031421,Sanjith Naidu,Mohan,Rekha,Telangana,KL University,6.11,8.55,5.35,15,CSIT,Cloud Computing,Web Technologies,Cyber Security,11,11,29
+2300031422,Deepika Patel,Ashok,Lakshmi,Maharashtra,KL University,9.77,6.3,8.53,78,ECE,Embedded Systems,Processors and Controllers,Digital Signals,11,28,20
+2300031423,Deepika Patel,Mohan,Sarita,Karnataka,KL University,9.38,8.27,9.1,84,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,11,18
+2300031424,Kiran Iyer,Suresh,Sarita,Gujarat,KL University,8.19,7.26,8.2,5,AIDS,AIML,NLP,Data Communication,14,17,8
+2300031425,Kiran Patel,Prakash,Radha,Telangana,KL University,7.26,5.98,9.25,4,ECE,Embedded Systems,Processors and Controllers,Digital Signals,29,8,18
+2300031426,Deepika Naidu,Prakash,Rekha,Karnataka,KL University,5.7,5.8,8.13,35,EEE,Power Systems,Control Systems,Electrical Machines,19,24,28
+2300031427,Sanjith Naidu,Anil,Padma,Tamil Nadu,KL University,8.28,9.09,7.75,43,EEE,Power Systems,Control Systems,Electrical Machines,27,18,17
+2300031428,Manoj Singh,Prakash,Sarita,Karnataka,KL University,5.88,7.24,5.63,81,ECE,Embedded Systems,Processors and Controllers,Digital Signals,23,10,5
+2300031429,Vijay Verma,Mohan,Padma,Andhra Pradesh,KL University,7.31,6.96,5.68,68,AIDS,AIML,NLP,Data Communication,22,8,17
+2300031430,Ravi Reddy,Anil,Anitha,Tamil Nadu,KL University,7.82,5.85,6.59,3,AIDS,AIML,NLP,Data Communication,20,25,18
+2300031431,Karthik Mehta,Srinivas,Sita,West Bengal,KL University,5.52,5.42,8.47,81,CSIT,Cloud Computing,Web Technologies,Cyber Security,8,18,5
+2300031432,Ananya Verma,Ashok,Kavitha,Gujarat,KL University,6.71,5.68,8.9,14,CSE,Operating Systems,DBMS,Java,6,12,19
+2300031433,Ananya Sharma,Venkatesh,Lakshmi,Kerala,KL University,8.31,6.43,7.78,33,CSIT,Cloud Computing,Web Technologies,Cyber Security,16,14,27
+2300031434,Kiran Mehta,Srinivas,Kavitha,Delhi,KL University,8.26,6.13,7.57,83,CSIT,Cloud Computing,Web Technologies,Cyber Security,21,6,10
+2300031435,Suresh Patel,Mohan,Radha,West Bengal,KL University,6.44,6.64,6.68,52,ECE,Embedded Systems,Processors and Controllers,Digital Signals,22,26,9
+2300031436,Sanjith Patel,Suresh,Padma,Maharashtra,KL University,7.69,8.0,5.31,48,ECE,Embedded Systems,Processors and Controllers,Digital Signals,21,16,18
+2300031437,Rahul Singh,Prakash,Sarita,Gujarat,KL University,6.98,6.29,6.27,85,EEE,Power Systems,Control Systems,Electrical Machines,19,15,29
+2300031438,Sanjith Rao,Suresh,Padma,Gujarat,KL University,6.07,7.98,9.25,62,CSE,Operating Systems,DBMS,Java,30,27,18
+2300031439,Manoj Reddy,Ashok,Sunitha,Telangana,KL University,7.56,8.71,9.39,93,AIDS,AIML,NLP,Data Communication,29,18,23
+2300031440,Vijay Gupta,Mohan,Geetha,Gujarat,KL University,8.98,6.4,9.4,95,ECE,Embedded Systems,Processors and Controllers,Digital Signals,14,17,7
+2300031441,Aarav Gupta,Venkatesh,Sita,Karnataka,KL University,9.17,6.58,5.34,67,CSE,Operating Systems,DBMS,Java,24,14,22
+2300031442,Priya Naidu,Ashok,Anitha,Telangana,KL University,7.76,7.01,9.29,95,CSIT,Cloud Computing,Web Technologies,Cyber Security,25,28,9
+2300031443,Swathi Mehta,Suresh,Sarita,Rajasthan,KL University,6.29,8.66,5.36,90,CSE,Operating Systems,DBMS,Java,9,23,8
+2300031444,Vijay Rao,Venkatesh,Sita,West Bengal,KL University,9.12,6.38,8.31,26,AIDS,AIML,NLP,Data Communication,19,6,27
+2300031445,Sanjith Iyer,Rajesh,Rekha,Rajasthan,KL University,9.41,6.93,9.2,9,ECE,Embedded Systems,Processors and Controllers,Digital Signals,25,15,11
+2300031446,Nikhil Reddy,Ramesh,Lakshmi,Tamil Nadu,KL University,6.9,5.32,5.93,98,CSE,Operating Systems,DBMS,Java,10,27,25
+2300031447,Akhil Patel,Krishna,Radha,Rajasthan,KL University,6.16,6.47,7.41,56,AIDS,AIML,NLP,Data Communication,16,29,28
+2300031448,Swathi Naidu,Ramesh,Radha,Rajasthan,KL University,7.66,7.7,6.11,18,CSIT,Cloud Computing,Web Technologies,Cyber Security,6,19,16
+2300031449,Ravi Patel,Srinivas,Sarita,Gujarat,KL University,9.47,7.96,9.42,22,CSE,Operating Systems,DBMS,Java,16,6,29

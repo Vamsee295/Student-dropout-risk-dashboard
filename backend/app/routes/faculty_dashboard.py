@@ -183,104 +183,29 @@ async def upload_data(
 @router.post("/recalculate")
 def recalculate_scores(db: Session = Depends(get_db)):
     """
-    Trigger risk score re-computation for all students.
+    Trigger ML-based risk score re-computation for all students.
+    
+    This uses the trained XGBoost model to predict dropout risk,
+    not the old formula-based approach.
     """
-    # Logic to iterate over students and update metrics -> risk score
-    # This matches the user requirement: (Attendance * 0.4) + (Marks * 0.4) + (Assignments * 0.2)
+    from app.services.realtime_prediction import compute_all_risk_scores
     
-    students = db.query(Student).all()
-    count = 0
-    
-    for s in students:
-        # 1. Calculate Attendance %
-        total_att = db.query(AttendanceRecord).filter(AttendanceRecord.student_id == s.id).count()
-        present = db.query(AttendanceRecord).filter(
-            AttendanceRecord.student_id == s.id, 
-            AttendanceRecord.status == "Present"
-        ).count()
-        att_rate = (present / total_att * 100) if total_att > 0 else 0.0
+    try:
+        # Compute all risk scores using ML model
+        result = compute_all_risk_scores(db)
         
-        # 2. Calculate Marks % (Average of all assessments)
-        # Simplified: average of obtained/total
-        assessments = db.query(StudentAssessment).filter(StudentAssessment.student_id == s.id).all()
-        total_pct = 0
-        valid_assessments = 0
-        for sa in assessments:
-            if sa.assessment.total_marks > 0 and sa.obtained_marks is not None:
-                total_pct += (sa.obtained_marks / sa.assessment.total_marks) * 100
-                valid_assessments += 1
+        return {
+            "message": f"Successfully recalculated ML-based risk scores for {result['processed']} students",
+            "total_students": result['total'],
+            "processed": result['processed'],
+            "risk_distribution": result['risk_distribution']
+        }
         
-        avg_marks = (total_pct / valid_assessments) if valid_assessments > 0 else 0.0
-        
-        # 3. Assignment Completion %
-        # We can treat assignment marks as part of marks or separate. 
-        # Requirement says "Assignments * 0.2". Let's assume this means assignment scores?
-        # Or completion rate? "Assignments" usually implies completion/scores.
-        # Let's use assignment scores specifically if available, or just completion rate?
-        # The formula usually implies scores. Let's assume the earlier avg_marks covered everything,
-        # but to strictly follow formula, we need to separate Marks (Exams) and Assignments.
-        
-        # Let's refine based on prompt: "Engagement Score = (Attendance * 0.4) + (Marks * 0.4) + (Assignment * 0.2)"
-        # So 'Marks' likely means Exam scores.
-        
-        exam_assessments = db.query(StudentAssessment).join(Assessment).filter(
-            StudentAssessment.student_id == s.id,
-            Assessment.type.in_(["Internal", "External"])
-        ).all()
-        
-        assignment_assessments = db.query(StudentAssessment).join(Assessment).filter(
-            StudentAssessment.student_id == s.id,
-            Assessment.type.in_(["Assignment", "Project"])
-        ).all()
-        
-        # Calc Exam Marks Avg
-        exam_sum_pct = 0
-        exam_count = 0
-        for sa in exam_assessments:
-            if sa.assessment.total_marks > 0 and sa.obtained_marks is not None:
-                exam_sum_pct += (sa.obtained_marks / sa.assessment.total_marks) * 100
-                exam_count += 1
-        exam_score = (exam_sum_pct / exam_count) if exam_count > 0 else 0.0
-        
-        # Calc Assignment Score Avg
-        assign_sum_pct = 0
-        assign_count = 0
-        for sa in assignment_assessments:
-            if sa.assessment.total_marks > 0 and sa.obtained_marks is not None:
-                assign_sum_pct += (sa.obtained_marks / sa.assessment.total_marks) * 100
-                assign_count += 1
-        assign_score = (assign_sum_pct / assign_count) if assign_count > 0 else 0.0
-        
-        # Final Formula
-        engagement = (att_rate * 0.4) + (exam_score * 0.4) + (assign_score * 0.2)
-        
-        # Update Metric
-        if s.metrics:
-            s.metrics.attendance_rate = att_rate
-            s.metrics.engagement_score = engagement
-            s.metrics.academic_performance_index = exam_score / 10 # Rough GPA
-            # Update risk logic could go here too or be a separate service
-        
-        # Update Risk Score (Simple rule based on prompt)
-        # < 50 -> High, 50-75 -> Medium, > 75 -> Low
-        new_risk_level = RiskLevel.SAFE
-        if engagement < 50:
-            new_risk_level = RiskLevel.HIGH
-        elif engagement < 75:
-            new_risk_level = RiskLevel.MODERATE
-        else:
-            new_risk_level = RiskLevel.SAFE
-            
-        if s.risk_score:
-            s.risk_score.risk_level = new_risk_level
-            s.risk_score.risk_score = 100 - engagement # Invert for "Risk Score" (High engagement = Low risk)
-            s.risk_score.risk_value = f"{round(100 - engagement)}%"
-            
-        count += 1
-        
-    db.commit()
-    
-    return {"message": f"Recalculated scores for {count} students"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Risk recalculation failed: {str(e)}"
+        )
 
 
 class StudentCodingStats(StudentWithRisk):

@@ -62,20 +62,24 @@ async def login_for_access_token(
                 return f"{prefix}{''.join(random.choices(string.digits, k=4))}"
 
             student_id = generate_id("ST") if role == Role.STUDENT else None
-            
-            user = User(
-                email=form_data.username,
-                password_hash=hashed_password,
-                name=form_data.username.split("@")[0].replace(".", " ").replace("_", " ").title(),
-                role=role,
-                student_id=student_id
-            )
-            db.add(user)
-            db.flush() # Get user.id without committing yet
+            name = form_data.username.split("@")[0].replace(".", " ").replace("_", " ").title()
             
             # If Student, sow default data so dashboard doesn't crash
             if role == Role.STUDENT:
                 from app.models import Student, Department, Section, StudentMetric, RiskScore, RiskLevel, RiskTrend, ModelVersion
+                
+                # 1. Create Student Profile (MUST BE BEFORE USER due to FK)
+                student_profile = Student(
+                    id=student_id,
+                    name=name,
+                    avatar=name[:2].upper(),
+                    course="B.Tech Computer Science",
+                    department=Department.CSE,
+                    section=Section.A,
+                    advisor_id="FAC001" 
+                )
+                db.add(student_profile)
+                db.flush() # Ensure Student exists for User FK
                 
                 # Ensure Model Version exists for Risk Score FK
                 model_v = db.query(ModelVersion).filter(ModelVersion.is_active == True).first()
@@ -94,18 +98,6 @@ async def login_for_access_token(
                     db.add(model_v)
                     db.flush()
 
-                # 1. Create Student Profile
-                student_profile = Student(
-                    id=student_id,
-                    name=user.name,
-                    avatar=user.name[:2].upper(),
-                    course="B.Tech Computer Science",
-                    department=Department.CSE,
-                    section=Section.A,
-                    advisor_id="FAC001" 
-                )
-                db.add(student_profile)
-                
                 # 2. Create Default Metrics
                 metrics = StudentMetric(
                     student_id=student_id,
@@ -131,7 +123,19 @@ async def login_for_access_token(
                     shap_explanation={"top_factors": []}
                 )
                 db.add(risk)
-                
+
+            # Create new user
+            hashed_password = get_password_hash(form_data.password)
+            user = User(
+                email=form_data.username,
+                password_hash=hashed_password,
+                name=name,
+                role=role,
+                student_id=student_id
+            )
+            db.add(user)
+            db.flush() # Get user.id without committing yet
+            
             db.commit()
             db.refresh(user)
             print(f"Auto-signup success: {user.email}")
@@ -156,11 +160,22 @@ async def login_for_access_token(
         expires_delta=access_token_expires
     )
     
+    # Ensure user.id is populated (important for auto-registered users)
+    # If user.id is None, it means the object is detached from the session
+    # Re-query from database to get the persistent object
+    if user.id is None:
+        user = db.query(User).filter(User.email == user.email).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="User creation failed"
+            )
+    
     return {
         "access_token": access_token, 
         "token_type": "bearer",
         "role": user.role,
-        "user_id": user.id,
+        "user_id": user.id if user.id is not None else 0,  # Fallback to 0 if still None
         "student_id": user.student_id
     }
 
