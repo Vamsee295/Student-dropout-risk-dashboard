@@ -314,6 +314,7 @@ class StudentFrontendResponse(BaseModel):
     engagementScore: float
     lastInteraction: str
     advisor: Optional[str] = None
+    primaryRiskDriver: Optional[str] = "AI Prediction"
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -410,4 +411,15 @@ class AssignmentProgress(BaseModel):
     completion_percentage: float
     overdue_count: int
     assignments: List[StudentAssessmentResponse]
+
+
+class GradeForecast(BaseModel):
+    """Grade forecast prediction."""
+    student_id: str
+    current_gpa: float
+    projected_gpa: float
+    confidence_interval: List[float]  # [min, max]
+    prediction_factors: dict  # {"Attendance Impact": +0.2, "Missing Assignments": -0.5}
+    trend: str  # "Improving", "Declining", "Stable"
+
 

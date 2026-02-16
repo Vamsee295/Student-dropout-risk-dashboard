@@ -44,7 +44,8 @@ def get_all_students(db: Session = Depends(get_db)):
                     "riskValue": f"{risk_score.risk_score:.1f}%",
                     "attendance": int(getattr(metrics, 'attendance_rate', 85)),  # Already 0-100 scale
                     "engagementScore": int(getattr(metrics, 'engagement_score', 75)),  # Already 0-100 scale
-                    "lastInteraction": student.updated_at.strftime("%Y-%m-%d") if student.updated_at else "2024-01-01"
+                    "lastInteraction": student.updated_at.strftime("%Y-%m-%d") if student.updated_at else "2024-01-01",
+                    "primaryRiskDriver": get_primary_driver(risk_score.shap_explanation)
                 }
                 result.append(student_data)
         
@@ -129,12 +130,12 @@ def get_student_risk(student_id: str, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail=f"Risk score not found for student {student_id}")
         
         # Parse SHAP factors
-        import ast
-        try:
-            top_factors = ast.literal_eval(risk_score.top_factors) if isinstance(risk_score.top_factors, str) else risk_score.top_factors
-        except:
-            top_factors = []
-        
+        top_factors = []
+        if risk_score.shap_explanation:
+            shap_data = risk_score.shap_explanation
+            if isinstance(shap_data, dict):
+                top_factors = shap_data.get('top_factors', [])
+            
         return RiskExplanation(
             risk_score=risk_score.risk_score,
             risk_level=risk_score.risk_level,
@@ -167,6 +168,33 @@ def map_department(course: str) -> str:
         return "Aerospace"
     else:
         return "Computer Science (CSE)"  # Default
+
+
+def get_primary_driver(shap_explanation: dict) -> str:
+    """
+    Extract the primary risk driver from SHAP explanation.
+    """
+    if not shap_explanation or not isinstance(shap_explanation, dict):
+        return "AI Prediction"
+    
+    top_factors = shap_explanation.get('top_factors', [])
+    if not top_factors:
+        return "AI Prediction"
+    
+    # Get the factor with the highest impact
+    # Assuming top_factors is already sorted by impact, but let's be safe
+    try:
+        # If it's a list of dicts
+        first_factor = top_factors[0]
+        if isinstance(first_factor, dict):
+             return f"{first_factor.get('feature', 'Unknown')} ({int(first_factor.get('impact', 0) * 100)}%)"
+        # If it's an object (pydantic model dumped)
+        elif hasattr(first_factor, 'feature'):
+            return f"{first_factor.feature} ({int(first_factor.impact * 100)}%)"
+            
+        return "Complex Factors"
+    except Exception:
+        return "AI Prediction"
 
 
 # === New Endpoints for Student Management ===

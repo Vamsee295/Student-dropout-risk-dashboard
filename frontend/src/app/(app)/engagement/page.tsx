@@ -94,7 +94,7 @@ export default function EngagementPage() {
     };
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-8 relative pb-10">
             {showSuccess && (
                 <SuccessAnimation
                     message="Intervention Created"
@@ -114,40 +114,49 @@ export default function EngagementPage() {
                 } : undefined}
             />
 
-            <section className="flex flex-wrap items-center justify-between gap-3">
+            {/* Header Section */}
+            <section className="flex flex-wrap items-end justify-between gap-4 border-b border-gray-100 pb-6">
                 <div>
-                    <h2 className="text-xl font-bold tracking-tight text-gray-900">
+                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-2">
                         Student Engagement Overview
                     </h2>
-                    <p className="text-sm font-medium text-gray-500">
+                    <p className="text-base text-gray-500 max-w-2xl">
                         Track digital participation and identify at-risk students based on LMS activity.
                     </p>
                 </div>
-                <button
-                    onClick={handleExportReport}
-                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-                >
-                    <Download size={16} />
-                    Export Report
-                </button>
+                <div className="flex gap-3">
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 shadow-sm">
+                        <span>📅 Fall Semester 2023</span>
+                    </div>
+                    <button
+                        onClick={handleExportReport}
+                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
+                    >
+                        <Download size={18} />
+                        Export Report
+                    </button>
+                </div>
             </section>
 
+            {/* Metrics Section */}
             <section>
                 <EngagementMetricCards />
             </section>
 
+            {/* Digital Footprint Heatmap */}
             <section>
                 <LMSHeatmapChart />
             </section>
 
+            {/* Charts Grid */}
             <section className="grid gap-6 lg:grid-cols-12">
-                {/* Effort Chart - 8/12 */}
-                <div className="lg:col-span-8 h-[350px]">
+                {/* Effort Chart - 7/12 */}
+                <div className="lg:col-span-7 h-[400px]">
                     <EffortOutputChart />
                 </div>
 
-                {/* High Risk List - 4/12 */}
-                <div className="lg:col-span-4 h-full">
+                {/* High Risk List - 5/12 */}
+                <div className="lg:col-span-5 h-full min-h-[400px]">
                     <HighRiskStudentList onIntervene={handleIntervene} />
                 </div>
             </section>

@@ -13,7 +13,8 @@ from loguru import logger
 
 from app.models import (
     Student, StudentMetric, RiskScore, RiskHistory, 
-    ModelVersion, RiskLevel, RiskTrend
+    ModelVersion, RiskLevel, RiskTrend, Intervention, 
+    InterventionType, InterventionStatus
 )
 from app.services.risk_model import RiskModel
 from app.services.shap_explainer import SHAPExplainer
@@ -113,16 +114,15 @@ class RealtimePredictionService:
         )
         
         # Generate SHAP explanation
-        shap_values = self.shap_explainer.explain_prediction(X)
-        top_factors = self.shap_explainer.get_top_factors(shap_values, top_n=5)
+        top_factors = self.shap_explainer.explain(X, top_n=5)
         
         # Prepare SHAP explanation for storage
         shap_explanation = {
             'top_factors': [
                 {
-                    'feature': factor['feature'],
-                    'impact': factor['impact'],
-                    'direction': factor['direction']
+                    'feature': factor.feature,
+                    'impact': factor.impact,
+                    'direction': factor.direction
                 }
                 for factor in top_factors
             ]
@@ -135,7 +135,9 @@ class RealtimePredictionService:
             'risk_trend': risk_trend,
             'risk_value': risk_value,
             'shap_explanation': shap_explanation,
-            'model_version_id': self.active_model_version.id
+            'shap_explanation': shap_explanation,
+            'model_version_id': self.active_model_version.id,
+            'advisor_id': student.advisor_id
         }
         
         if save_to_db:
@@ -186,6 +188,43 @@ class RealtimePredictionService:
         )
         self.db.add(risk_history)
         
+        self.db.commit()
+
+        # Check for automated intervention
+        self._trigger_automated_intervention(student_id, result['risk_level'], result['risk_score'], result.get('advisor_id'))
+
+    def _trigger_automated_intervention(
+        self, 
+        student_id: str, 
+        risk_level: RiskLevel, 
+        risk_score: float,
+        advisor_id: Optional[str]
+    ):
+        """
+        Automatically create intervention if risk is HIGH and no pending intervention exists.
+        """
+        if risk_level != RiskLevel.HIGH:
+            return
+
+        # Check for existing pending/in_progress intervention
+        existing = self.db.query(Intervention).filter(
+            Intervention.student_id == student_id,
+            Intervention.status.in_([InterventionStatus.PENDING, InterventionStatus.IN_PROGRESS])
+        ).first()
+
+        if existing:
+            return
+
+        # Create new intervention
+        logger.info(f"Triggering automated intervention for student {student_id}")
+        new_intervention = Intervention(
+            student_id=student_id,
+            intervention_type=InterventionType.COUNSELING,
+            status=InterventionStatus.PENDING,
+            assigned_to=advisor_id if advisor_id else "Unassigned",
+            notes=f"Automated Alert: Student risk reached {risk_score:.1f}% (High Risk). Immediate counseling recommended."
+        )
+        self.db.add(new_intervention)
         self.db.commit()
     
     def compute_all_risk_scores(self) -> Dict[str, Any]:

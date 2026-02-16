@@ -17,9 +17,16 @@ interface EngagementOverview {
 export function EngagementMetricCards() {
     const [data, setData] = useState<EngagementOverview | null>(null);
     const [loading, setLoading] = useState(true);
+    const [clientSideWidths, setClientSideWidths] = useState<number[]>([]);
 
     useEffect(() => {
         fetchData();
+        // Generate random widths for progress bars only on the client
+        setClientSideWidths([
+            Math.random() * 40 + 60,
+            Math.random() * 40 + 60,
+            Math.random() * 40 + 60
+        ]);
     }, []);
 
     const fetchData = async () => {
@@ -73,32 +80,47 @@ export function EngagementMetricCards() {
     ];
 
     return (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
             {metrics.map((metric, i) => (
-                <div key={i} className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wide text-gray-500">
-                            {metric.title}
-                        </span>
-                        {metric.trend >= 0 ? (
-                            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600">
-                                <TrendingUp size={14} />
-                                {metric.trendLabel}
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600">
-                                <TrendingDown size={14} />
-                                {metric.trendLabel}
-                            </span>
-                        )}
+                <div key={i} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                    {/* Background decoration */}
+                    <div className={`absolute top-0 right-0 p-4 opacity-10 transform translate-x-3 -translate-y-3 group-hover:scale-110 transition-transform`}>
+                        <metric.icon size={100} className={metric.trend >= 0 ? "text-blue-600" : "text-gray-400"} />
                     </div>
 
-                    <div className="mb-2 flex items-end gap-3">
-                        <span className="text-4xl font-bold text-gray-900">{metric.value}</span>
-                        <metric.icon className="mb-1 text-gray-400" size={24} />
-                    </div>
+                    <div className="relative z-10">
+                        <div className="mb-4 flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                                {metric.title}
+                            </span>
+                        </div>
 
-                    <p className="text-xs text-gray-400">{metric.description}</p>
+                        <div className="mb-3 flex items-baseline gap-3">
+                            <span className="text-4xl font-extrabold text-gray-900 tracking-tight">{metric.value}</span>
+
+                            {metric.trend >= 0 ? (
+                                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600">
+                                    <TrendingUp size={12} />
+                                    {metric.trendLabel}
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-600">
+                                    <TrendingDown size={12} />
+                                    {metric.trendLabel}
+                                </span>
+                            )}
+                        </div>
+
+                        <p className="text-xs font-medium text-gray-400">{metric.description}</p>
+
+                        {/* Mini progress bar decoration */}
+                        <div className="mt-4 h-1 w-full bg-gray-50 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full ${metric.trend >= 0 ? 'bg-blue-500' : 'bg-orange-400'}`}
+                                style={{ width: `${clientSideWidths[i] || 0}%` }}
+                            ></div>
+                        </div>
+                    </div>
                 </div>
             ))}
         </div>

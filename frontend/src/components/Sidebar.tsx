@@ -47,9 +47,9 @@ export function Sidebar({ activePath }: SidebarProps) {
     { label: "My Performance", href: "/student-dashboard/performance", icon: <BarChart size={20} /> },
     { label: "Attendance", href: "/student-dashboard/attendance", icon: <UserCheck size={20} /> },
     { label: "Assignments", href: "/student-dashboard/assignments", icon: <BookOpen size={20} /> },
+    { label: "Engagement", href: "/student-dashboard/engagement", icon: <LineChart size={20} /> },
     { label: "Risk Status", href: "/student-dashboard/risk", icon: <AlertTriangle size={20} /> },
     { label: "Profile", href: "/profile", icon: <Users size={20} /> },
-    // { label: "Reports", href: "/reports", icon: <FileText size={20} /> },
   ];
 
   const facultyItems: NavItem[] = [
@@ -57,6 +57,7 @@ export function Sidebar({ activePath }: SidebarProps) {
     { label: "Students", href: "/students", icon: <Users size={20} /> },
     { label: "Analytics", href: "/dashboard/analytics", icon: <LineChart size={20} /> },
     { label: "Upload Data", href: "/dashboard/upload", icon: <Upload size={20} /> },
+    { label: "Engagement", href: "/engagement", icon: <ClipboardList size={20} /> },
     { label: "Interventions", href: "/interventions", icon: <ClipboardList size={20} /> },
     { label: "Reports", href: "/dashboard/reports", icon: <FileText size={20} /> },
     { label: "Settings", href: "/settings", icon: <SettingsIcon size={20} /> },

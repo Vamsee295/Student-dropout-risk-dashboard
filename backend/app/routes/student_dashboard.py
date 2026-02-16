@@ -14,7 +14,7 @@ from app.schemas import (
     StudentDashboardOverview, SemesterPerformance, SubjectPerformance,
     AttendanceRecordResponse, AssessmentResponse, AssignmentProgress,
     StudentAssessmentResponse, RiskScoreWithExplanation, RiskExplanation,
-    SHAPFactor
+    SHAPFactor, GradeForecast, StudentFrontendResponse
 )
 
 router = APIRouter(
@@ -382,3 +382,114 @@ def get_student_risk(student_id: str, db: Session = Depends(get_db)):
         updated_at=risk.updated_at,
         explanation=explanation
     )
+
+
+@router.get("/{student_id}/grade-forecast", response_model=GradeForecast)
+def get_student_grade_forecast(student_id: str, db: Session = Depends(get_db)):
+    """
+    Predict future grades based on current trajectory.
+    """
+    student = get_student_or_404(db, student_id)
+    
+    # Get metrics
+    metrics = db.query(StudentMetric).filter(StudentMetric.student_id == student_id).first()
+    
+    if not metrics:
+        raise HTTPException(status_code=404, detail="Student metrics not found")
+        
+    current_gpa = metrics.academic_performance_index / 10.0 # Assuming index is 0-100, GPA is 0-10
+    
+    # Heuristic Forecasting Logic
+    projected_change = 0.0
+    factors = {}
+    
+    # 1. Attendance Impact
+    if metrics.attendance_rate < 75:
+        impact = -0.2
+        factors["Low Attendance"] = impact
+        projected_change += impact
+    elif metrics.attendance_rate > 90:
+        impact = 0.1
+        factors["High Attendance"] = impact
+        projected_change += impact
+        
+    # 2. Assignment Completion (simulated check)
+    if metrics.engagement_score < 40:
+        impact = -0.3
+        factors["Low Engagement"] = impact
+        projected_change += impact
+    elif metrics.engagement_score > 80:
+        impact = 0.2
+        factors["High Engagement"] = impact
+        projected_change += impact
+        
+    # 3. Trend
+    trend_impact = metrics.semester_performance_trend / 20.0 # Scale trend
+    if abs(trend_impact) > 0.05:
+        factors["Recent Trend"] = float(round(trend_impact, 2))
+        projected_change += trend_impact
+        
+    projected_gpa = max(0.0, min(10.0, current_gpa + projected_change))
+    
+    # Confidence Interval
+    confidence = [max(0.0, projected_gpa - 0.4), min(10.0, projected_gpa + 0.4)]
+    
+    # Determine Trend Label
+    if projected_change > 0.1:
+        trend = "Improving"
+    elif projected_change < -0.1:
+        trend = "Declining"
+    else:
+        trend = "Stable"
+        
+    return GradeForecast(
+        student_id=student_id,
+        current_gpa=round(current_gpa, 2),
+        projected_gpa=round(projected_gpa, 2),
+        confidence_interval=[round(x, 2) for x in confidence],
+        prediction_factors=factors,
+        trend=trend
+    )
+
+
+@router.get("/{student_id}/mentors", response_model=List[StudentFrontendResponse])
+def get_suggested_mentors(student_id: str, db: Session = Depends(get_db)):
+    """
+    Suggest peer mentors for a student.
+    Matches based on department and high academic performance.
+    """
+    current_student = get_student_or_404(db, student_id)
+    
+    # Find potential mentors
+    # Criteria: Same Department, Safe Risk Level, High Performance
+    mentors = db.query(Student).join(StudentMetric).join(RiskScore).filter(
+        Student.department == current_student.department,
+        Student.id != current_student.id,
+        RiskScore.risk_level == RiskLevel.SAFE,
+        StudentMetric.academic_performance_index >= 70.0 # Top performers
+    ).order_by(desc(StudentMetric.academic_performance_index)).limit(5).all()
+    
+    # Format response
+    response = []
+    for mentor in mentors:
+        # Calculate derived fields for frontend
+        m_risk = mentor.risk_score
+        
+        response.append(StudentFrontendResponse(
+            id=mentor.id,
+            name=mentor.name,
+            avatar=mentor.avatar or mentor.name[:2].upper(),
+            course=mentor.course,
+            department=mentor.department.value,
+            section=mentor.section.value,
+            riskStatus=m_risk.risk_level.value if m_risk else "Safe",
+            riskTrend=m_risk.risk_trend.value if m_risk else "stable",
+            riskValue=m_risk.risk_value if m_risk else "0%",
+            attendance=mentor.metrics.attendance_rate,
+            engagementScore=mentor.metrics.engagement_score,
+            lastInteraction=mentor.metrics.last_interaction.strftime("%Y-%m-%d") if mentor.metrics.last_interaction else "2024-01-01",
+            advisor=mentor.advisor_id,
+            primaryRiskDriver="Mentor Candidate"
+        ))
+        
+    return response

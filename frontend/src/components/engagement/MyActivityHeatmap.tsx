@@ -2,29 +2,19 @@
 
 import { useState, useEffect, useMemo } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 // Constants for the heatmap
 const MONTHS = ["Sep", "Oct", "Nov", "Dec", "Jan"];
-const DAYS = ["Mon", "Wed", "Fri"]; // Only showing labels for alternate days to match design
 
 // Function to generate mock data for the semester (Sep 1 to Jan 30)
 const generateSemesterData = () => {
     const data = [];
     const startDate = new Date("2023-09-01"); // Start of Fall Semester
     const endDate = new Date("2024-01-30");
-    const today = new Date();
 
     let currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
         // Random activity level (0-4)
-        // 0: No activity
-        // 1: Low
-        // 2: Medium
-        // 3: High
-        // 4: Very High
-
         // Simulating some patterns (weekends less active, some streaks)
         const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
         let activityLevel = 0;
@@ -57,21 +47,17 @@ const getColorClass = (level: number) => {
     }
 };
 
-export function LMSHeatmapChart() {
+export function MyActivityHeatmap() {
     const [heatmapData, setHeatmapData] = useState<{ date: Date; count: number }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         // In a real app, verify if we have backend data, otherwise mock it
-        // For this design task, we'll use the generator to match the visual perfectly
         setHeatmapData(generateSemesterData());
         setLoading(false);
     }, []);
 
     // Group data by weeks for column-based rendering
-    // We need to organize data so that:
-    // Columns = Weeks
-    // Rows = Days (Sun-Sat)
     const weeksData = useMemo(() => {
         if (heatmapData.length === 0) return [];
 
@@ -103,7 +89,7 @@ export function LMSHeatmapChart() {
 
     if (loading) {
         return <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm min-h-[300px] flex items-center justify-center">
-            <div className="text-gray-500">Loading digital footprint...</div>
+            <div className="text-gray-500">Loading your activity...</div>
         </div>;
     }
 
@@ -111,14 +97,12 @@ export function LMSHeatmapChart() {
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="bg-blue-50 p-1.5 rounded-lg text-blue-600">
-                        {/* Icon placeholder or custom svg */}
+                    <div className="bg-indigo-50 p-1.5 rounded-lg text-indigo-600">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14.5 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7.5L14.5 2Z" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M14 2V8H20" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2H13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
-                    <h3 className="font-bold text-lg text-gray-900">Digital Footprint (LMS Logins)</h3>
+                    <h3 className="font-bold text-lg text-gray-900">My Participation Map</h3>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
@@ -139,8 +123,6 @@ export function LMSHeatmapChart() {
 
                     {/* Month Labels */}
                     <div className="flex text-xs text-gray-400 pl-8 mb-1">
-                        {/* Approximate positioning for month labels based on week index */}
-                        {/* Detailed implementation would perform exact date calculations */}
                         <div className="w-10"></div> {/* Data row offset */}
                         <div className="flex justify-between w-full px-4">
                             {MONTHS.map(m => <span key={m}>{m}</span>)}
@@ -175,6 +157,10 @@ export function LMSHeatmapChart() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="mt-4 text-xs text-gray-500 text-center">
+                Keep up the good work! Consistent activity improves your success score.
             </div>
         </div>
     );

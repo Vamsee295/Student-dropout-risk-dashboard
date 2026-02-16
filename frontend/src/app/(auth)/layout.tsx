@@ -7,11 +7,11 @@ export default function AuthLayout({
         <div className="min-h-screen grid lg:grid-cols-2">
             {/* Left: Branding & Visual */}
             {/* Left: Branding & Visual */}
-            <div className="hidden lg:flex flex-col bg-black text-white p-12 relative overflow-hidden">
+            <div className="hidden lg:flex flex-col bg-black text-white p-12 relative overflow-hidden login-left">
                 {/* Logo */}
                 <div className="z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white text-black rounded-lg flex items-center justify-center font-bold text-lg">ER</div>
+                        <div className="w-10 h-10 bg-white text-black rounded-lg flex items-center justify-center font-bold text-lg logo-icon">ER</div>
                         <span className="font-bold text-xl tracking-tight">EduRisk AI</span>
                     </div>
                 </div>
@@ -35,7 +35,7 @@ export default function AuthLayout({
 
             {/* Right: Auth Form */}
             <div className="flex items-center justify-center p-8 bg-gray-50">
-                <div className="w-full max-w-md space-y-8">
+                <div className="w-full max-w-md space-y-8 login-wrapper">
                     {children}
                 </div>
             </div>

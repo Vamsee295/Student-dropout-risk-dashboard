@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     "Professional analytics console to monitor student engagement, attendance, and dropout risk using big data and machine learning.",
 };
 
+import CinematicBackground from "@/components/CinematicBackground";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,8 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased text-white`}
       >
+        <CinematicBackground />
         <NotificationsProvider>
           {children}
         </NotificationsProvider>

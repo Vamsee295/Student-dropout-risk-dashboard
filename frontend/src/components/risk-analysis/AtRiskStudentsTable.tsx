@@ -37,7 +37,7 @@ export function AtRiskStudentsTable() {
                         avatar: s.avatar,
                         riskScore: parseFloat(s.riskValue),
                         riskLabel: s.riskStatus === 'High Risk' ? 'Critical' : s.riskStatus === 'Moderate Risk' ? 'High' : 'Medium',
-                        primaryDriver: "AI Prediction", // Can be enhanced with SHAP data
+                        primaryDriver: s.primaryRiskDriver || "AI Prediction",
                         lastActivity: s.lastInteraction
                     }))
                     .sort((a: any, b: any) => b.riskScore - a.riskScore)
