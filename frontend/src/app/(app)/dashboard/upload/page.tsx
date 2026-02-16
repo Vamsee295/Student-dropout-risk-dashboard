@@ -25,7 +25,7 @@ export default function UploadDataPage() {
         setUploading(true);
         setStatus('idle');
         try {
-            await facultyService.uploadData(file, type);
+            await facultyService.uploadData(type, file);
             setStatus('success');
             setMessage(`Successfully uploaded ${type} data.`);
             setFile(null);
