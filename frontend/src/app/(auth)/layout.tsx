@@ -1,3 +1,5 @@
+import { Logo } from "@/components/Logo";
+
 export default function AuthLayout({
     children,
 }: {
@@ -10,10 +12,7 @@ export default function AuthLayout({
             <div className="hidden lg:flex flex-col bg-black text-white p-12 relative overflow-hidden login-left">
                 {/* Logo */}
                 <div className="z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white text-black rounded-lg flex items-center justify-center font-bold text-lg logo-icon">ER</div>
-                        <span className="font-bold text-xl tracking-tight">EduRisk AI</span>
-                    </div>
+                    <Logo variant="dark" />
                 </div>
 
                 {/* Centered Hero Content */}

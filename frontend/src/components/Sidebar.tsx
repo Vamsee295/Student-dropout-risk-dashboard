@@ -20,6 +20,8 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 
+import { Logo } from "@/components/Logo";
+
 type NavItem = {
   label: string;
   href: string;
@@ -68,17 +70,7 @@ export function Sidebar({ activePath }: SidebarProps) {
   return (
     <aside className="hidden w-64 flex-col border-r bg-white shadow-sm md:flex">
       <div className="flex h-16 items-center px-6 border-b">
-        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">
-          {role === "STUDENT" ? "S" : "F"}
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold tracking-tight text-gray-900">
-            EduRisk AI
-          </span>
-          <span className="text-xs font-medium text-gray-500">
-            {role === "STUDENT" ? "Student Portal" : "Faculty Admin"}
-          </span>
-        </div>
+        <Logo variant="light" className="scale-90 origin-left" />
       </div>
 
       <nav className="mt-6 flex-1 space-y-1 px-3">

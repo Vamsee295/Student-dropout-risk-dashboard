@@ -40,8 +40,11 @@ export function NotificationBell() {
         <div className="relative" ref={dropdownRef}>
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-xs font-bold transition-colors hover:bg-neutral-100 ${isOpen ? 'bg-neutral-100' : ''}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 text-xs font-bold transition-all hover:bg-neutral-100 hover:border-neutral-300 hover:shadow-sm active:scale-95 ${isOpen ? 'bg-neutral-100 border-neutral-300 shadow-inner' : ''}`}
                 aria-label="Notifications"
             >
                 <Bell size={16} className="text-neutral-600" />

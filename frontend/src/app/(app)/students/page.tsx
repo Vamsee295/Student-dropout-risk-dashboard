@@ -91,17 +91,17 @@ export default function StudentListPage() {
         ) : filteredStudents.length > 0 ? (
           filteredStudents.map((student) => (
             <Link href={`/students/${student.id}`} key={student.id} className="block group">
-              <div className={`h-full bg-white rounded-xl border transition-all hover:shadow-md hover:border-indigo-200 p-5 flex flex-col ${student.risk_level === 'High Risk' ? 'border-red-100' :
-                  student.risk_level === 'Moderate Risk' ? 'border-amber-100' :
-                    'border-green-100'
+              <div className={`h-full bg-white rounded-2xl border transition-all duration-300 hover:shadow-xl hover:border-indigo-300 hover:-translate-y-1.5 p-6 flex flex-col ${student.risk_level === 'High Risk' ? 'border-red-100' :
+                student.risk_level === 'Moderate Risk' ? 'border-amber-100' :
+                  'border-green-100'
                 }`}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-500 font-bold">
+                <div className="flex items-start justify-between mb-5">
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-xl text-indigo-600 font-bold shadow-inner ring-1 ring-black/5 group-hover:scale-110 transition-transform">
                     {student.name.charAt(0)}
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${student.risk_level === 'High Risk' ? 'bg-red-100 text-red-700' :
-                      student.risk_level === 'Moderate Risk' ? 'bg-amber-100 text-amber-700' :
-                        'bg-green-100 text-green-700'
+                  <span className={`px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-bold shadow-sm flex items-center gap-1.5 ${student.risk_level === 'High Risk' ? 'bg-red-50 text-red-700 border border-red-100' :
+                    student.risk_level === 'Moderate Risk' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                      'bg-green-50 text-green-700 border border-green-100'
                     }`}>
                     {student.risk_level === 'High Risk' && <AlertTriangle size={12} />}
                     {student.risk_level === 'Low Risk' && <ShieldCheck size={12} />}
@@ -109,20 +109,29 @@ export default function StudentListPage() {
                   </span>
                 </div>
 
-                <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-indigo-600 transition-colors">{student.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">{student.id} • {student.department}</p>
+                <h3 className="font-bold text-gray-900 text-xl mb-1 group-hover:text-indigo-600 transition-colors">{student.name}</h3>
+                <p className="text-sm font-medium text-gray-500 mb-6">{student.id} • {student.department}</p>
 
-                <div className="mt-auto pt-4 border-t border-gray-50 grid grid-cols-2 gap-4 text-sm">
+                <div className="mt-auto pt-5 border-t border-gray-100 grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-gray-400 text-xs uppercase font-semibold">Risk Score</p>
-                    <p className={`font-bold ${student.risk_score > 75 ? 'text-red-600' :
-                        student.risk_score > 50 ? 'text-amber-600' :
-                          'text-green-600'
-                      }`}>{student.risk_score}%</p>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1 leading-none">Risk Score</p>
+                    <p className={`text-lg font-black ${student.risk_score > 75 ? 'text-red-600' :
+                      student.risk_score > 50 ? 'text-amber-600' :
+                        'text-green-600'
+                      }`}>{Math.round(student.risk_score)}%</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-gray-400 text-xs uppercase font-semibold">Attendance</p>
-                    <p className="font-bold text-gray-900">{student.attendance}%</p>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1 leading-none">Attendance</p>
+                    <p className="text-lg font-black text-gray-900">
+                      {typeof student.attendance === 'number' ? student.attendance.toFixed(1) : student.attendance}%
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center text-[10px] font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span>VIEW FULL PROFILE</span>
+                  <div className="h-6 w-6 rounded-full bg-indigo-50 flex items-center justify-center">
+                    <Search size={12} />
                   </div>
                 </div>
               </div>

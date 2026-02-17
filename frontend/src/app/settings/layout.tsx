@@ -1,9 +1,9 @@
 "use client";
 
-import { useSettingsStore } from "@/store/settingsStore";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { SettingsSidebar } from "@/components/settings/SettingsSidebar";
+import { Logo } from "@/components/Logo";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -11,13 +11,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             {/* Settings Sidebar - Fixed Left */}
             <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-screen sticky top-0">
                 <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-bold text-gray-900">
-                        <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center font-bold text-sm">ER</div>
-                        <div className="leading-tight">
-                            <div className="text-sm">EduRisk AI</div>
-                            <div className="text-[10px] text-gray-500 font-medium uppercase">Admin Console</div>
-                        </div>
-                    </div>
+                    <Logo variant="light" className="scale-[0.85] origin-left" />
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-4">
