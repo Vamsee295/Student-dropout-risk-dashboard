@@ -46,7 +46,20 @@ export const facultyService = {
         if (riskLevel) params.risk_level = riskLevel;
 
         const response = await axios.get(`${API_URL}/faculty/students`, { params });
-        return response.data;
+
+        // Handling paginated response structure: { items: [], total: ... }
+        const rawItems = response.data.items || (Array.isArray(response.data) ? response.data : []);
+
+        // Mapping backend fields (attendance_rate, engagement_score) to frontend StudentSummary interface
+        return rawItems.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            department: s.department,
+            risk_level: s.risk_level,
+            risk_score: s.risk_score,
+            attendance: s.attendance_rate ?? s.attendance ?? 0,
+            engagement: s.engagement_score ?? s.engagement ?? 0
+        }));
     },
 
     getAnalytics: async (): Promise<AnalyticsData> => {
@@ -114,4 +127,3 @@ export interface StudentCodingStats {
     lastInteraction: string;
     coding_profile: CodingProfile | null;
 }
-

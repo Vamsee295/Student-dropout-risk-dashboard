@@ -8,7 +8,7 @@ from sqlalchemy import func
 from typing import List
 
 from app.database import get_db
-from app.models import Student, RiskScore, ModelVersion, RiskLevel, Department
+from app.models import Student, RiskScore, ModelVersion, RiskLevel, Department, StudentMetric
 from app.schemas import (
     AnalyticsOverview, DepartmentRiskBreakdown,
     FeatureImportance, RiskDistributionBucket
@@ -21,12 +21,6 @@ router = APIRouter()
 def get_analytics_overview(db: Session = Depends(get_db)):
     """
     Get dashboard overview metrics.
-    
-    Returns:
-    - total_students
-    - high_risk_count and percentage
-    - average_risk_score
-    - risk_distribution by level
     """
     # Total students
     total_students = db.query(func.count(Student.id)).scalar()
@@ -41,6 +35,22 @@ def get_analytics_overview(db: Session = Depends(get_db)):
     # Average risk score
     avg_risk_score = db.query(func.avg(RiskScore.risk_score)).scalar() or 0
     
+    # Average attendance from StudentMetric
+    avg_attendance = db.query(func.avg(StudentMetric.attendance_rate)).scalar() or 0
+
+    # High risk department: department with the most high-risk students
+    high_risk_dept = None
+    high_risk_dept_row = (
+        db.query(Student.department, func.count(RiskScore.id).label("cnt"))
+        .join(RiskScore, RiskScore.student_id == Student.id)
+        .filter(RiskScore.risk_level == RiskLevel.HIGH)
+        .group_by(Student.department)
+        .order_by(func.count(RiskScore.id).desc())
+        .first()
+    )
+    if high_risk_dept_row:
+        high_risk_dept = high_risk_dept_row[0].value if hasattr(high_risk_dept_row[0], 'value') else str(high_risk_dept_row[0])
+
     # Risk distribution
     risk_distribution = {}
     for level in RiskLevel:
@@ -54,6 +64,8 @@ def get_analytics_overview(db: Session = Depends(get_db)):
         high_risk_count=high_risk_count,
         high_risk_percentage=round(high_risk_percentage, 2),
         average_risk_score=round(float(avg_risk_score), 2),
+        average_attendance=round(float(avg_attendance), 2),
+        high_risk_department=high_risk_dept,
         risk_distribution=risk_distribution
     )
 

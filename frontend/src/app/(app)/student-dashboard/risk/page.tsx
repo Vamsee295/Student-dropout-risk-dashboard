@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { studentService, type RiskDetails } from "@/services/student";
-import { Loader2, AlertTriangle, TrendingUp, TrendingDown, Info, ShieldCheck } from "lucide-react";
+import { Loader2, AlertTriangle, TrendingUp, TrendingDown, Info, ShieldCheck, Clock } from "lucide-react";
 
 export default function RiskStatusPage() {
     const { user } = useAuthStore();
@@ -60,18 +60,18 @@ export default function RiskStatusPage() {
 
             {/* Main Risk Card */}
             <div className={`p-8 rounded-2xl border flex flex-col items-center text-center ${isHighRisk ? 'bg-red-50 border-red-100' :
-                    isModerateRisk ? 'bg-amber-50 border-amber-100' :
-                        'bg-green-50 border-green-100'
+                isModerateRisk ? 'bg-amber-50 border-amber-100' :
+                    'bg-green-50 border-green-100'
                 }`}>
                 <div className={`p-4 rounded-full mb-4 ${isHighRisk ? 'bg-red-200 text-red-700' :
-                        isModerateRisk ? 'bg-amber-200 text-amber-700' :
-                            'bg-green-200 text-green-700'
+                    isModerateRisk ? 'bg-amber-200 text-amber-700' :
+                        'bg-green-200 text-green-700'
                     }`}>
                     <RiskIcon size={48} />
                 </div>
                 <h2 className={`text-3xl font-bold mb-2 ${isHighRisk ? 'text-red-900' :
-                        isModerateRisk ? 'text-amber-900' :
-                            'text-green-900'
+                    isModerateRisk ? 'text-amber-900' :
+                        'text-green-900'
                     }`}>
                     {data.risk_level}
                 </h2>

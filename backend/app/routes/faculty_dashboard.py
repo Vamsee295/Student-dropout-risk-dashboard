@@ -64,6 +64,7 @@ from app.schemas import (
     RiskHistoryItem,
     SHAPExplanationResponse,
     SHAPFeatureItem,
+    StudentCodingStats,
     UploadSummary,
 )
 from app.services.feature_engineering import compute_and_save_features
@@ -800,3 +801,41 @@ def export_students_csv(db: Session = Depends(get_db)):
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+@router.get("/reports/coding", response_model=List[StudentCodingStats])
+def get_coding_reports(
+    department: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Return a list of students with their coding platform profile data.
+    """
+    query = db.query(Student).outerjoin(StudentCodingProfile).outerjoin(RiskScore).outerjoin(StudentMetric)
+
+    if department and department != "All Departments":
+        # Robust department filtering
+        dept_enum = _parse_department(department)
+        if dept_enum:
+            query = query.filter(Student.department == dept_enum)
+
+    students = query.all()
+    
+    results = []
+    for s in students:
+        # Map to the StudentCodingStats schema
+        results.append(StudentCodingStats(
+            id=s.id,
+            name=s.name,
+            avatar=s.avatar or "1",
+            course=s.course,
+            department=s.department.value if hasattr(s.department, 'value') else str(s.department),
+            section=s.section.value if hasattr(s.section, 'value') else str(s.section),
+            riskStatus=s.risk_score.risk_level.value if s.risk_score else "Safe",
+            riskTrend=s.risk_score.risk_trend.value if s.risk_score else "stable",
+            riskValue=s.risk_score.risk_value if s.risk_score else "0%",
+            attendance=s.metrics.attendance_rate if s.metrics else 0.0,
+            engagementScore=s.metrics.engagement_score if s.metrics else 0.0,
+            lastInteraction=str(s.metrics.last_interaction) if s.metrics else str(datetime.utcnow()),
+            coding_profile=s.coding_profile if s.coding_profile else None
+        ))
+    
+    return results

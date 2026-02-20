@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { facultyService, type FacultyOverview, type AnalyticsData } from "@/services/faculty";
+import { facultyService } from "@/services/faculty";
 import {
   Users,
   AlertTriangle,
@@ -10,7 +10,6 @@ import {
   RefreshCw,
   Loader2,
   PieChart as PieChartIcon,
-  BarChart2
 } from "lucide-react";
 import {
   BarChart,
@@ -23,34 +22,55 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
 } from "recharts";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
+interface FacultyOverview {
+  total_students: number;
+  high_risk_count: number;
+  average_attendance: number;
+  average_risk_score: number;
+  high_risk_department: string | null;
+  risk_distribution: Record<string, number>;
+}
+
+interface DeptAnalytics {
+  department: string;
+  total_students: number;
+  avg_risk_score: number;
+  avg_attendance: number;
+  high_risk_count: number;
+}
+
+const RISK_COLORS: Record<string, string> = {
+  "High Risk": "#EF4444",
+  "Moderate Risk": "#F59E0B",
+  "Stable": "#6366F1",
+  "Safe": "#10B981",
+};
 
 export default function FacultyDashboard() {
   const [overview, setOverview] = useState<FacultyOverview | null>(null);
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [deptData, setDeptData] = useState<DeptAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [overviewData, analyticsData] = await Promise.all([
           facultyService.getOverview(),
-          facultyService.getAnalytics()
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/faculty/analytics/department`).then(r => r.json()),
         ]);
-        setOverview(overviewData);
-        setAnalytics(analyticsData);
+        setOverview(overviewData as any);
+        setDeptData(Array.isArray(analyticsData) ? analyticsData : []);
       } catch (error) {
         console.error("Failed to fetch faculty dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -58,13 +78,10 @@ export default function FacultyDashboard() {
     setRecalculating(true);
     try {
       await facultyService.recalculateRisk();
-      // Refresh data
       const overviewData = await facultyService.getOverview();
-      setOverview(overviewData);
-      alert("Risk scores recalculated successfully.");
+      setOverview(overviewData as any);
     } catch (error) {
       console.error("Recalculation failed:", error);
-      alert("Failed to recalculate risk scores.");
     } finally {
       setRecalculating(false);
     }
@@ -78,20 +95,34 @@ export default function FacultyDashboard() {
     );
   }
 
-  if (!overview || !analytics) return null;
+  if (!overview) return null;
 
-  const pieData = [
-    { name: 'Low Risk', value: overview.risk_distribution.low, color: '#10B981' },
-    { name: 'Moderate Risk', value: overview.risk_distribution.medium, color: '#F59E0B' },
-    { name: 'High Risk', value: overview.risk_distribution.high, color: '#EF4444' },
-  ];
+  // Build pie data from the actual API keys ("High Risk", "Moderate Risk", "Stable", "Safe")
+  const pieData = Object.entries(overview.risk_distribution || {})
+    .filter(([, v]) => v > 0)
+    .map(([name, value]) => ({
+      name,
+      value,
+      color: RISK_COLORS[name] || "#6B7280",
+    }));
+
+  // Bar chart data — use avg_risk_score field from DepartmentAnalytics schema
+  const barData = deptData.map((d) => ({
+    department: d.department,
+    avg_risk: d.avg_risk_score,
+    attendance: d.avg_attendance,
+    high_risk: d.high_risk_count,
+  }));
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Faculty Overview</h1>
-          <p className="text-gray-500">Monitor student risk levels and engagement across departments.</p>
+          <p className="text-gray-500">
+            Monitor student risk levels and engagement across departments.
+          </p>
         </div>
         <div className="flex gap-3">
           <button
@@ -125,7 +156,11 @@ export default function FacultyDashboard() {
           value={overview.high_risk_count}
           icon={<AlertTriangle className="text-red-600" />}
           color="red"
-          subText={`${((overview.high_risk_count / overview.total_students) * 100).toFixed(1)}% of total`}
+          subText={
+            overview.total_students > 0
+              ? `${((overview.high_risk_count / overview.total_students) * 100).toFixed(1)}% of total`
+              : ""
+          }
         />
         <StatCard
           title="Avg Attendance"
@@ -135,61 +170,183 @@ export default function FacultyDashboard() {
         />
         <StatCard
           title="Avg Risk Score"
-          value={overview.average_risk_score.toFixed(1)}
+          value={(overview.average_risk_score || 0).toFixed(1)}
           icon={<PieChartIcon className="text-purple-600" />}
           color="purple"
         />
       </div>
 
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Risk Distribution Chart */}
+        {/* Risk Distribution Donut */}
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="font-semibold text-gray-900 mb-6">Risk Distribution</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <h3 className="font-semibold text-gray-900 mb-4">Risk Distribution</h3>
+          {pieData.length === 0 ? (
+            <div className="flex h-[280px] items-center justify-center text-gray-400 text-sm">
+              No risk data available
+            </div>
+          ) : (
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={65}
+                    outerRadius={105}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      `${value} students`,
+                      name,
+                    ]}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    iconSize={10}
+                    formatter={(value) => (
+                      <span className="text-xs text-gray-600">{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
-        {/* Department Analysis Chart */}
+        {/* Department Risk Bar Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="font-semibold text-gray-900 mb-6">Department Risk Levels</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.department_risks}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} domain={[0, 100]} />
-                <Tooltip
-                  cursor={{ fill: '#F3F4F6' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend />
-                <Bar dataKey="avg_risk" name="Avg Risk Score" fill="#6366F1" radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <h3 className="font-semibold text-gray-900 mb-4">Department Risk Levels</h3>
+          {barData.length === 0 ? (
+            <div className="flex h-[280px] items-center justify-center text-gray-400 text-sm">
+              No department data available
+            </div>
+          ) : (
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={barData}
+                  margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#E5E7EB"
+                  />
+                  <XAxis
+                    dataKey="department"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#6B7280", fontSize: 11 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#6B7280", fontSize: 11 }}
+                    domain={[0, 100]}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#F3F4F6" }}
+                    formatter={(value: number, name: string) => {
+                      if (name === "avg_risk") return [`${value.toFixed(1)}%`, "Avg Risk Score"];
+                      if (name === "attendance") return [`${value.toFixed(1)}%`, "Avg Attendance"];
+                      return [value, name];
+                    }}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value) => {
+                      if (value === "avg_risk") return <span className="text-xs text-gray-600">Avg Risk Score</span>;
+                      if (value === "attendance") return <span className="text-xs text-gray-600">Avg Attendance</span>;
+                      return <span className="text-xs text-gray-600">{value}</span>;
+                    }}
+                  />
+                  <Bar
+                    dataKey="avg_risk"
+                    name="avg_risk"
+                    fill="#6366F1"
+                    radius={[4, 4, 0, 0]}
+                    barSize={32}
+                  />
+                  <Bar
+                    dataKey="attendance"
+                    name="attendance"
+                    fill="#10B981"
+                    radius={[4, 4, 0, 0]}
+                    barSize={32}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
       </div>
+
+      {/* Department Table */}
+      {deptData.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-900">Department Summary</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left">
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Students</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Avg Risk</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Avg Attendance</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">High Risk</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {deptData.map((dept) => (
+                  <tr key={dept.department} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{dept.department}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.total_students}</td>
+                    <td className="px-6 py-4 text-right">
+                      <span className={`text-sm font-semibold ${dept.avg_risk_score >= 70 ? "text-red-600" :
+                          dept.avg_risk_score >= 55 ? "text-amber-600" :
+                            dept.avg_risk_score >= 40 ? "text-indigo-600" : "text-emerald-600"
+                        }`}>
+                        {dept.avg_risk_score.toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.avg_attendance.toFixed(1)}%</td>
+                    <td className="px-6 py-4 text-right">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
+                        {dept.high_risk_count}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -205,9 +362,7 @@ function StatCard({ title, value, icon, color, subText }: any) {
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${bgColors[color]}`}>
-          {icon}
-        </div>
+        <div className={`p-3 rounded-lg ${bgColors[color]}`}>{icon}</div>
       </div>
       <div>
         <p className="text-sm font-medium text-gray-500">{title}</p>

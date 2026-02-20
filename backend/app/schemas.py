@@ -187,6 +187,25 @@ class CodingProfileResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class StudentCodingStats(BaseModel):
+    """Response schema for coding reports list view."""
+    id: str
+    name: str
+    avatar: str
+    course: str
+    department: str
+    section: str
+    riskStatus: str
+    riskTrend: str
+    riskValue: str
+    attendance: float
+    engagementScore: float
+    lastInteraction: str
+    coding_profile: Optional[CodingProfileResponse] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class StudentDetailResponse(StudentResponse):
     """Detailed student response with metrics and risk."""
     metrics: Optional[StudentMetricResponse] = None

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useAuthStore } from '@/store/useAuthStore';
 
-export type NotificationType = 'alert' | 'info' | 'success' | 'warning';
+export type NotificationType = 'alert' | 'info' | 'success' | 'warning' | 'deadline' | 'intervention';
 
 export interface Notification {
     id: string;
@@ -25,32 +26,84 @@ interface NotificationsContextType {
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-    const [notifications, setNotifications] = useState<Notification[]>([
-        {
-            id: '1',
-            title: 'High Risk Alert',
-            message: 'Student John Doe has dropped below 75% attendance.',
-            type: 'alert',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-            read: false,
-        },
-        {
-            id: '2',
-            title: 'System Update',
-            message: 'The dashboard will undergo maintenance at midnight.',
-            type: 'info',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-            read: false,
-        },
-        {
-            id: '3',
-            title: 'Report Generated',
-            message: 'Your requested attendance report is ready for download.',
-            type: 'success',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-            read: true,
-        },
-    ]);
+    const { user } = useAuthStore();
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+
+    useEffect(() => {
+        if (!user) {
+            setNotifications([]);
+            return;
+        }
+
+        // Generate role-specific initial notifications
+        let initialNotifications: Notification[] = [];
+
+        if (user.role === 'STUDENT') {
+            initialNotifications = [
+                {
+                    id: 's1',
+                    title: 'Upcoming Deadline',
+                    message: 'Mathematics Assignment 3 is due in 24 hours.',
+                    type: 'deadline',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 30),
+                    read: false,
+                },
+                {
+                    id: 's2',
+                    title: 'Midterm Warning',
+                    message: 'Database Systems midterm exam scheduled for next Monday.',
+                    type: 'warning',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+                    read: false,
+                },
+                {
+                    id: 's3',
+                    title: 'Submission Received',
+                    message: 'Your Physics lab report has been successfully submitted.',
+                    type: 'success',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
+                    read: true,
+                },
+            ];
+        } else if (user.role === 'FACULTY' || user.role === 'ADMIN') {
+            initialNotifications = [
+                {
+                    id: 'f1',
+                    title: 'Pending Intervention',
+                    message: 'Academic counseling session required for student John Doe.',
+                    type: 'intervention',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 15),
+                    read: false,
+                },
+                {
+                    id: 'f2',
+                    title: 'High Risk Student',
+                    message: 'Student Sarah Smith has showing consecutive performance decline.',
+                    type: 'alert',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 45),
+                    read: false,
+                },
+                {
+                    id: 'f3',
+                    title: 'New At-Risk Cluster',
+                    message: '3 students in CSE Section A have moved to High Risk category.',
+                    type: 'alert',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
+                    read: false,
+                },
+                {
+                    id: 'f4',
+                    title: 'Remedial Class Scheduled',
+                    message: 'Extra session for Mathematics scheduled for tomorrow 4 PM.',
+                    type: 'info',
+                    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
+                    read: true,
+                },
+            ];
+        }
+
+        setNotifications(initialNotifications);
+    }, [user]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 

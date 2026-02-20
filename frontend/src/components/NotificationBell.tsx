@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, Check, Trash2, X } from "lucide-react";
+import { Bell, Check, Trash2, Clock, ShieldAlert, BookOpen, UserCheck } from "lucide-react";
 import { useNotifications, type Notification } from "@/context/NotificationsContext";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export function NotificationBell() {
     const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
+    const { user } = useAuthStore();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -26,12 +28,25 @@ export function NotificationBell() {
         }
     };
 
+    const getIcon = (type: Notification['type']) => {
+        switch (type) {
+            case 'alert': return <ShieldAlert size={14} />;
+            case 'warning': return <Clock size={14} />;
+            case 'success': return <Check size={14} />;
+            case 'deadline': return <BookOpen size={14} />;
+            case 'intervention': return <UserCheck size={14} />;
+            default: return <Bell size={14} />;
+        }
+    };
+
     const getIconColor = (type: Notification['type']) => {
         switch (type) {
             case 'alert': return 'text-red-500 bg-red-50';
             case 'warning': return 'text-amber-500 bg-amber-50';
             case 'success': return 'text-green-500 bg-green-50';
             case 'info': return 'text-blue-500 bg-blue-50';
+            case 'deadline': return 'text-indigo-500 bg-indigo-50';
+            case 'intervention': return 'text-purple-500 bg-purple-50';
             default: return 'text-gray-500 bg-gray-50';
         }
     };
@@ -58,7 +73,12 @@ export function NotificationBell() {
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 bg-gray-50/50">
-                        <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+                            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                                {user?.role === 'STUDENT' ? 'Student Workspace' : 'Faculty Dashboard'}
+                            </p>
+                        </div>
                         <div className="flex gap-2">
                             {unreadCount > 0 && (
                                 <button
@@ -93,7 +113,9 @@ export function NotificationBell() {
                                         onClick={() => handleNotificationClick(notification.id, notification.read)}
                                         className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3 ${!notification.read ? 'bg-indigo-50/10' : ''}`}
                                     >
-                                        <div className={`flex-shrink-0 h-2 w-2 mt-2 rounded-full ${!notification.read ? 'bg-indigo-600' : 'bg-transparent'}`}></div>
+                                        <div className={`mt-1 flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${getIconColor(notification.type)}`}>
+                                            {getIcon(notification.type)}
+                                        </div>
                                         <div className="flex-1 space-y-1">
                                             <div className="flex justify-between items-start">
                                                 <p className={`text-sm ${!notification.read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
@@ -112,7 +134,6 @@ export function NotificationBell() {
                             </div>
                         )}
                     </div>
-
                 </div>
             )}
         </div>
