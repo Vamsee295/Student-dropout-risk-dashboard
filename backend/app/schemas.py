@@ -423,3 +423,166 @@ class GradeForecast(BaseModel):
     trend: str  # "Improving", "Declining", "Stable"
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Faculty Dashboard — New Schemas
+# ─────────────────────────────────────────────────────────────────────────────
+
+class FacultyStudentListItem(BaseModel):
+    """Single row in the paginated faculty student directory."""
+    id: str
+    name: str
+    avatar: str
+    department: str
+    course: str
+    section: str
+    risk_score: float
+    risk_level: str
+    risk_trend: str
+    risk_value: str
+    attendance_rate: float
+    engagement_score: float
+    academic_performance_index: float
+    last_updated: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PaginatedStudentList(BaseModel):
+    """Paginated faculty student directory response."""
+    items: List[FacultyStudentListItem]
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+
+class RiskHistoryItem(BaseModel):
+    """Slim risk history entry for student profile."""
+    risk_score: float
+    risk_level: str
+    recorded_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InterventionItem(BaseModel):
+    """Intervention entry for student profile."""
+    id: int
+    intervention_type: str
+    status: str
+    assigned_to: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SHAPFeatureItem(BaseModel):
+    """Single SHAP feature contribution."""
+    feature: str
+    impact: float
+    direction: str  # "positive" or "negative"
+
+
+class FacultyStudentProfile(BaseModel):
+    """Full student profile for faculty drill-down view."""
+    # Base info
+    id: str
+    name: str
+    avatar: str
+    department: str
+    course: str
+    section: str
+    advisor: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    # Engineered features
+    attendance_rate: float
+    engagement_score: float
+    academic_performance_index: float
+    failure_ratio: float
+    semester_performance_trend: float
+    login_gap_days: int
+    financial_risk_flag: bool
+    commute_risk_score: int
+
+    # Current risk
+    risk_score: float
+    risk_level: str
+    risk_trend: str
+    risk_value: str
+
+    # Risk history (last 30 entries)
+    risk_history: List[RiskHistoryItem] = []
+
+    # SHAP explanation
+    shap_factors: List[SHAPFeatureItem] = []
+
+    # Interventions
+    interventions: List[InterventionItem] = []
+
+
+class CreateStudentRequest(BaseModel):
+    """Manual student creation payload."""
+    id: str = Field(..., min_length=1, max_length=50)
+    name: str = Field(..., min_length=1, max_length=200)
+    department: Department
+    section: Section
+    course: str = Field(..., min_length=1, max_length=100)
+    advisor_id: Optional[str] = None
+    # Optional initial metric overrides (if not provided, use safe defaults)
+    attendance_rate: float = Field(default=75.0, ge=0, le=100)
+    engagement_score: float = Field(default=70.0, ge=0, le=100)
+    academic_performance_index: float = Field(default=65.0, ge=0)
+    failure_ratio: float = Field(default=0.1, ge=0, le=1)
+    financial_risk_flag: bool = False
+    commute_risk_score: int = Field(default=1, ge=1, le=4)
+
+
+class UploadSummary(BaseModel):
+    """Response after CSV upload."""
+    rows_processed: int
+    students_affected: int
+    recalculations_triggered: int
+    errors: List[str] = []
+    message: str
+
+
+class RecalculateRequest(BaseModel):
+    """Optional body for risk recalculation endpoint."""
+    student_id: Optional[str] = None
+
+
+class DepartmentTrendPoint(BaseModel):
+    """Single date/avg-risk point for the 7-day trend."""
+    date: str
+    avg_risk: float
+
+
+class DepartmentAnalytics(BaseModel):
+    """Per-department analytics including 7-day risk trend."""
+    department: str
+    total_students: int
+    avg_risk_score: float
+    avg_attendance: float
+    high_risk_count: int
+    trend_7d: List[DepartmentTrendPoint] = []
+
+
+class SHAPExplanationResponse(BaseModel):
+    """SHAP explanation response for a single student."""
+    student_id: str
+    risk_score: float
+    risk_level: str
+    top_features: List[SHAPFeatureItem]
+
+
+class AnalyticsOverview(BaseModel):
+    """Aggregated KPI summary for the faculty dashboard overview cards."""
+    total_students: int
+    high_risk_count: int
+    high_risk_percentage: float
+    average_risk_score: float
+    average_attendance: float
+    high_risk_department: Optional[str] = None
+    risk_distribution: dict  # {"High": N, "Moderate": N, "Stable": N, "Safe": N}

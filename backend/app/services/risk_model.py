@@ -1,8 +1,9 @@
 """
 ML Model Training and Inference Service for Student Dropout Risk Prediction.
 
-Uses XGBoost with 5-fold cross-validation and calibrated probability outputs.
-Implements model versioning and persistence.
+Uses a tree-based gradient boosting classifier (from scikit-learn) with
+5-fold cross-validation and calibrated probability outputs. Implements
+model versioning and persistence.
 """
 
 import os
@@ -18,7 +19,7 @@ from sklearn.metrics import (
     classification_report, confusion_matrix
 )
 from sklearn.calibration import CalibratedClassifierCV
-from xgboost import XGBClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from loguru import logger
 
 from app.config import get_settings
@@ -29,8 +30,8 @@ settings = get_settings()
 
 class RiskModel:
     """
-    XGBoost-based risk prediction model with calibration.
-    
+    Gradient-boosted tree risk prediction model with calibration.
+
     Features:
     - 5-fold cross-validation
     - Calibrated probability outputs (0-100 scale)
@@ -61,8 +62,8 @@ class RiskModel:
         version: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Train XGBoost model with 5-fold cross-validation.
-        
+        Train gradient boosting model with 5-fold cross-validation.
+
         Args:
             X: Feature DataFrame
             y: Target Series (0=no dropout, 1=dropout)
@@ -89,16 +90,13 @@ class RiskModel:
         
         logger.info(f"Train size: {len(X_train)}, Test size: {len(X_test)}")
         
-        # Initialize XGBoost classifier
-        self.model = XGBClassifier(
-            n_estimators=100,
-            max_depth=6,
-            learning_rate=0.1,
+        # Initialize tree-based gradient boosting classifier
+        self.model = GradientBoostingClassifier(
+            n_estimators=200,
+            max_depth=3,
+            learning_rate=0.05,
             subsample=0.8,
-            colsample_bytree=0.8,
             random_state=42,
-            eval_metric='logloss',
-            use_label_encoder=False
         )
         
         # 5-fold cross-validation

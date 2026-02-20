@@ -430,3 +430,60 @@ class StudentAssessment(Base):
         UniqueConstraint('student_id', 'assessment_id', name='idx_unique_student_assessment'),
     )
 
+
+class StudentRawAttendance(Base):
+    """Raw attendance rows ingested from CSV upload."""
+    __tablename__ = "student_raw_attendance"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    date = Column(DateTime, nullable=False)
+    subject = Column(String(200), nullable=False, default="General")
+    status = Column(String(20), nullable=False)  # Present / Absent / Late
+    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    student = relationship("Student", backref="raw_attendance")
+
+    __table_args__ = (
+        Index('idx_raw_attendance_student', 'student_id'),
+        Index('idx_raw_attendance_date', 'date'),
+    )
+
+
+class StudentRawMarks(Base):
+    """Raw marks rows ingested from CSV upload."""
+    __tablename__ = "student_raw_marks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    subject = Column(String(200), nullable=False, default="General")
+    exam_type = Column(String(100), nullable=False, default="Internal")  # Internal / External / Mid
+    marks_obtained = Column(Float, nullable=False)
+    max_marks = Column(Float, nullable=False, default=100.0)
+    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    student = relationship("Student", backref="raw_marks")
+
+    __table_args__ = (
+        Index('idx_raw_marks_student', 'student_id'),
+    )
+
+
+class StudentRawAssignments(Base):
+    """Raw assignment submission rows ingested from CSV upload."""
+    __tablename__ = "student_raw_assignments"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(String(50), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    subject = Column(String(200), nullable=False, default="General")
+    assignment_name = Column(String(300), nullable=False, default="Assignment")
+    submitted = Column(Boolean, nullable=False, default=False)
+    score = Column(Float, nullable=True)  # None = not graded / not submitted
+    max_score = Column(Float, nullable=False, default=10.0)
+    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    student = relationship("Student", backref="raw_assignments")
+
+    __table_args__ = (
+        Index('idx_raw_assignments_student', 'student_id'),
+    )

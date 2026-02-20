@@ -1,30 +1,29 @@
-# Use Python 3.10 slim image
 FROM python:3.10-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# System dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     libpq-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for caching
+# Install Python dependencies (cached layer)
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy entire backend application
 COPY . .
 
-# Create directories for models and logs
-RUN mkdir -p models/versions logs data/raw
+# Ensure runtime directories exist
+RUN mkdir -p models/versions logs data/raw ml_models
 
-# Expose port
+# Make entrypoint executable (line-ending safe)
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["bash", "entrypoint.sh"]
