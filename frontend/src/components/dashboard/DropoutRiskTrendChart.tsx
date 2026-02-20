@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     LineChart,
     Line,
@@ -12,34 +12,44 @@ import {
     Area,
     AreaChart,
 } from "recharts";
-
-const data = [
-    { month: "Jan", risk: 25, attendance: 85, engagement: 6.5 },
-    { month: "Feb", risk: 32, attendance: 82, engagement: 6.2 },
-    { month: "Mar", risk: 45, attendance: 75, engagement: 5.8 },
-    { month: "Apr", risk: 58, attendance: 65, engagement: 5.0 },
-    { month: "May", risk: 68, attendance: 55, engagement: 4.5 },
-    { month: "Jun", risk: 65, attendance: 58, engagement: 4.8 },
-];
+import apiClient from "@/lib/api";
 
 export function DropoutRiskTrendChart() {
     const [activeTab, setActiveTab] = useState("attendance");
+    const [data, setData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Dynamic data selection
+    useEffect(() => {
+        async function fetchTrend() {
+            try {
+                const response = await apiClient.get('/analytics/risk-trend');
+                setData(response.data.months || []);
+            } catch (error) {
+                console.error('Failed to fetch risk trend:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchTrend();
+    }, []);
+
     const getActiveDataKey = () => {
         switch (activeTab) {
             case "attendance": return "attendance";
             case "engagement": return "engagement";
-            case "grades": return "grades"; // Mocking grades using engagement/risk inverse for demo
+            case "grades": return "grades";
             default: return "attendance";
         }
     };
 
-    // Enrich data for the demo
     const chartData = data.map(d => ({
         ...d,
-        grades: 85 - (d.risk * 0.5), // Mock grades logic
+        grades: d.grades ?? 85 - (d.risk * 0.5),
     }));
+
+    if (loading) {
+        return <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm text-center text-gray-500">Loading trend data...</div>;
+    }
 
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { InterventionFilters } from "@/components/interventions/InterventionFilters";
 import { InterventionBoard } from "@/components/interventions/InterventionBoard";
@@ -8,92 +8,27 @@ import { InterventionCardProps } from "@/components/interventions/InterventionCa
 import { AssignFacultyModal } from "@/components/interventions/AssignFacultyModal";
 import { SuccessAnimation } from "@/components/interventions/SuccessAnimation";
 import { NewInterventionModal } from "@/components/interventions/NewInterventionModal";
-
-// --- MOCK DATA START ---
-const INITIAL_PENDING: InterventionCardProps[] = [
-  {
-    id: "1",
-    studentName: "Isabella Chen",
-    studentInitial: "IC",
-    studentId: "#9320",
-    grade: "Grade 11",
-    riskLevel: "High Risk",
-    alertTitle: "Attendance dropped by 15%",
-    alertDescription: "ML Model flagged unusual absence pattern in Science classes.",
-    suggestedAction: "Schedule Counseling",
-    status: "Pending",
-  },
-  {
-    id: "2",
-    studentName: "Marcus Johnson",
-    studentInitial: "MJ",
-    studentId: "#8841",
-    grade: "Grade 10",
-    riskLevel: "Medium Risk",
-    alertTitle: "Math grade below threshold",
-    alertDescription: "Consistent decline over last 3 weeks.",
-    suggestedAction: "Peer Tutoring",
-    status: "Pending",
-  },
-];
-
-const INITIAL_IN_PROGRESS: InterventionCardProps[] = [
-  {
-    id: "3",
-    studentName: "Sophia Williams",
-    studentInitial: "SW",
-    studentId: "#1029",
-    grade: "Grade 12",
-    riskLevel: "High Risk",
-    alertTitle: "Risk Alert",
-    alertDescription: "",
-    suggestedAction: "",
-    actionPlan: "Weekly mentorship sessions",
-    actionPlanDescription: "Focus on college application stress management.",
-    assignedTo: "Mr. Davis",
-    dueDate: "Next: Fri, 2pm",
-    status: "In Progress",
-  },
-  {
-    id: "4",
-    studentName: "Elena Rodriguez",
-    studentInitial: "ER",
-    studentId: "#9921",
-    grade: "Grade 11",
-    riskLevel: "Medium Risk",
-    alertTitle: "",
-    alertDescription: "",
-    suggestedAction: "",
-    actionPlan: "Parent-Teacher Conference",
-    actionPlanDescription: "Scheduled to discuss behavioral changes.",
-    assignedTo: "Mrs. Admin",
-    dueDate: "Pending Reply",
-    status: "In Progress",
-  },
-];
-
-const INITIAL_COMPLETED: InterventionCardProps[] = [
-  {
-    id: "5",
-    studentName: "James Wilson",
-    studentInitial: "JW",
-    studentId: "#7732",
-    grade: "Grade 10",
-    riskLevel: "Low Risk",
-    alertTitle: "Financial Aid approved",
-    alertDescription: "Student received requested materials grant.",
-    suggestedAction: "",
-    status: "Completed",
-    resolvedDate: "Oct 12",
-    resolvedBy: "Sarah Admin",
-  },
-];
-// --- MOCK DATA END ---
+import apiClient from "@/lib/api";
 
 export default function InterventionsPage() {
-  const [pending, setPending] = useState(INITIAL_PENDING);
-  const [inProgress, setInProgress] = useState(INITIAL_IN_PROGRESS);
-  const [completed, setCompleted] = useState(INITIAL_COMPLETED);
+  const [pending, setPending] = useState<InterventionCardProps[]>([]);
+  const [inProgress, setInProgress] = useState<InterventionCardProps[]>([]);
+  const [completed, setCompleted] = useState<InterventionCardProps[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient.get('/analytics/interventions')
+      .then((res) => {
+        const data = res.data;
+        setPending(data.pending || []);
+        setInProgress(data.in_progress || []);
+        setCompleted(data.completed || []);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch interventions:', err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isNewInterventionOpen, setIsNewInterventionOpen] = useState(false);
@@ -191,12 +126,18 @@ export default function InterventionsPage() {
 
       {/* Board */}
       <section className="flex-1 min-h-0">
-        <InterventionBoard
-          pending={pending}
-          inProgress={inProgress}
-          completed={completed}
-          onAssign={handleAssignClick}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+          </div>
+        ) : (
+          <InterventionBoard
+            pending={pending}
+            inProgress={inProgress}
+            completed={completed}
+            onAssign={handleAssignClick}
+          />
+        )}
       </section>
     </div>
   );

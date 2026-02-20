@@ -1,50 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 // Constants for the heatmap
 const MONTHS = ["Sep", "Oct", "Nov", "Dec", "Jan"];
-const DAYS = ["Mon", "Wed", "Fri"]; // Only showing labels for alternate days to match design
-
-// Function to generate mock data for the semester (Sep 1 to Jan 30)
-const generateSemesterData = () => {
-    const data = [];
-    const startDate = new Date("2023-09-01"); // Start of Fall Semester
-    const endDate = new Date("2024-01-30");
-    const today = new Date();
-
-    let currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-        // Random activity level (0-4)
-        // 0: No activity
-        // 1: Low
-        // 2: Medium
-        // 3: High
-        // 4: Very High
-
-        // Simulating some patterns (weekends less active, some streaks)
-        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-        let activityLevel = 0;
-
-        if (!isWeekend) {
-            const rand = Math.random();
-            if (rand > 0.3) activityLevel = Math.floor(Math.random() * 4) + 1;
-        } else {
-            if (Math.random() > 0.8) activityLevel = Math.floor(Math.random() * 2) + 1;
-        }
-
-        data.push({
-            date: new Date(currentDate),
-            count: activityLevel,
-        });
-
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    return data;
-};
 
 const getColorClass = (level: number) => {
     switch (level) {
@@ -62,10 +22,55 @@ export function LMSHeatmapChart() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real app, verify if we have backend data, otherwise mock it
-        // For this design task, we'll use the generator to match the visual perfectly
-        setHeatmapData(generateSemesterData());
-        setLoading(false);
+        const fetchData = async () => {
+            try {
+                const res = await apiClient.get("/engagement/digital-footprint");
+                const students = res.data.heatmap_data || [];
+
+                const weeklyTotals: Record<number, { sum: number; count: number }> = {};
+                for (const student of students) {
+                    for (const entry of student.weekly_activity || []) {
+                        if (!weeklyTotals[entry.week]) {
+                            weeklyTotals[entry.week] = { sum: 0, count: 0 };
+                        }
+                        weeklyTotals[entry.week].sum += entry.activity;
+                        weeklyTotals[entry.week].count += 1;
+                    }
+                }
+
+                const weeklyAvg: Record<number, number> = {};
+                for (const [week, val] of Object.entries(weeklyTotals)) {
+                    weeklyAvg[Number(week)] = Math.round((val.sum / val.count) / 25);
+                }
+
+                const data: { date: Date; count: number }[] = [];
+                const year = new Date().getFullYear();
+                const startDate = new Date(year, 8, 1); // Sep 1
+                const endDate = new Date(year + 1, 0, 30); // Jan 30
+                let currentDate = new Date(startDate);
+                let weekIndex = 0;
+                let dayInWeek = 0;
+
+                while (currentDate <= endDate) {
+                    const level = weeklyAvg[weekIndex] ?? 0;
+                    data.push({ date: new Date(currentDate), count: Math.min(level, 4) });
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    dayInWeek++;
+                    if (dayInWeek === 7) {
+                        dayInWeek = 0;
+                        weekIndex++;
+                    }
+                }
+
+                setHeatmapData(data);
+            } catch (err) {
+                console.error("Failed to fetch digital footprint:", err);
+                setHeatmapData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     // Group data by weeks for column-based rendering

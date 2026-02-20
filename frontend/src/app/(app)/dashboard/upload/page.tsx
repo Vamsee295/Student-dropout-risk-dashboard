@@ -5,8 +5,7 @@ import {
     Upload, FileText, CheckCircle, AlertCircle, Loader2, Database,
     Users, BookOpen, ClipboardList, X
 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+import apiClient from "@/lib/api";
 
 type DataType = "attendance" | "marks" | "assignments";
 
@@ -66,37 +65,31 @@ export default function UploadDataPage() {
         formData.append("file", file);
 
         try {
-            const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-            const res = await fetch(`${API_URL}/faculty/upload/${type}`, {
-                method: "POST",
-                body: formData,
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-
-            const json = await res.json();
-
-            if (!res.ok) {
-                setResult({
-                    status: "error",
-                    message: "Upload failed",
-                    detail: json.detail || json.message || `Server error ${res.status}`,
-                });
-                return;
-            }
+            const res = await apiClient.post(`/faculty/upload/${type}`, formData);
+            const json = res.data;
 
             setResult({
                 status: "success",
                 message: json.message || "Upload successful!",
-                inserted: json.inserted,
-                skipped: json.skipped_unknown_students,
+                inserted: json.rows_processed,
+                skipped: json.errors?.length || 0,
             });
             setFile(null);
-        } catch (err: any) {
-            setResult({
-                status: "error",
-                message: "Network error",
-                detail: err.message || "Could not reach the server.",
-            });
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { detail?: string; message?: string }; status?: number }; message?: string };
+            if (axiosErr.response) {
+                setResult({
+                    status: "error",
+                    message: "Upload failed",
+                    detail: axiosErr.response.data?.detail || axiosErr.response.data?.message || `Server error ${axiosErr.response.status}`,
+                });
+            } else {
+                setResult({
+                    status: "error",
+                    message: "Network error",
+                    detail: axiosErr.message || "Could not reach the server.",
+                });
+            }
         } finally {
             setUploading(false);
         }

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { X, Send, MessageSquare, Minimize2, User } from "lucide-react";
+import apiClient from "@/lib/api";
 
 interface Message {
     id: string;
@@ -15,9 +16,10 @@ interface ChatWidgetProps {
     onClose: () => void;
     advisorName: string;
     advisorRole: string;
+    studentId?: string;
 }
 
-export default function ChatWidget({ isOpen, onClose, advisorName, advisorRole }: ChatWidgetProps) {
+export default function ChatWidget({ isOpen, onClose, advisorName, advisorRole, studentId }: ChatWidgetProps) {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -40,13 +42,14 @@ export default function ChatWidget({ isOpen, onClose, advisorName, advisorRole }
 
     if (!isOpen) return null;
 
-    const handleSendMessage = (e?: React.FormEvent) => {
+    const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!inputValue.trim()) return;
 
+        const userText = inputValue;
         const newUserMessage: Message = {
             id: Date.now().toString(),
-            text: inputValue,
+            text: userText,
             sender: 'user',
             timestamp: new Date()
         };
@@ -55,27 +58,29 @@ export default function ChatWidget({ isOpen, onClose, advisorName, advisorRole }
         setInputValue("");
         setIsTyping(true);
 
-        // Mock advisor reply
-        setTimeout(() => {
-            const replies = [
-                "I see. I'll take a look at their file right away.",
-                "That's a good observation. Let's schedule a meeting to discuss this further.",
-                "I've noted that down in the student's record.",
-                "Thanks for bringing this to my attention.",
-                "I'll reach out to the student directly regarding this."
-            ];
-            const randomReply = replies[Math.floor(Math.random() * replies.length)];
+        try {
+            const res = await apiClient.post('/analytics/chat', {
+                message: userText,
+                student_id: studentId || null,
+            });
+            const replyText = res.data?.reply || "I'll look into that and get back to you.";
 
-            const advisorReply: Message = {
+            setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
-                text: randomReply,
+                text: replyText,
                 sender: 'advisor',
                 timestamp: new Date()
-            };
-
-            setMessages(prev => [...prev, advisorReply]);
+            }]);
+        } catch {
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                text: "Sorry, I'm unable to connect right now. Please try again.",
+                sender: 'advisor',
+                timestamp: new Date()
+            }]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     return (

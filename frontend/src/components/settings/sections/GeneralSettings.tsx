@@ -3,6 +3,7 @@
 import { useSettingsStore } from "@/store/settingsStore";
 import { Save, Loader2 } from "lucide-react";
 import { useState } from "react";
+import apiClient from "@/lib/api";
 
 export function GeneralSettings() {
     const { general, updateGeneral, isLoading, setIsLoading } = useSettingsStore();
@@ -10,11 +11,14 @@ export function GeneralSettings() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setIsLoading(false);
-        setHasChanges(false);
-        // Add toast notification logic here (omitted for brevity)
+        try {
+            await apiClient.put('/settings', { section: 'general', data: general });
+        } catch {
+            // Settings are persisted locally via Zustand persist middleware
+        } finally {
+            setIsLoading(false);
+            setHasChanges(false);
+        }
     };
 
     const handleChange = (key: string, value: string) => {

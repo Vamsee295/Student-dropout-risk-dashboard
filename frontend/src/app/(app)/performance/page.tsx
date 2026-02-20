@@ -16,8 +16,7 @@ import { PlatformCard } from "@/components/performance/assessments/PlatformCard"
 import { SolvedQuestionsCard } from "@/components/performance/assessments/SolvedQuestionsCard";
 import { DomainPerformanceCard } from "@/components/performance/assessments/DomainPerformanceCard";
 import { exportToCSV } from "@/utils/exportUtils";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 // Sections for navigation
 const SECTIONS = [
@@ -29,7 +28,8 @@ const SECTIONS = [
 ];
 
 export default function PerformancePage() {
-    const [year, setYear] = useState("2023 - 2024");
+    const currentYear = new Date().getFullYear();
+    const [year, setYear] = useState(`${currentYear - 1} - ${currentYear}`);
     const [department, setDepartment] = useState("All Departments");
     const [activeSection, setActiveSection] = useState("overview");
     const [legacyData, setLegacyData] = useState<any>(null);
@@ -40,8 +40,8 @@ export default function PerformancePage() {
         if (department && department !== "All Departments") {
             params.append("department", department);
         }
-        fetch(`${API_URL}/api/performance/aggregate?${params.toString()}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/aggregate?${params.toString()}`)
+            .then(r => r.data)
             .then(setLegacyData)
             .catch(console.error)
             .finally(() => setLoading(false));

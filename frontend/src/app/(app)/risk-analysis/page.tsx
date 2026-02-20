@@ -1,12 +1,24 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CheckCircle, School, AlertTriangle, Play } from "lucide-react";
 import { MLMetricCard } from "@/components/risk-analysis/MLMetricCard";
 import { FeatureImportanceChart } from "@/components/risk-analysis/FeatureImportanceChart";
 import { RiskProbabilityChart } from "@/components/risk-analysis/RiskProbabilityChart";
 import { AtRiskStudentsTable } from "@/components/risk-analysis/AtRiskStudentsTable";
+import apiClient from "@/lib/api";
 
 export default function RiskAnalysisPage() {
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient.get('/analytics/ml-metrics')
+      .then((res) => setMetrics(res.data))
+      .catch((err) => console.error('Failed to fetch ML metrics:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-3">
@@ -25,35 +37,41 @@ export default function RiskAnalysisPage() {
       </section>
 
       <section className="grid gap-6 md:grid-cols-3">
-        <MLMetricCard
-          title="Model Accuracy"
-          value="94%"
-          trend="+2%"
-          trendDirection="up"
-          subtitle="Based on validation set of 500 records"
-          icon={CheckCircle}
-          iconColor="text-blue-600 bg-blue-50"
-          progress={94}
-          highlightColor="text-gray-900"
-        />
-        <MLMetricCard
-          title="Students Analyzed"
-          value="2,450"
-          subtitle="Across 12 different departments"
-          icon={School}
-          iconColor="text-blue-600 bg-blue-50"
-          highlightColor="text-gray-900"
-        />
-        <MLMetricCard
-          title="High Risk Alerts"
-          value="128"
-          trend="+15 new"
-          trendDirection="down" // Red color for bad trend (more alerts)
-          subtitle="since last week"
-          icon={AlertTriangle}
-          iconColor="text-red-600 bg-red-50"
-          highlightColor="text-gray-900"
-        />
+        {loading ? (
+          <div className="col-span-3 flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+          </div>
+        ) : (
+          <>
+            <MLMetricCard
+              title="Model Accuracy"
+              value={`${metrics?.model_accuracy || 0}%`}
+              trend={`F1: ${metrics?.f1_score || 0}%`}
+              trendDirection="up"
+              subtitle={`Trained on ${metrics?.training_samples || 0} samples`}
+              icon={CheckCircle}
+              iconColor="text-blue-600 bg-blue-50"
+              progress={metrics?.model_accuracy || 0}
+              highlightColor="text-gray-900"
+            />
+            <MLMetricCard
+              title="Students Analyzed"
+              value={metrics?.total_students_analyzed?.toLocaleString() || "0"}
+              subtitle={`Across ${metrics?.department_count || 0} departments`}
+              icon={School}
+              iconColor="text-blue-600 bg-blue-50"
+              highlightColor="text-gray-900"
+            />
+            <MLMetricCard
+              title="High Risk Alerts"
+              value={metrics?.high_risk_alerts?.toString() || "0"}
+              subtitle="Flagged by ML model"
+              icon={AlertTriangle}
+              iconColor="text-red-600 bg-red-50"
+              highlightColor="text-gray-900"
+            />
+          </>
+        )}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2 h-full">

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface HighRiskStudent {
     id: string;
@@ -27,8 +26,8 @@ export function HighRiskStudentList({ onIntervene }: HighRiskStudentListProps) {
 
     const fetchStudents = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/engagement/high-risk-students`);
-            const data = await response.json();
+            const response = await apiClient.get('/engagement/high-risk-students');
+            const data = response.data;
             setStudents(data.students || []);
         } catch (error) {
             console.error("Error fetching high-risk students:", error);

@@ -3,6 +3,7 @@
 import { Bell, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
 interface AlertItemProps {
     name: string;
@@ -63,9 +64,8 @@ export function RecentCriticalAlerts() {
     useEffect(() => {
         async function fetchAlerts() {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-                const response = await fetch(`${API_URL}/api/students/all`);
-                const students = await response.json();
+                const response = await apiClient.get('/students/all');
+                const students = response.data;
 
                 const highRiskStudents = students
                     .filter((s: any) => s.riskStatus === 'High Risk' || s.riskStatus === 'Moderate Risk')
@@ -79,7 +79,7 @@ export function RecentCriticalAlerts() {
                     title: student.riskStatus === 'High Risk' ? 'Critical Risk Detected' : 'Elevated Risk Warning',
                     description: `AI prediction shows ${student.riskValue} dropout risk. Attendance: ${student.attendance}%, Engagement: ${student.engagementScore}%.`,
                     actions: [
-                        { label: "Send Email", href: `mailto:${student.id}@student.edu` },
+                        { label: "Send Email", href: `mailto:${student.id}@university.edu` },
                         { label: "Inform Parent", primary: true, href: "#" }
                     ],
                     isCritical: student.riskStatus === 'High Risk'

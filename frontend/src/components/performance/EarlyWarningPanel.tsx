@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bell, AlertTriangle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface Alert {
     student_id: string;
@@ -43,8 +42,8 @@ export function EarlyWarningPanel({ department = "All Departments" }: EarlyWarni
 
     useEffect(() => {
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/early-warnings${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/early-warnings${params}`)
+            .then(r => r.data)
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false));

@@ -1,16 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-const data = [
-    { name: "Intro to CS", attendance: 65, gpa: 2.1, risk: "High" },
-    { name: "Math 101", attendance: 72, gpa: 2.5, risk: "Medium" },
-    { name: "History", attendance: 85, gpa: 3.2, risk: "Low" },
-    { name: "Physics", attendance: 92, gpa: 3.8, risk: "Low" },
-    { name: "Macroecon", attendance: 55, gpa: 1.8, risk: "High" },
-    { name: "Art", attendance: 88, gpa: 3.5, risk: "Low" },
-    { name: "Chemistry", attendance: 78, gpa: 2.9, risk: "Medium" },
-];
+import apiClient from "@/lib/api";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -28,6 +20,47 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function CorrelationChart() {
+    const [data, setData] = useState<{ name: string; attendance: number; gpa: string; risk: string }[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await apiClient.get("/performance/course-detail");
+                const courses = res.data.courses || [];
+                setData(
+                    courses.map((course: any) => ({
+                        name: course.course_name,
+                        attendance: course.attendance_pct,
+                        gpa: (course.overall_grade / 25).toFixed(1),
+                        risk: course.overall_grade < 50 ? "High" : course.overall_grade < 70 ? "Medium" : "Low",
+                    }))
+                );
+            } catch (err) {
+                console.error("Failed to fetch course performance:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="h-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm flex items-center justify-center min-h-[300px]">
+                <p className="text-gray-500">Loading performance data...</p>
+            </div>
+        );
+    }
+
+    if (data.length === 0) {
+        return (
+            <div className="h-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm flex items-center justify-center min-h-[300px]">
+                <p className="text-gray-500">No course performance data available.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="h-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">

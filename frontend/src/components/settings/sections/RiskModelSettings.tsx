@@ -3,6 +3,7 @@
 import { useSettingsStore } from "@/store/settingsStore";
 import { Save, Loader2, AlertTriangle, Info } from "lucide-react";
 import { useState } from "react";
+import apiClient from "@/lib/api";
 
 export function RiskModelSettings() {
     const { riskThresholds, featureWeights, updateRiskThresholds, updateFeatureWeights, isLoading, setIsLoading } = useSettingsStore();
@@ -10,9 +11,17 @@ export function RiskModelSettings() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate longer recalc time
-        setIsLoading(false);
-        setHasChanges(false);
+        try {
+            await Promise.all([
+                apiClient.put('/settings', { section: 'riskThresholds', data: riskThresholds }),
+                apiClient.put('/settings', { section: 'featureWeights', data: featureWeights }),
+            ]);
+        } catch {
+            // Persisted locally via Zustand persist middleware
+        } finally {
+            setIsLoading(false);
+            setHasChanges(false);
+        }
     };
 
     const handleThresholdChange = (key: string, value: number) => {

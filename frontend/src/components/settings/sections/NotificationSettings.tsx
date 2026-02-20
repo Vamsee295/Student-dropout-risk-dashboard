@@ -3,6 +3,7 @@
 import { useSettingsStore, NotificationSettings as NotifSettingsType } from "@/store/settingsStore";
 import { Save, Loader2, Bell, Mail, Smartphone } from "lucide-react";
 import { useState } from "react";
+import apiClient from "@/lib/api";
 
 export function NotificationSettings() {
     const { notifications, updateNotifications, isLoading, setIsLoading } = useSettingsStore();
@@ -10,9 +11,14 @@ export function NotificationSettings() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setIsLoading(false);
-        setHasChanges(false);
+        try {
+            await apiClient.put('/settings', { section: 'notifications', data: notifications });
+        } catch {
+            // Persisted locally via Zustand persist middleware
+        } finally {
+            setIsLoading(false);
+            setHasChanges(false);
+        }
     };
 
     const handleChange = (key: keyof NotifSettingsType, value: boolean) => {

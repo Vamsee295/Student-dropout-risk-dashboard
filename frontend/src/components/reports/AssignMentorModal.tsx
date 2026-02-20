@@ -1,8 +1,8 @@
 "use client";
 
-import { X, Search, GraduationCap } from "lucide-react";
-import { useState } from "react";
-import { PEER_MENTORS } from "@/data/mockStudentData";
+import { X, Search, GraduationCap, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
 interface AssignMentorModalProps {
     isOpen: boolean;
@@ -13,17 +13,30 @@ interface AssignMentorModalProps {
 export function AssignMentorModal({ isOpen, onClose, onConfirm }: AssignMentorModalProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+    const [mentors, setMentors] = useState<{ id: string; name: string; department: string; year: string }[]>([]);
+    const [loadingMentors, setLoadingMentors] = useState(true);
+
+    useEffect(() => {
+        if (isOpen) {
+            apiClient.get('/analytics/faculty')
+                .then(res => setMentors(res.data.faculty.map((f: { id: string; name: string; department: string; role: string }) => ({
+                    id: f.id, name: f.name, department: f.department, year: f.role,
+                }))))
+                .catch(() => {})
+                .finally(() => setLoadingMentors(false));
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
-    const filteredMentors = PEER_MENTORS.filter(m =>
+    const filteredMentors = mentors.filter(m =>
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.department.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const handleConfirm = () => {
         if (selectedMentorId) {
-            const mentor = PEER_MENTORS.find(m => m.id === selectedMentorId);
+            const mentor = mentors.find(m => m.id === selectedMentorId);
             if (mentor) {
                 onConfirm(mentor.name);
                 onClose();
@@ -57,6 +70,7 @@ export function AssignMentorModal({ isOpen, onClose, onConfirm }: AssignMentorMo
                     </div>
 
                     <div className="max-h-[300px] overflow-y-auto space-y-2">
+                        {loadingMentors && <div className="flex justify-center py-6"><Loader2 size={24} className="animate-spin text-gray-400" /></div>}
                         {filteredMentors.map((mentor) => (
                             <button
                                 key={mentor.id}

@@ -19,6 +19,7 @@ import {
     ComposedChart,
     Area,
 } from "recharts";
+import apiClient from "@/lib/api";
 
 interface DeptAnalytics {
     department: string;
@@ -33,8 +34,6 @@ const DEPT_COLORS = [
     "#6366F1", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-
 export default function AnalyticsPage() {
     const [deptData, setDeptData] = useState<DeptAnalytics[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,9 +41,8 @@ export default function AnalyticsPage() {
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
-                const res = await fetch(`${API_URL}/faculty/analytics/department`);
-                const json = await res.json();
-                setDeptData(Array.isArray(json) ? json : []);
+                const res = await apiClient.get('/faculty/analytics/department');
+                setDeptData(Array.isArray(res.data) ? res.data : []);
             } catch (error) {
                 console.error("Failed to fetch analytics:", error);
             } finally {
@@ -152,10 +150,10 @@ export default function AnalyticsPage() {
                                 />
                                 <Tooltip
                                     cursor={{ fill: "#F3F4F6" }}
-                                    formatter={(value: number, name: string) => {
+                                    formatter={(value, name) => {
                                         if (name === "avg_risk") return [`${value}%`, "Avg Risk Score"];
                                         if (name === "attendance") return [`${value}%`, "Avg Attendance"];
-                                        return [value, name];
+                                        return [`${value}`, String(name)];
                                     }}
                                     contentStyle={{
                                         borderRadius: "8px",
@@ -214,7 +212,7 @@ export default function AnalyticsPage() {
                                             border: "none",
                                             boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                                         }}
-                                        formatter={(v: number) => [`${v.toFixed(1)}%`, "Avg Risk"]}
+                                        formatter={(v) => [`${Number(v).toFixed(1)}%`, "Avg Risk"]}
                                     />
                                     <Legend iconType="circle" iconSize={8} />
                                     {trendDepts.map((dept, i) => (
@@ -263,7 +261,7 @@ export default function AnalyticsPage() {
                                         border: "none",
                                         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                                     }}
-                                    formatter={(v: number) => [v, "High Risk Students"]}
+                                    formatter={(v) => [Number(v), "High Risk Students"]}
                                 />
                                 <Bar dataKey="high_risk_count" name="High Risk Students" radius={[4, 4, 0, 0]} barSize={36}>
                                     {deptData.map((_, i) => (

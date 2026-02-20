@@ -23,7 +23,7 @@ export default function SignupPage() {
                     </div>
                     <div>
                         <h4 className="font-bold text-gray-900 text-sm">Email Support</h4>
-                        <p className="text-xs text-gray-500 mt-1">support@edusight.edu</p>
+                        <p className="text-xs text-gray-500 mt-1">admin@klu.ac.in</p>
                     </div>
                 </div>
 
@@ -33,7 +33,7 @@ export default function SignupPage() {
                     </div>
                     <div>
                         <h4 className="font-bold text-gray-900 text-sm">IT Helpdesk</h4>
-                        <p className="text-xs text-gray-500 mt-1">+1 (800) 123-4567 (Ext. 99)</p>
+                        <p className="text-xs text-gray-500 mt-1">Contact your department administrator</p>
                     </div>
                 </div>
 
@@ -50,7 +50,7 @@ export default function SignupPage() {
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center">
                 <p className="text-xs text-gray-400">
-                    Reference ID: <span className="font-mono text-gray-600">REQ-{Math.floor(Math.random() * 10000)}</span>
+                    Reference ID: <span className="font-mono text-gray-600">REQ-{new Date().getFullYear()}{String(new Date().getMonth() + 1).padStart(2, '0')}</span>
                 </p>
             </div>
         </div>

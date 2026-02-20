@@ -10,8 +10,7 @@ import { NewInterventionModal } from "@/components/interventions/NewIntervention
 import { SuccessAnimation } from "@/components/interventions/SuccessAnimation";
 import { InterventionCardProps } from "@/components/interventions/InterventionCard";
 import { exportToCSV } from "@/utils/exportUtils";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 export default function EngagementPage() {
     const [isInterventionModalOpen, setIsInterventionModalOpen] = useState(false);
@@ -26,16 +25,13 @@ export default function EngagementPage() {
     const fetchEngagementData = async () => {
         try {
             const [overviewResp, highRiskResp] = await Promise.all([
-                fetch(`${API_URL}/api/engagement/overview`),
-                fetch(`${API_URL}/api/engagement/high-risk-students`)
+                apiClient.get('/engagement/overview'),
+                apiClient.get('/engagement/high-risk-students')
             ]);
 
-            const overview = await overviewResp.json();
-            const highRisk = await highRiskResp.json();
-
             setEngagementData({
-                overview,
-                highRisk: highRisk.students || []
+                overview: overviewResp.data,
+                highRisk: highRiskResp.data.students || []
             });
         } catch (error) {
             console.error("Error fetching engagement data:", error);
@@ -47,10 +43,16 @@ export default function EngagementPage() {
         setIsInterventionModalOpen(true);
     };
 
-    const handleConfirmIntervention = (intervention: Partial<InterventionCardProps>) => {
-        // In a real app, we would save this to the backend.
-        // For now, we just show the success animation.
-        console.log("Created intervention:", intervention);
+    const handleConfirmIntervention = async (intervention: Partial<InterventionCardProps>) => {
+        try {
+            await apiClient.post('/faculty/interventions', {
+                student_id: selectedStudent?.id || intervention.studentId?.replace('#', ''),
+                intervention_type: 'academic_support',
+                notes: `${intervention.alertTitle}: ${intervention.alertDescription}`,
+            });
+        } catch (e) {
+            console.error("Failed to create intervention:", e);
+        }
         setShowSuccess(true);
     };
 
@@ -126,7 +128,7 @@ export default function EngagementPage() {
                 </div>
                 <div className="flex gap-3">
                     <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 shadow-sm">
-                        <span>📅 Fall Semester 2023</span>
+                        <span>Current Semester</span>
                     </div>
                     <button
                         onClick={handleExportReport}

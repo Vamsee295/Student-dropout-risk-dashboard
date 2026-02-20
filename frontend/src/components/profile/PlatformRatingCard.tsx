@@ -59,8 +59,8 @@ export function PlatformRatingCard({
             </div>
 
             <div className="mt-2 flex justify-between text-[10px] text-gray-400">
-                <span>Apr 25</span>
-                <span>Jan 26</span>
+                <span>Start</span>
+                <span>Current</span>
             </div>
         </div>
     );

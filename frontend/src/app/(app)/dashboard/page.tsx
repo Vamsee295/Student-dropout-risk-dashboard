@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { facultyService } from "@/services/faculty";
+import apiClient from "@/lib/api";
 import {
   Users,
   AlertTriangle,
@@ -59,12 +60,12 @@ export default function FacultyDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [overviewData, analyticsData] = await Promise.all([
+        const [overviewData, analyticsRes] = await Promise.all([
           facultyService.getOverview(),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/faculty/analytics/department`).then(r => r.json()),
+          apiClient.get('/faculty/analytics/department'),
         ]);
-        setOverview(overviewData as any);
-        setDeptData(Array.isArray(analyticsData) ? analyticsData : []);
+        setOverview(overviewData as FacultyOverview);
+        setDeptData(Array.isArray(analyticsRes.data) ? analyticsRes.data : []);
       } catch (error) {
         console.error("Failed to fetch faculty dashboard data:", error);
       } finally {
@@ -79,7 +80,7 @@ export default function FacultyDashboard() {
     try {
       await facultyService.recalculateRisk();
       const overviewData = await facultyService.getOverview();
-      setOverview(overviewData as any);
+      setOverview(overviewData as FacultyOverview);
     } catch (error) {
       console.error("Recalculation failed:", error);
     } finally {
@@ -204,9 +205,9 @@ export default function FacultyDashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [
+                    formatter={(value, name) => [
                       `${value} students`,
-                      name,
+                      String(name),
                     ]}
                     contentStyle={{
                       borderRadius: "8px",
@@ -262,10 +263,10 @@ export default function FacultyDashboard() {
                   />
                   <Tooltip
                     cursor={{ fill: "#F3F4F6" }}
-                    formatter={(value: number, name: string) => {
-                      if (name === "avg_risk") return [`${value.toFixed(1)}%`, "Avg Risk Score"];
-                      if (name === "attendance") return [`${value.toFixed(1)}%`, "Avg Attendance"];
-                      return [value, name];
+                    formatter={(value, name) => {
+                      if (name === "avg_risk") return [`${Number(value).toFixed(1)}%`, "Avg Risk Score"];
+                      if (name === "attendance") return [`${Number(value).toFixed(1)}%`, "Avg Attendance"];
+                      return [`${value}`, String(name)];
                     }}
                     contentStyle={{
                       borderRadius: "8px",

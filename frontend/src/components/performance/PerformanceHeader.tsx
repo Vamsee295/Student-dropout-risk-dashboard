@@ -1,7 +1,8 @@
 "use client";
 
 import { Download, Calendar, ChevronDown, Check } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
 interface PerformanceHeaderProps {
     selectedYear: string;
@@ -20,25 +21,21 @@ export function PerformanceHeader({
 }: PerformanceHeaderProps) {
     const [isYearOpen, setIsYearOpen] = useState(false);
     const [isDeptOpen, setIsDeptOpen] = useState(false);
+    const [departments, setDepartments] = useState<string[]>(["All Departments"]);
 
-    // Close dropdowns on click outside (simplified for now, can be improved with hooks)
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 4 }, (_, i) => `${currentYear - 2 + i} - ${currentYear - 1 + i}`);
 
-    const years = [
-        "2023 - 2024",
-        "2024 - 2025",
-        "2025 - 2026",
-        "2026 - 2027"
-    ];
-
-    const departments = [
-        "All Departments",
-        "CSE",
-        "CS IT",
-        "AEROSPACE",
-        "AI-DS",
-        "AIML",
-        "DATA SCIENCE"
-    ];
+    useEffect(() => {
+        apiClient.get('/analytics/department-breakdown')
+            .then(res => {
+                const depts = (res.data || []).map((d: { department: string }) =>
+                    typeof d.department === 'string' ? d.department : String(d.department)
+                );
+                setDepartments(["All Departments", ...depts]);
+            })
+            .catch(() => {});
+    }, []);
 
     return (
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-2 relative z-20">
@@ -55,14 +52,13 @@ export function PerformanceHeader({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1 shadow-sm relative">
 
-                    {/* Year Dropdown */}
                     <div className="relative">
                         <button
                             onClick={() => { setIsYearOpen(!isYearOpen); setIsDeptOpen(false); }}
                             className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-md"
                         >
                             <Calendar size={14} className="text-gray-500" />
-                            {selectedYear.split(' - ')[0] || "Select Year"} {/* Show start year for compactness */}
+                            {selectedYear.split(' - ')[0] || "Select Year"}
                             <ChevronDown size={14} className={`text-gray-400 transition-transform ${isYearOpen ? "rotate-180" : ""}`} />
                         </button>
 
@@ -84,7 +80,6 @@ export function PerformanceHeader({
 
                     <div className="w-px h-5 bg-gray-200"></div>
 
-                    {/* Department Dropdown */}
                     <div className="relative">
                         <button
                             onClick={() => { setIsDeptOpen(!isDeptOpen); setIsYearOpen(false); }}

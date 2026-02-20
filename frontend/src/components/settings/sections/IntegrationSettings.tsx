@@ -1,15 +1,60 @@
 "use client";
 
 import { RefreshCw, CheckCircle, XCircle, Upload } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import apiClient from "@/lib/api";
 
 export function IntegrationSettings() {
+    const router = useRouter();
     const [lmsStatus, setLmsStatus] = useState<'connected' | 'disconnected'>('connected');
     const [syncing, setSyncing] = useState(false);
+    const [selectedLMS, setSelectedLMS] = useState('Canvas');
+    const [apiKey, setApiKey] = useState('sk_live_51J...');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleSync = () => {
+    useEffect(() => {
+        const saved = localStorage.getItem('app-settings-integration');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed.selectedLMS) setSelectedLMS(parsed.selectedLMS);
+            } catch {}
+        }
+    }, []);
+
+    const handleSync = async () => {
         setSyncing(true);
-        setTimeout(() => setSyncing(false), 2000);
+        try {
+            await apiClient.get('/analytics/ml-metrics');
+            setLmsStatus('connected');
+        } catch {
+            setLmsStatus('disconnected');
+        } finally {
+            setSyncing(false);
+        }
+    };
+
+    const handleLMSSelect = (lms: string) => {
+        setSelectedLMS(lms);
+        localStorage.setItem('app-settings-integration', JSON.stringify({ selectedLMS: lms }));
+    };
+
+    const handleRegenerate = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const key = 'sk_live_' + Array.from({ length: 24 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+        setApiKey(key);
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            router.push('/dashboard/upload');
+        }
     };
 
     return (
@@ -36,7 +81,7 @@ export function IntegrationSettings() {
                     <div className="space-y-4">
                         <div className="flex gap-4">
                             {['Canvas', 'Moodle', 'Blackboard', 'Google Classroom'].map((lms) => (
-                                <button key={lms} className={`flex-1 py-3 border rounded-lg text-sm font-semibold transition-colors ${lms === 'Canvas' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                <button key={lms} onClick={() => handleLMSSelect(lms)} className={`flex-1 py-3 border rounded-lg text-sm font-semibold transition-colors ${lms === selectedLMS ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                                     }`}>
                                     {lms}
                                 </button>
@@ -48,11 +93,11 @@ export function IntegrationSettings() {
                             <div className="flex gap-2">
                                 <input
                                     type="password"
-                                    defaultValue="sk_live_51J..."
+                                    value={apiKey}
                                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono bg-gray-50"
                                     readOnly
                                 />
-                                <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50">
+                                <button onClick={handleRegenerate} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50">
                                     Regenerate
                                 </button>
                             </div>
@@ -77,7 +122,8 @@ export function IntegrationSettings() {
                         </button>
                     </div>
 
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                    <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                    <div onClick={handleUploadClick} className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
                         <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
                             <Upload size={24} />
                         </div>

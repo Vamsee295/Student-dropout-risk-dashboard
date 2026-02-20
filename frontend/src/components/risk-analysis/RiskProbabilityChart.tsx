@@ -1,16 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import apiClient from "@/lib/api";
 
-const data = [
-    { range: "0-20%", value: 240, color: "#bfdbfe" }, // sky-200
-    { range: "20-40%", value: 180, color: "#93c5fd" }, // sky-300
-    { range: "40-60%", value: 120, color: "#60a5fa" }, // sky-400
-    { range: "60-80%", value: 80, color: "#3b82f6" }, // blue-500
-    { range: "80-100%", value: 45, color: "#2563eb" }, // blue-600
-];
+const colors = ["#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#2563eb"];
 
 export function RiskProbabilityChart() {
+    const [data, setData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchDistribution() {
+            try {
+                const response = await apiClient.get('/analytics/risk-distribution');
+                const mapped = (response.data || []).map((item: any, index: number) => ({
+                    range: `${item.bucket_start}-${item.bucket_end}%`,
+                    value: item.count,
+                    color: colors[index % colors.length],
+                }));
+                setData(mapped);
+            } catch (error) {
+                console.error('Failed to fetch risk distribution:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchDistribution();
+    }, []);
+
+    if (loading) {
+        return <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full text-center text-gray-500">Loading distribution...</div>;
+    }
+
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">
             <div className="mb-6 flex items-center justify-between">

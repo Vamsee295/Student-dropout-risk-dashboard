@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown, Clock, CheckCircle, LogIn } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface EngagementOverview {
     avg_login_rate: number;
@@ -17,23 +17,14 @@ interface EngagementOverview {
 export function EngagementMetricCards() {
     const [data, setData] = useState<EngagementOverview | null>(null);
     const [loading, setLoading] = useState(true);
-    const [clientSideWidths, setClientSideWidths] = useState<number[]>([]);
-
     useEffect(() => {
         fetchData();
-        // Generate random widths for progress bars only on the client
-        setClientSideWidths([
-            Math.random() * 40 + 60,
-            Math.random() * 40 + 60,
-            Math.random() * 40 + 60
-        ]);
     }, []);
 
     const fetchData = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/engagement/overview`);
-            const result = await response.json();
-            setData(result);
+            const response = await apiClient.get('/engagement/overview');
+            setData(response.data);
         } catch (error) {
             console.error("Error fetching engagement overview:", error);
         } finally {
@@ -117,7 +108,7 @@ export function EngagementMetricCards() {
                         <div className="mt-4 h-1 w-full bg-gray-50 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full ${metric.trend >= 0 ? 'bg-blue-500' : 'bg-orange-400'}`}
-                                style={{ width: `${clientSideWidths[i] || 0}%` }}
+                                style={{ width: `${i === 0 ? Math.round(data.avg_login_rate) : i === 1 ? Math.min(100, Math.round(data.avg_time_spent * 10)) : Math.round(data.assignment_completion)}%` }}
                             ></div>
                         </div>
                     </div>

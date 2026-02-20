@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface WeeklyData {
     week: string;
@@ -21,8 +20,8 @@ export function EffortOutputChart() {
 
     const fetchData = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/engagement/effort-vs-output`);
-            const result = await response.json();
+            const response = await apiClient.get('/engagement/effort-vs-output');
+            const result = response.data;
             setData(result.weeks || []);
         } catch (error) {
             console.error("Error fetching effort vs output data:", error);

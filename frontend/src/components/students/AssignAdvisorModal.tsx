@@ -1,8 +1,14 @@
 "use client";
 
-import { X, Search, User } from "lucide-react";
-import { useState } from "react";
-import { Teacher, TEACHERS } from "@/data/mockStudentData";
+import { X, Search, User, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
+
+interface Teacher {
+    id: string;
+    name: string;
+    department: string;
+}
 
 interface AssignAdvisorModalProps {
     isOpen: boolean;
@@ -14,17 +20,30 @@ interface AssignAdvisorModalProps {
 export function AssignAdvisorModal({ isOpen, onClose, onConfirm, studentCount }: AssignAdvisorModalProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [loadingFaculty, setLoadingFaculty] = useState(true);
+
+    useEffect(() => {
+        if (isOpen) {
+            apiClient.get('/analytics/faculty')
+                .then(res => setTeachers(res.data.faculty.map((f: { id: string; name: string; department: string }) => ({
+                    id: f.id, name: f.name, department: f.department,
+                }))))
+                .catch(() => {})
+                .finally(() => setLoadingFaculty(false));
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
-    const filteredTeachers = TEACHERS.filter(t =>
+    const filteredTeachers = teachers.filter(t =>
         t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.department.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const handleConfirm = () => {
         if (selectedTeacherId) {
-            const teacher = TEACHERS.find(t => t.id === selectedTeacherId);
+            const teacher = teachers.find(t => t.id === selectedTeacherId);
             if (teacher) {
                 onConfirm(teacher.id, teacher.name);
                 onClose();
@@ -58,6 +77,7 @@ export function AssignAdvisorModal({ isOpen, onClose, onConfirm, studentCount }:
                     </div>
 
                     <div className="max-h-[300px] overflow-y-auto space-y-2">
+                        {loadingFaculty && <div className="flex justify-center py-6"><Loader2 size={24} className="animate-spin text-gray-400" /></div>}
                         {filteredTeachers.map((teacher) => (
                             <button
                                 key={teacher.id}

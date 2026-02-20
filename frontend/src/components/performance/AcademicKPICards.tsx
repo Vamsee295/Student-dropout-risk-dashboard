@@ -5,8 +5,7 @@ import {
     TrendingUp, TrendingDown, Minus, BookOpen,
     XCircle, FileCheck, Award, AlertTriangle
 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface KPIData {
     total_students: number;
@@ -53,8 +52,8 @@ export function AcademicKPICards({ department = "All Departments" }: AcademicKPI
 
     useEffect(() => {
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/kpis${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/kpis${params}`)
+            .then(r => r.data)
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false));

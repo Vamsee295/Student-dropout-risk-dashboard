@@ -6,8 +6,7 @@ import {
     ResponsiveContainer, LineChart, Line, XAxis, YAxis,
     CartesianGrid, Tooltip, ReferenceLine, Legend, Area, AreaChart, ComposedChart, Bar
 } from "recharts";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface TrendsData {
     terms: string[];
@@ -56,8 +55,8 @@ export function GPATrendChart({ department = "All Departments" }: GPATrendChartP
 
     useEffect(() => {
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/trends${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/trends${params}`)
+            .then(r => r.data)
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false));

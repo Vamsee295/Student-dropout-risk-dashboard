@@ -98,7 +98,7 @@ export default function CourseInsightsPage() {
                     Intro to Macroeconomics
                   </div>
                   <div className="text-[11px] text-neutral-600">
-                    ECON 101 · Prof. Sarah Jenkins
+                    ECON 101 · Faculty Advisor
                   </div>
                 </div>
                 <span className="text-right text-red-600">24%</span>
@@ -109,7 +109,7 @@ export default function CourseInsightsPage() {
                 <div>
                   <div className="text-sm font-bold">Computer Science 101</div>
                   <div className="text-[11px] text-neutral-600">
-                    CS 101 · Prof. Alan Turing
+                    CS 101 · Faculty Advisor
                   </div>
                 </div>
                 <span className="text-right text-red-600">21%</span>
@@ -120,7 +120,7 @@ export default function CourseInsightsPage() {
                 <div>
                   <div className="text-sm font-bold">Linear Algebra</div>
                   <div className="text-[11px] text-neutral-600">
-                    MATH 201 · Prof. John Doe
+                    MATH 201 · Faculty Advisor
                   </div>
                 </div>
                 <span className="text-right text-amber-700">16%</span>

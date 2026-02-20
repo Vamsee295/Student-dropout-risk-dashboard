@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     MoreHorizontal,
     Plus,
@@ -9,9 +9,11 @@ import {
     AlertTriangle,
     Clock,
     User,
-    ArrowRight
+    ArrowRight,
+    Loader2
 } from "lucide-react";
 import Link from "next/link";
+import apiClient from "@/lib/api";
 
 type Status = 'Needs Review' | 'Counseling Scheduled' | 'Monitoring' | 'Resolved';
 
@@ -25,18 +27,29 @@ interface StudentCard {
     avatar: string;
 }
 
-const initialData: StudentCard[] = [
-    { id: 'S001', name: 'John Student', riskScore: 88, riskLevel: 'High', status: 'Needs Review', lastUpdated: '2h ago', avatar: 'JS' },
-    { id: 'S002', name: 'Emily Chen', riskScore: 72, riskLevel: 'Medium', status: 'Needs Review', lastUpdated: '5h ago', avatar: 'EC' },
-    { id: 'S003', name: 'Michael Brown', riskScore: 92, riskLevel: 'High', status: 'Counseling Scheduled', lastUpdated: '1d ago', avatar: 'MB' },
-    { id: 'S004', name: 'Sarah Davis', riskScore: 65, riskLevel: 'Medium', status: 'Monitoring', lastUpdated: '3d ago', avatar: 'SD' },
-    { id: 'S005', name: 'David Wilson', riskScore: 45, riskLevel: 'Low', status: 'Resolved', lastUpdated: '1w ago', avatar: 'DW' },
-];
-
 const columns: Status[] = ['Needs Review', 'Counseling Scheduled', 'Monitoring', 'Resolved'];
 
 export default function InterventionBoard() {
-    const [students, setStudents] = useState<StudentCard[]>(initialData);
+    const [students, setStudents] = useState<StudentCard[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        apiClient.get('/analytics/at-risk-students')
+            .then(res => {
+                const fetched: StudentCard[] = (res.data.students || []).map((s: { id: string; name: string; riskScore: number; riskLevel: string; status: string; lastUpdated: string; avatar: string }) => ({
+                    id: s.id,
+                    name: s.name,
+                    riskScore: s.riskScore,
+                    riskLevel: s.riskLevel as 'High' | 'Medium' | 'Low',
+                    status: s.status as Status,
+                    lastUpdated: s.lastUpdated,
+                    avatar: s.avatar,
+                }));
+                setStudents(fetched);
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
     const [draggedStudent, setDraggedStudent] = useState<string | null>(null);
 
     const handleDragStart = (e: React.DragEvent, studentId: string) => {
@@ -69,6 +82,14 @@ export default function InterventionBoard() {
             default: return 'bg-green-100 text-green-700 border-green-200';
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex h-full items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-8rem)] flex flex-col">

@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sparkles, RefreshCw, TrendingDown, Shield } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface InsightData {
     insight: string;
@@ -22,8 +21,8 @@ export function AIInsightCard({ department = "All Departments" }: AIInsightCardP
     const fetch_ = () => {
         setLoading(true);
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/ai-insight${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/ai-insight${params}`)
+            .then(r => r.data)
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false));

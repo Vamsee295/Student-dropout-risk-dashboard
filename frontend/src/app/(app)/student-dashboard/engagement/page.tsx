@@ -25,7 +25,7 @@ export default function StudentEngagementPage() {
                 </div>
             </section>
 
-            {/* Metrics Section - Using the same component but it will show student's personal data (mocked) */}
+            {/* Metrics Section */}
             <section>
                 <EngagementMetricCards />
             </section>

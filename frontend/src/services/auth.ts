@@ -1,6 +1,7 @@
 import axios from 'axios';
+import apiClient from '@/lib/api';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api') + '/auth';
+const AUTH_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api') + '/auth';
 
 export const authService = {
     login: async (email: string, password: string) => {
@@ -9,11 +10,11 @@ export const authService = {
         params.append('password', password);
 
         try {
-            const response = await axios.post(`${API_URL}/login`, params, {
+            const response = await axios.post(`${AUTH_URL}/login`, params, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                timeout: 10000, // 10s timeout
+                timeout: 10000,
             });
             return response.data;
         } catch (error) {
@@ -24,7 +25,7 @@ export const authService = {
 
     getCurrentUser: async (token: string) => {
         try {
-            const response = await axios.get(`${API_URL}/me`, {
+            const response = await apiClient.get('/auth/me', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -39,7 +40,7 @@ export const authService = {
 
     forgotPassword: async (email: string) => {
         try {
-            const response = await axios.post(`${API_URL}/forgot-password?email=${encodeURIComponent(email)}`);
+            const response = await apiClient.post(`/auth/forgot-password?email=${encodeURIComponent(email)}`);
             return response.data;
         } catch (error) {
             console.error("Forgot Password Error:", error);

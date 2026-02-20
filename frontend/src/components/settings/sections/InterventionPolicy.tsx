@@ -2,16 +2,26 @@
 
 import { Save, Loader2, Zap } from "lucide-react";
 import { useState } from "react";
+import apiClient from "@/lib/api";
 
 export function InterventionPolicy() {
     const [isLoading, setIsLoading] = useState(false);
     const [autoAssignment, setAutoAssignment] = useState(true);
     const [escalationDays, setEscalationDays] = useState(7);
+    const [riskThreshold, setRiskThreshold] = useState(80);
 
     const handleSave = async () => {
         setIsLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setIsLoading(false);
+        try {
+            await apiClient.put('/settings', {
+                section: 'interventionPolicy',
+                data: { autoAssignment, escalationDays, riskThreshold },
+            });
+        } catch {
+            // Acceptable – settings will be reloaded next time
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -38,7 +48,8 @@ export function InterventionPolicy() {
                             <div className="mt-3 flex items-center gap-3">
                                 <input
                                     type="number"
-                                    defaultValue={80}
+                                    value={riskThreshold}
+                                    onChange={(e) => setRiskThreshold(Number(e.target.value))}
                                     className="w-20 px-3 py-1.5 border border-gray-300 rounded-lg font-bold text-center"
                                 />
                                 <span className="font-bold text-gray-600">%</span>

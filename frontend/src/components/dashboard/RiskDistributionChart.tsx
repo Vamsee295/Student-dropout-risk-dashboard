@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
 export function RiskDistributionChart() {
     const [loading, setLoading] = useState(true);
@@ -10,10 +11,8 @@ export function RiskDistributionChart() {
     useEffect(() => {
         async function fetchDistribution() {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-                const response = await fetch(`${API_URL}/api/analytics/overview`);
-                const data = await response.json();
-                setDistribution(data.risk_distribution || {});
+                const response = await apiClient.get('/analytics/overview');
+                setDistribution(response.data.risk_distribution || {});
             } catch (error) {
                 console.error('Failed to fetch risk distribution:', error);
             } finally {

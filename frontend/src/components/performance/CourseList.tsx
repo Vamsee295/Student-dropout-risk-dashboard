@@ -1,52 +1,32 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { LayoutGrid, List, ChevronDown } from "lucide-react";
 import { CourseCard, CourseCardProps } from "./CourseCard";
-
-const courses: CourseCardProps[] = [
-    {
-        id: "1",
-        name: "Intro to Macroeconomics",
-        code: "ECON 101",
-        professor: "Prof. Sarah Jenkins",
-        riskStatus: "Red Flag",
-        riskRate: "24%",
-        avgAttendance: "65%",
-        avgGrade: "1.8",
-    },
-    {
-        id: "2",
-        name: "Computer Science 101",
-        code: "CS 101",
-        professor: "Prof. Alan Turing",
-        riskStatus: "Red Flag",
-        riskRate: "21%",
-        avgAttendance: "72%",
-        avgGrade: "2.5",
-    },
-    {
-        id: "3",
-        name: "Linear Algebra",
-        code: "MATH 201",
-        professor: "Prof. John Doe",
-        riskStatus: "Warning",
-        riskRate: "15%",
-        avgAttendance: "78%",
-        avgGrade: "2.9",
-    },
-    {
-        id: "4",
-        name: "Physics I",
-        code: "PHYS 101",
-        professor: "Prof. Albert",
-        riskStatus: "Stable",
-        riskRate: "5%",
-        avgAttendance: "92%",
-        avgGrade: "3.8",
-    },
-];
+import apiClient from "@/lib/api";
 
 export function CourseList() {
+    const [courses, setCourses] = useState<CourseCardProps[]>([]);
+
+    useEffect(() => {
+        apiClient.get("/performance/course-detail").then((res) => {
+            const mapped: CourseCardProps[] = (res.data.courses ?? []).map(
+                (course: { course_id: string; course_name: string; credits: number; attendance_pct: number; overall_grade: number }) => ({
+                    id: course.course_id,
+                    name: course.course_name,
+                    code: course.course_id,
+                    professor: course.course_name.split(" ")[0] + " Dept",
+                    riskStatus: course.overall_grade < 50 ? "Red Flag" : course.overall_grade < 70 ? "Warning" : "Stable",
+                    riskRate: `${Math.round(100 - course.overall_grade)}%`,
+                    avgAttendance: `${course.attendance_pct}%`,
+                    avgGrade: (course.overall_grade / 25).toFixed(1),
+                })
+            );
+            setCourses(mapped);
+        }).catch((err) => {
+            console.error("Failed to fetch course details:", err);
+        });
+    }, []);
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">

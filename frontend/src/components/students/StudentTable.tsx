@@ -2,7 +2,21 @@
 
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { Student } from "@/data/mockStudentData";
+export interface Student {
+    id: string;
+    name: string;
+    avatar: string;
+    course: string;
+    department: string;
+    section: string;
+    riskStatus: string;
+    riskTrend: "up" | "down" | "stable";
+    riskValue: string;
+    attendance: number;
+    engagementScore: number;
+    lastInteraction: string;
+    advisor?: string;
+}
 
 interface StudentTableProps {
     students: Student[];
@@ -11,7 +25,7 @@ interface StudentTableProps {
     onToggleAll: () => void;
 }
 
-function SparklineMock({ trend }: { trend: "up" | "down" | "stable" }) {
+function RiskSparkline({ trend }: { trend: "up" | "down" | "stable" }) {
     const color = trend === "up" ? "text-red-500" : trend === "down" ? "text-emerald-500" : "text-gray-400";
     if (trend === "up") {
         return (
@@ -107,7 +121,7 @@ export function StudentTable({ students, selectedIds, onToggleSelection, onToggl
                             </td>
                             <td className="px-6 py-4">
                                 <div className="flex flex-col items-center gap-1 w-20">
-                                    <SparklineMock trend={student.riskTrend} />
+                                    <RiskSparkline trend={student.riskTrend} />
                                     <span className={`text-[10px] font-bold ${student.riskStatus === 'High Risk' ? 'text-red-600' :
                                         student.riskStatus === 'Safe' ? 'text-emerald-600' :
                                             student.riskStatus === 'Stable' ? 'text-blue-600' : 'text-amber-600'

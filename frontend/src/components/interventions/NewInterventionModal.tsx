@@ -45,8 +45,8 @@ export function NewInterventionModal({ isOpen, onClose, onConfirm, initialData }
             const newIntervention: Partial<InterventionCardProps> = {
                 studentName,
                 studentInitial: studentName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase(),
-                studentId: initialData?.studentId || `#${Math.floor(Math.random() * 9000) + 1000}`,
-                grade: "Grade 11", // Mock Grade
+                studentId: initialData?.studentId || `#${Date.now().toString().slice(-4)}`,
+                grade: "B.Tech",
                 riskLevel: riskLevel as any,
                 alertTitle: title,
                 alertDescription: description,

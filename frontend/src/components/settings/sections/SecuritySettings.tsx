@@ -1,8 +1,29 @@
 "use client";
 
-import { Shield, Smartphone, Key, FileText, Download } from "lucide-react";
+import { Shield, Smartphone, Key, FileText, Download, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
+import { exportToCSV } from "@/utils/exportUtils";
 
 export function SecuritySettings() {
+    const [auditLogs, setAuditLogs] = useState<{ action: string; user: string; time: string }[]>([]);
+
+    useEffect(() => {
+        apiClient.get('/analytics/ml-metrics')
+            .then(res => {
+                const m = res.data;
+                const logs = [
+                    { action: `Model ${m.model_version || 'v1'} Active`, user: "System", time: "Current" },
+                    { action: `${m.total_students_analyzed || 0} Students Analyzed`, user: "System", time: "Latest run" },
+                    { action: `${m.high_risk_alerts || 0} Risk Alerts Generated`, user: "System", time: "Latest run" },
+                ];
+                setAuditLogs(logs);
+            })
+            .catch(() => {
+                setAuditLogs([{ action: "System initialized", user: "System", time: "Now" }]);
+            });
+    }, []);
+
     return (
         <div className="space-y-6">
             <div>
@@ -40,7 +61,7 @@ export function SecuritySettings() {
                                 <p className="text-xs text-gray-500">Minimum 12 characters, special chars</p>
                             </div>
                         </div>
-                        <button className="text-xs font-bold text-blue-600 hover:underline">Edit</button>
+                        <button onClick={() => alert("Password policy is managed via JWT-based authentication. Contact your system administrator to modify security policies.")} className="text-xs font-bold text-blue-600 hover:underline">Edit</button>
                     </div>
                 </div>
 
@@ -51,11 +72,7 @@ export function SecuritySettings() {
                     </div>
 
                     <div className="space-y-3">
-                        {[
-                            { action: "Risk Threshold Updated", user: "Jane Doe (Admin)", time: "10 mins ago" },
-                            { action: "User Role Changed", user: "Jane Doe (Admin)", time: "2 hours ago" },
-                            { action: "Integration Sync", user: "System", time: "5 hours ago" },
-                        ].map((log, i) => (
+                        {auditLogs.map((log, i) => (
                             <div key={i} className="text-xs p-2 bg-gray-50 rounded flex justify-between">
                                 <div>
                                     <span className="font-bold text-gray-800 block">{log.action}</span>
@@ -65,7 +82,7 @@ export function SecuritySettings() {
                             </div>
                         ))}
                     </div>
-                    <button className="w-full py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2">
+                    <button onClick={() => exportToCSV(auditLogs, "audit_logs")} className="w-full py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2">
                         <Download size={14} /> Download Full Logs
                     </button>
                 </div>

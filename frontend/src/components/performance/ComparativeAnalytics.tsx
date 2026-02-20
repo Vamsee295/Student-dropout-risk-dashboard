@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Users, TrendingDown, TrendingUp, BarChart2 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface CompData {
     class_avg_gpa: number;
@@ -24,8 +23,8 @@ export function ComparativeAnalytics({ department = "All Departments" }: Compara
 
     useEffect(() => {
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/comparative${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/comparative${params}`)
+            .then(r => r.data)
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false));

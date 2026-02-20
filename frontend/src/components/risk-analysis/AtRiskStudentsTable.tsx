@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { AlertTriangle, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
+import { exportToCSV } from "@/utils/exportUtils";
 
 interface AtRiskStudent {
     id: string;
@@ -21,12 +23,8 @@ export function AtRiskStudentsTable() {
     useEffect(() => {
         async function fetchAtRiskStudents() {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-                const response = await fetch(`${API_URL}/api/students/all`);
-
-                if (!response.ok) throw new Error('Failed to fetch');
-
-                const data = await response.json();
+                const response = await apiClient.get('/students/all');
+                const data = response.data;
 
                 // Filter high-risk students and format for display
                 const atRisk = data
@@ -65,7 +63,7 @@ export function AtRiskStudentsTable() {
                     <p className="text-xs text-gray-500">Students with risk scores &gt; 75% requiring immediate intervention.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50">Export CSV</button>
+                    <button onClick={() => exportToCSV(students.map(s => ({ Name: s.name, ID: s.id, "Risk Score": s.riskScore, "Risk Level": s.riskLabel, "Primary Driver": s.primaryDriver, "Last Activity": s.lastActivity })), "at_risk_students")} className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50">Export CSV</button>
                     <button className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-semibold text-white hover:bg-blue-700">View All</button>
                 </div>
             </div>

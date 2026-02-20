@@ -1,10 +1,34 @@
 "use client";
 
-import { useSettingsStore } from "@/store/settingsStore";
+import { useSettingsStore, User } from "@/store/settingsStore";
 import { Plus, Edit2, Trash, Check, X } from "lucide-react";
+import { useState } from "react";
 
 export function UserManagement() {
     const { users, addUser, removeUser, updateUserRole } = useSettingsStore();
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Faculty' as User['role'] });
+
+    const handleAddUser = () => {
+        if (!newUser.name || !newUser.email) return;
+        addUser({
+            id: Date.now().toString(),
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role,
+            status: 'Active',
+            lastLogin: 'Never',
+        });
+        setNewUser({ name: '', email: '', role: 'Faculty' });
+        setShowAddModal(false);
+    };
+
+    const handleEditSave = () => {
+        if (!editingUser) return;
+        updateUserRole(editingUser.id, editingUser.role);
+        setEditingUser(null);
+    };
 
     return (
         <div className="space-y-6">
@@ -15,7 +39,7 @@ export function UserManagement() {
                         Manage access, roles, and permissions for the dashboard.
                     </p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700">
+                <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700">
                     <Plus size={16} />
                     Add User
                 </button>
@@ -55,7 +79,7 @@ export function UserManagement() {
                                 </td>
                                 <td className="px-6 py-4 text-gray-500">{user.lastLogin}</td>
                                 <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                    <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded">
+                                    <button onClick={() => setEditingUser({ ...user })} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded">
                                         <Edit2 size={16} />
                                     </button>
                                     <button
@@ -70,6 +94,74 @@ export function UserManagement() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Add User Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-gray-900">Add New User</h3>
+                            <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                        </div>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Full Name</label>
+                                <input type="text" value={newUser.name} onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none" placeholder="John Doe" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Email</label>
+                                <input type="email" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none" placeholder="user@university.edu" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Role</label>
+                                <select value={newUser.role} onChange={e => setNewUser(p => ({ ...p, role: e.target.value as User['role'] }))} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="Faculty">Faculty</option>
+                                    <option value="Advisor">Advisor</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <button onClick={() => setShowAddModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50">Cancel</button>
+                            <button onClick={handleAddUser} disabled={!newUser.name || !newUser.email} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">Add User</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit User Modal */}
+            {editingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-gray-900">Edit User Role</h3>
+                            <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+                        </div>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Name</label>
+                                <p className="text-sm text-gray-900 mt-1">{editingUser.name}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Email</label>
+                                <p className="text-sm text-gray-900 mt-1">{editingUser.email}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-gray-700">Role</label>
+                                <select value={editingUser.role} onChange={e => setEditingUser(prev => prev ? { ...prev, role: e.target.value as User['role'] } : null)} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="Faculty">Faculty</option>
+                                    <option value="Advisor">Advisor</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <button onClick={() => setEditingUser(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50">Cancel</button>
+                            <button onClick={handleEditSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Permission Matrix */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">

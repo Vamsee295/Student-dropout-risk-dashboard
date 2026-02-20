@@ -1,8 +1,24 @@
 "use client";
 
 import { AlertTriangle, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
 export function AlertBanner() {
+    const [alertCount, setAlertCount] = useState(0);
+    const [riskPct, setRiskPct] = useState(0);
+
+    useEffect(() => {
+        apiClient.get('/analytics/overview')
+            .then(res => {
+                setAlertCount(res.data.high_risk_count || 0);
+                setRiskPct(Math.round(res.data.high_risk_percentage || 0));
+            })
+            .catch(() => {});
+    }, []);
+
+    if (alertCount === 0) return null;
+
     return (
         <div className="flex items-start gap-4 rounded-xl border border-red-100 bg-red-50 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 shadow-sm">
@@ -12,9 +28,9 @@ export function AlertBanner() {
                 <h3 className="text-sm font-bold text-red-900">Critical Attention Required</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-1 text-sm text-red-800">
                     <p>
-                        <span className="font-bold">3 courses</span> have been identified with dropout risk levels
-                        exceeding 20% deviation from the institutional average.
-                        Review the "Red Flag" items below.
+                        <span className="font-bold">{alertCount} students</span> have been identified with dropout risk levels
+                        exceeding {riskPct}% of the institutional average.
+                        Review the analysis below.
                     </p>
                 </div>
             </div>

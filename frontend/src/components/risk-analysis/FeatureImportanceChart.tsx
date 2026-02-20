@@ -1,16 +1,41 @@
 "use client";
 
-import { Info } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
-const features = [
-    { name: "Attendance Rate", importance: 0.85 },
-    { name: "Mid-term Grades", importance: 0.72 },
-    { name: "LMS Logins", importance: 0.64 },
-    { name: "Financial Aid Status", importance: 0.45 },
-    { name: "Commute Distance", importance: 0.20 },
-];
+interface Feature {
+    name: string;
+    importance: number;
+}
 
 export function FeatureImportanceChart() {
+    const [features, setFeatures] = useState<Feature[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        apiClient.get('/analytics/feature-importance')
+            .then(res => {
+                const data = (res.data || []).map((f: { feature: string; importance: number }) => ({
+                    name: f.feature.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    importance: f.importance,
+                }));
+                setFeatures(data.length > 0 ? data : [
+                    { name: "No model trained yet", importance: 0 }
+                ]);
+            })
+            .catch(() => setFeatures([]))
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+        );
+    }
+
     return (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-full">
             <div className="mb-6 flex items-center justify-between">

@@ -3,6 +3,7 @@
 import { Users, AlertTriangle, Clock, Activity } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import apiClient from "@/lib/api";
 
 // Update MetricCardProps to include href
 interface MetricCardProps {
@@ -76,18 +77,13 @@ export function DashboardMetrics() {
     useEffect(() => {
         async function fetchMetrics() {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const [overviewRes, studentsRes] = await Promise.all([
+                    apiClient.get('/analytics/overview'),
+                    apiClient.get('/students/all'),
+                ]);
 
-                // Fetch overview analytics
-                const overviewRes = await fetch(`${API_URL}/api/analytics/overview`);
-                const overviewData = await overviewRes.json();
-
-                // Fetch students for attendance/engagement calculation
-                const studentsRes = await fetch(`${API_URL}/api/students/all`);
-                const studentsData = await studentsRes.json();
-
-                setOverview(overviewData);
-                setStudents(studentsData);
+                setOverview(overviewRes.data);
+                setStudents(Array.isArray(studentsRes.data) ? studentsRes.data : []);
             } catch (error) {
                 console.error('Failed to fetch metrics:', error);
             } finally {
@@ -115,8 +111,8 @@ export function DashboardMetrics() {
         {
             title: "Total Students",
             value: overview?.total_students?.toLocaleString() || "0",
-            trend: "+2.4%",
-            trendLabel: "vs last semester",
+            trend: `${overview?.total_students?.toLocaleString() || 0} enrolled`,
+            trendLabel: "current semester",
             trendDirection: "up" as const,
             trendColor: "text-emerald-600",
             icon: Users,
@@ -142,7 +138,7 @@ export function DashboardMetrics() {
         {
             title: "Avg Attendance",
             value: `${avgAttendance}%`,
-            trend: avgAttendance >= 85 ? "+1.5%" : "-1.5%",
+            trend: `${avgAttendance >= 85 ? '+' : ''}${(avgAttendance - 85).toFixed(1)}%`,
             trendLabel: avgAttendance >= 85 ? "above target" : "below target",
             trendDirection: avgAttendance >= 85 ? "up" as const : "down" as const,
             trendColor: avgAttendance >= 85 ? "text-emerald-600" : "text-red-600",
@@ -155,9 +151,9 @@ export function DashboardMetrics() {
         {
             title: "Avg Engagement",
             value: `${avgEngagement}/10`,
-            trend: "+0.3",
-            trendLabel: "improving",
-            trendDirection: "up" as const,
+            trend: `${Number(avgEngagement) >= 5 ? '+' : ''}${(Number(avgEngagement) - 5).toFixed(1)}`,
+            trendLabel: Number(avgEngagement) >= 5 ? "above baseline" : "below baseline",
+            trendDirection: Number(avgEngagement) >= 5 ? "up" as const : "down" as const,
             trendColor: "text-emerald-600",
             icon: Activity,
             iconColor: "text-emerald-600",

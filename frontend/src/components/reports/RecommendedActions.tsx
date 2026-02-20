@@ -102,12 +102,11 @@ export function RecommendedActions() {
                 <h4 className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-4">Assigned Advisor</h4>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">
-                            {/* Mock Advisor Image */}
-                            <img src="https://ui-avatars.com/api/?name=Sarah+Connor&background=random" alt="Sarah Connor" />
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+                            FA
                         </div>
                         <div>
-                            <h4 className="font-bold text-gray-900 text-sm">Sarah Connor</h4>
+                            <h4 className="font-bold text-gray-900 text-sm">Faculty Advisor</h4>
                             <button className="text-xs font-semibold text-blue-600 hover:underline">View Notes</button>
                         </div>
                     </div>
@@ -117,17 +116,17 @@ export function RecommendedActions() {
                 </div>
             </div>
 
-            {/* Next 7 Days (Mock) */}
+            {/* Upcoming */}
             <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h4 className="text-sm font-bold text-gray-900 mb-4">Next 7 Days</h4>
+                <h4 className="text-sm font-bold text-gray-900 mb-4">Upcoming Events</h4>
                 <div className="flex items-start gap-4">
                     <div className="flex flex-col items-center bg-gray-50 rounded-lg px-2 py-1 min-w-[50px]">
-                        <span className="text-[10px] font-bold text-gray-500 uppercase">Nov</span>
-                        <span className="text-xl font-bold text-gray-900">12</span>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">{new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-US', { month: 'short' })}</span>
+                        <span className="text-xl font-bold text-gray-900">{new Date(Date.now() + 7 * 86400000).getDate()}</span>
                     </div>
                     <div>
-                        <h5 className="text-sm font-bold text-gray-900">Data Structures Quiz</h5>
-                        <p className="text-xs text-gray-500">CS-201 • 10:00 AM</p>
+                        <h5 className="text-sm font-bold text-gray-900">Follow-up Review</h5>
+                        <p className="text-xs text-gray-500">Scheduled check-in</p>
                     </div>
                 </div>
             </div>

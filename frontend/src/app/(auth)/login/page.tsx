@@ -70,7 +70,7 @@ export default function LoginPage() {
             const user = {
                 id: data.user_id,
                 email: formData.email,
-                name: data.role === "STUDENT" ? "Ravi Student" : "Faculty Admin", // In real app, name comes from backend
+                name: data.name || formData.email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
                 role: data.role,
                 student_id: data.student_id
             };
@@ -253,8 +253,8 @@ export default function LoginPage() {
             <div className="mt-8 text-center pt-6 border-t border-gray-100">
                 <p className="text-xs text-gray-400">
                     Test Credentials: <br />
-                    <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">student@klu.ac.in</span> | <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">faculty@klu.ac.in</span>
-                    <br />password: <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">student123</span> | <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">faculty123</span>
+                    <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">student1@gmail.com</span> | <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">faculty1@gmail.com</span>
+                    <br />password: <span className="font-mono bg-gray-50 px-1 py-0.5 rounded">password</span>
                 </p>
             </div>
         </div>

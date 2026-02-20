@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+import apiClient from '@/lib/api';
 
 export interface StudentOverview {
     attendance_rate: number;
@@ -69,27 +67,27 @@ export interface RiskDetails {
 
 export const studentService = {
     getOverview: async (studentId: string): Promise<StudentOverview> => {
-        const response = await axios.get(`${API_URL}/student/${studentId}/overview`);
+        const response = await apiClient.get(`/student/${studentId}/overview`);
         return response.data;
     },
 
     getPerformance: async (studentId: string) => {
-        const response = await axios.get(`${API_URL}/student/${studentId}/performance`);
+        const response = await apiClient.get(`/student/${studentId}/performance`);
         return response.data;
     },
 
     getAttendance: async (studentId: string) => {
-        const response = await axios.get(`${API_URL}/student/${studentId}/attendance`);
+        const response = await apiClient.get(`/student/${studentId}/attendance`);
         return response.data;
     },
 
     getAssignments: async (studentId: string): Promise<AssignmentProgress> => {
-        const response = await axios.get(`${API_URL}/student/${studentId}/assignments`);
+        const response = await apiClient.get(`/student/${studentId}/assignments`);
         return response.data;
     },
 
     getRisk: async (studentId: string): Promise<RiskDetails> => {
-        const response = await axios.get(`${API_URL}/student/${studentId}/risk`);
+        const response = await apiClient.get(`/student/${studentId}/risk`);
         return response.data;
     }
 };

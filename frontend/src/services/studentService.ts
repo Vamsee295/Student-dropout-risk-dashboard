@@ -1,5 +1,4 @@
-// API service for fetching student data from backend
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import apiClient from '@/lib/api';
 
 export interface Student {
     id: string;
@@ -18,38 +17,26 @@ export interface Student {
 }
 
 /**
- * Fetch all students from the backend API
+ * Fetch all students from the backend API.
+ * Uses the /api/students/all endpoint (served by frontend.py router).
  */
 export async function fetchStudents(): Promise<Student[]> {
     try {
-        const response = await fetch(`${API_URL}/api/students/all`);
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch students: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return data;
+        const response = await apiClient.get('/students/all');
+        return response.data;
     } catch (error) {
         console.error('Error fetching students from API:', error);
-        // Return empty array on error - you can also return mock data as fallback
         return [];
     }
 }
 
 /**
- * Fetch a single student by ID
+ * Fetch a single student by ID.
  */
 export async function getStudentById(id: string): Promise<Student | null> {
     try {
-        const response = await fetch(`${API_URL}/api/students/${id}`);
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch student: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return data;
+        const response = await apiClient.get(`/students/${id}`);
+        return response.data;
     } catch (error) {
         console.error(`Error fetching student ${id}:`, error);
         return null;

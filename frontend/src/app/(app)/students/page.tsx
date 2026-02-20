@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { facultyService, type StudentSummary } from "@/services/faculty";
 import { Loader2, Search, Filter, AlertTriangle, ShieldCheck, User } from "lucide-react";
 import Link from "next/link";
+import apiClient from "@/lib/api";
 
 export default function StudentListPage() {
   const [students, setStudents] = useState<StudentSummary[]>([]);
@@ -11,6 +12,18 @@ export default function StudentListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [riskFilter, setRiskFilter] = useState("");
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    apiClient.get('/analytics/department-breakdown')
+      .then(res => {
+        const depts = (res.data || []).map((d: { department: string }) =>
+          typeof d.department === 'string' ? d.department : String(d.department)
+        );
+        setDepartments(depts);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -64,10 +77,9 @@ export default function StudentListPage() {
             onChange={(e) => setDepartmentFilter(e.target.value)}
           >
             <option value="">All Departments</option>
-            <option value="Computer Science">Computer Science</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Mechanical">Mechanical</option>
-            <option value="Civil">Civil</option>
+            {departments.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
           </select>
           <select
             className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"

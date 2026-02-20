@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Gauge, Shield, AlertTriangle, CheckCircle } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface RiskData {
     aggregate_risk_score: number;
@@ -82,8 +81,8 @@ export function PerformanceRiskScore({ department = "All Departments" }: Perform
 
     useEffect(() => {
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/risk-scores${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/risk-scores${params}`)
+            .then(r => r.data)
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false));

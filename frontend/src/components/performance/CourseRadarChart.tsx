@@ -7,8 +7,7 @@ import {
     PolarRadiusAxis, Radar, Tooltip, BarChart, Bar, XAxis, YAxis,
     CartesianGrid, Legend, ReferenceLine, Cell
 } from "recharts";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import apiClient from "@/lib/api";
 
 interface Course {
     course_id: string;
@@ -77,8 +76,8 @@ export function CourseRadarChart({ department = "All Departments" }: CourseRadar
 
     useEffect(() => {
         const params = department !== "All Departments" ? `?department=${encodeURIComponent(department)}` : "";
-        fetch(`${API_URL}/api/performance/course-detail${params}`)
-            .then(r => r.json())
+        apiClient.get(`/performance/course-detail${params}`)
+            .then(r => r.data)
             .then(d => {
                 setCourses(d.courses || []);
                 if (d.courses?.length) setSelected(d.courses[0].course_id);
