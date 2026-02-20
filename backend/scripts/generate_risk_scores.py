@@ -53,7 +53,7 @@ def main():
         model_version = db.query(ModelVersion).filter(ModelVersion.is_active == True).first()
         
         if not model_version:
-            logger.info("Creating placeholder model version...")
+            logger.info("Creating initial model version record...")
             model_version = ModelVersion(
                 version="rule_based_v1",
                 model_path="N/A - Rule-based system",

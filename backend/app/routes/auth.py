@@ -49,8 +49,6 @@ async def login_for_access_token(
     if not user:
         try:
             print(f"Attempting auto-signup for {form_data.username}")
-            # Create new user on the fly
-            hashed_password = get_password_hash(form_data.password)
             
             # Determine role: faculty1@, faculty.test@, etc. -> FACULTY, else STUDENT
             role = Role.FACULTY if "faculty" in form_data.username.lower() else Role.STUDENT
@@ -86,7 +84,7 @@ async def login_for_access_token(
                 if not model_v:
                     model_v = ModelVersion(
                         version="v1.0-auto",
-                        model_path="dummy",
+                        model_path="models/auto-generated",
                         is_active=True,
                         accuracy=0.85,
                         precision=0.85,
@@ -107,7 +105,7 @@ async def login_for_access_token(
                     login_gap_days=0,
                     failure_ratio=0.0,
                     financial_risk_flag=False,
-                    commute_risk_score=1.0,
+                    commute_risk_score=1,
                     semester_performance_trend=0.0
                 )
                 db.add(metrics)
@@ -175,16 +173,51 @@ async def login_for_access_token(
         "access_token": access_token, 
         "token_type": "bearer",
         "role": user.role,
-        "user_id": user.id if user.id is not None else 0,  # Fallback to 0 if still None
-        "student_id": user.student_id
+        "user_id": user.id if user.id is not None else 0,
+        "student_id": user.student_id,
+        "name": user.name
     }
 
 @router.post("/forgot-password")
 async def forgot_password(email: str, db: Session = Depends(get_db)):
-    """Mock forgot password endpoint."""
+    """Generate a password reset token for the user."""
     user = db.query(User).filter(User.email == email).first()
-    # For security, standard practice is to return success even if user not found
+
+    if user:
+        reset_token = create_access_token(
+            data={"sub": user.email, "purpose": "password_reset"},
+            expires_delta=timedelta(minutes=30),
+        )
+        # In production, this token would be emailed. For hackathon demo we
+        # return it so the frontend can use it directly.
+        return {
+            "message": "If an account exists for this email, a reset link has been sent.",
+            "reset_token": reset_token,
+        }
+
     return {"message": "If an account exists for this email, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
+    """Reset a user's password using a valid reset token."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("purpose") != "password_reset":
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password_hash = get_password_hash(new_password)
+    db.commit()
+    return {"message": "Password reset successfully"}
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):

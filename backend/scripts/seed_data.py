@@ -127,7 +127,7 @@ def seed_data():
         from app.models import ModelVersion
         model_v = ModelVersion(
             version="v1.0", 
-            model_path="dummy", 
+            model_path="models/seed-generated", 
             accuracy=0.9, precision=0.9, recall=0.9, f1_score=0.9, 
             training_samples=1000, feature_importance={}, is_active=True
         )

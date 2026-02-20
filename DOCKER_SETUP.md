@@ -1,23 +1,37 @@
+# Docker Setup Guide
+
+This guide covers running the Student Dropout Risk Dashboard using Docker for team collaboration and consistent environments.
+
+## Quick Start
+
 1. **Start everything with Docker**
    ```bash
    docker-compose up --build
    ```
 
    This will:
-   - ✅ Create MySQL database
-   - ✅ Initialize database tables
-   - ✅ Load 450 students from CSV
-   - ✅ Train ML model
-   - ✅ Compute risk scores
-   - ✅ Start backend API server
-   - ✅ All teammates get the SAME data
+   - Create MySQL database
+   - Initialize database tables
+   - Load 450 students from CSV
+   - Train GradientBoosting ML model with SHAP explainability
+   - Compute risk scores for all students
+   - Start backend API server
+   - All teammates get the SAME data
 
 2. **Access the application**
    - Backend API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
-   - Frontend: http://localhost:3000 (run separately with `npm run dev`)
+   - Health Check: http://localhost:8000/health
 
-3. **Default login credentials** (created automatically)
+3. **Start frontend separately**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   - Frontend: http://localhost:3000
+
+4. **Default login credentials** (created automatically)
    - **Faculty**: 
      - Email: `faculty@klu.ac.in`
      - Password: `faculty123`
@@ -25,11 +39,20 @@
      - Email: `student@klu.ac.in`
      - Password: `student123`
 
-### Development Workflow
+---
+
+## Development Workflow
 
 **Backend changes**: 
 - Code changes auto-reload (volume mounted)
 - No need to rebuild container
+
+**Run backend tests** (no Docker or MySQL needed):
+```bash
+cd backend
+python -m pytest tests/ -v
+```
+Tests use an in-memory SQLite database, so they run independently of Docker.
 
 **Database reset**:
 ```bash
@@ -48,6 +71,8 @@ docker-compose logs -f mysql
 docker-compose down
 ```
 
+---
+
 ## Database Access
 
 **Connect to MySQL from host machine**:
@@ -59,6 +84,8 @@ mysql -h 127.0.0.1 -P 3306 -u root -pSanjith_2005 student_dropout_db
 ```bash
 docker exec -it student_dropout_mysql mysql -u root -pSanjith_2005 student_dropout_db
 ```
+
+---
 
 ## Troubleshooting
 
@@ -88,7 +115,9 @@ docker exec -it student_dropout_mysql mysql -u root -pSanjith_2005 student_dropo
 
 **Issue**: Backend container exits immediately
 - Check logs: `docker-compose logs backend`
-- Usually means database connection failed
+- Usually means database connection failed — wait for MySQL to finish initializing
+
+---
 
 ## For Production Deployment
 

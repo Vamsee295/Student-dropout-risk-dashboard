@@ -4,9 +4,12 @@
 
 Real-time ML-powered student dropout risk prediction dashboard with:
 - **450 Real Students** from CSV dataset
-- **XGBoost ML Model** with SHAP explainability
+- **GradientBoosting ML Model** with SHAP explainability
 - **Real-time Predictions** triggered by data updates
 - **Faculty Dashboard** with risk analytics
+- **Student Dashboard** with personal risk insights
+- **Centralized API Client** with JWT interceptors for secure frontend-backend communication
+- **108 Backend Tests** covering unit, route, and integration testing
 - **Docker Setup** for team collaboration
 
 ---
@@ -19,14 +22,13 @@ Real-time ML-powered student dropout risk prediction dashboard with:
 
 ### One-Command Setup
 ```bash
-cd "c:\UG Sanjith\Student-dropout-risk-dashboard"
 docker-compose up --build
 ```
 
 **This automatically:**
 1. Creates MySQL database
 2. Loads 450 students from CSV
-3. Trains XGBoost model
+3. Trains ML model
 4. Computes risk scores
 5. Starts backend API server
 
@@ -38,6 +40,7 @@ docker-compose up --build
 **Start Frontend Separately:**
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 Frontend: http://localhost:3000
@@ -98,7 +101,7 @@ python scripts/seed_users.py
 ### Step 4: Train ML Model & Compute Risks
 
 ```bash
-# Train XGBoost model
+# Train GradientBoosting model (5-fold cross-validation + SHAP)
 python scripts/train_model.py
 
 # Compute risk scores for all students
@@ -159,16 +162,46 @@ npm run dev
 
 ## 🧪 Testing the System
 
-### 1. Verify Database
+### 1. Run Backend Test Suite
+
+The project includes **108 automated tests** that run against an in-memory SQLite database (no MySQL required):
+
+```bash
+cd backend
+
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test modules
+python -m pytest tests/test_security.py -v       # JWT & password hashing
+python -m pytest tests/test_models.py -v          # ORM models & schemas
+python -m pytest tests/test_risk_model.py -v      # ML risk model logic
+python -m pytest tests/test_feature_engineering.py -v  # Feature engineering
+python -m pytest tests/test_routes.py -v          # API route integration
+python -m pytest tests/test_integration.py -v     # Frontend-backend contract
+```
+
+**Test Categories:**
+
+| Module | Tests | What It Covers |
+|--------|-------|---------------|
+| `test_security.py` | Password hashing, JWT token creation/validation |
+| `test_models.py` | All ORM models, enums, relationships, Pydantic schemas |
+| `test_risk_model.py` | Risk level classification, trend calculation, alert detection |
+| `test_feature_engineering.py` | Helper functions, static methods, DB-integrated features |
+| `test_routes.py` | All API endpoints (auth, students, faculty, analytics, engagement) |
+| `test_integration.py` | Frontend-backend contract (response shapes, field types, schemas) |
+
+### 2. Verify Database
 ```bash
 mysql -h 127.0.0.1 -P 3306 -u root -pSanjith_2005 student_dropout_db
 
 # Run queries
-SELECT COUNT(*) FROM students;  # Should show 450
+SELECT COUNT(*) FROM students;  -- Should show 450
 SELECT risk_level, COUNT(*) FROM risk_scores GROUP BY risk_level;
 ```
 
-### 2. Test API Endpoints
+### 3. Test API Endpoints
 ```bash
 # Health check
 curl http://localhost:8000/health
@@ -183,7 +216,7 @@ curl http://localhost:8000/api/faculty/students
 curl -X POST http://localhost:8000/api/faculty/recalculate
 ```
 
-### 3. Test Frontend Dashboard
+### 4. Test Frontend Dashboard
 1. Open http://localhost:3000
 2. Login with faculty credentials
 3. Navigate to Faculty Dashboard
@@ -226,28 +259,56 @@ Via Frontend:
 Student-dropout-risk-dashboard/
 ├── backend/
 │   ├── app/
-│   │   ├── routes/
-│   │   │   └── faculty_dashboard.py  # Faculty API endpoints
+│   │   ├── routes/                    # API endpoints (11 modules)
+│   │   │   ├── auth.py               # Authentication (login, register)
+│   │   │   ├── students.py           # Student CRUD & risk
+│   │   │   ├── faculty_dashboard.py  # Faculty API endpoints
+│   │   │   ├── student_dashboard.py  # Student personal dashboard
+│   │   │   ├── frontend.py           # Frontend-formatted data
+│   │   │   └── ...                   # analytics, engagement, performance, etc.
 │   │   ├── services/
-│   │   │   ├── risk_model.py         # XGBoost ML model
-│   │   │   └── realtime_prediction.py # Real-time risk service
-│   │   ├── models.py                 # Database models
-│   │   └── main.py                   # FastAPI app
+│   │   │   ├── risk_model.py         # GradientBoosting ML model
+│   │   │   ├── realtime_prediction.py # Real-time risk service
+│   │   │   ├── feature_engineering.py # Feature extraction from raw data
+│   │   │   └── shap_explainer.py     # SHAP model explainability
+│   │   ├── models.py                 # SQLAlchemy ORM models (15+ tables)
+│   │   ├── schemas.py               # Pydantic request/response schemas
+│   │   ├── security.py              # JWT & password hashing (config-driven)
+│   │   └── main.py                  # FastAPI app entry point
+│   ├── tests/                        # 108 automated tests
+│   │   ├── conftest.py              # Fixtures (SQLite DB, test client)
+│   │   ├── test_security.py         # JWT & password tests
+│   │   ├── test_models.py           # ORM & schema tests
+│   │   ├── test_risk_model.py       # ML logic tests
+│   │   ├── test_feature_engineering.py
+│   │   ├── test_routes.py           # API endpoint tests
+│   │   └── test_integration.py      # Frontend-backend contract tests
 │   ├── data/raw/
-│   │   └── student_dataset_450.csv   # Source data
+│   │   └── student_dataset_450.csv  # Source data
 │   ├── scripts/
-│   │   ├── load_custom_dataset.py    # CSV → Database
-│   │   ├── train_model.py            # ML training
-│   │   └── compute_all_risks.py      # Risk computation
-│   ├── models/                       # Trained ML models
+│   │   ├── load_custom_dataset.py   # CSV → Database
+│   │   ├── train_model.py           # ML training
+│   │   └── compute_all_risks.py     # Risk computation
+│   ├── models/                      # Trained ML models (.joblib)
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── app/
-│   │   └── components/
+│   │   ├── app/                     # Next.js App Router pages
+│   │   ├── components/              # Reusable UI components (100+)
+│   │   ├── services/                # API service clients
+│   │   │   ├── auth.ts             # Authentication service
+│   │   │   ├── student.ts          # Student dashboard API
+│   │   │   ├── faculty.ts          # Faculty dashboard API
+│   │   │   └── studentService.ts   # Student directory API
+│   │   ├── store/                   # Zustand auth store
+│   │   └── lib/
+│   │       └── api.ts              # Centralized Axios client (JWT interceptors)
 │   └── package.json
-├── docker-compose.yml                # Docker setup
-└── DOCKER_SETUP.md                   # Team collaboration guide
+├── docker-compose.yml               # Docker setup
+├── SETUP_GUIDE.md                   # This file
+├── DOCKER_SETUP.md                  # Team collaboration guide
+├── CHANGELOG.md                     # Bug fixes & improvements log
+└── summary.md                       # Detailed project summary
 ```
 
 ---
@@ -297,18 +358,18 @@ netstat -ano | findstr :8000
 - Same risk scores
 - Consistent development environment
 
-**Detailed Guide:** See [`DOCKER_SETUP.md`](file:///c:/UG%20Sanjith/Student-dropout-risk-dashboard/DOCKER_SETUP.md)
+**Detailed Guide:** See [`DOCKER_SETUP.md`](./DOCKER_SETUP.md)
 
 ---
 
 ## 📊 ML Model Details
 
-- **Algorithm:** XGBoost Classifier
-- **Training:** 5-fold cross-validation
-- **Calibration:** Sigmoid calibration for probability outputs
+- **Algorithm:** GradientBoostingClassifier (scikit-learn)
+- **Training:** 5-fold stratified cross-validation
+- **Calibration:** CalibratedClassifierCV (sigmoid) for probability outputs
 - **Features:** 8 engineered features
 - **Output:** Risk score (0-100) + SHAP explanations
-- **Versioning:** Automatic model versioning in database
+- **Versioning:** Automatic model versioning in database with accuracy, precision, recall, F1
 
 **Risk Levels:**
 - 0-40: Safe
@@ -348,7 +409,7 @@ netstat -ano | findstr :8000
 ## 🚀 Next Steps
 
 1. **Deployment:** Configure for production (AWS/Azure)
-2. **Authentication:** JWT tokens for security
-3. **Notifications:** Email alerts for high-risk students
-4. **Mobile App:** Student mobile interface
-5. **Automated Retraining:** Schedule weekly model updates
+2. **Notifications:** Email alerts for high-risk students
+3. **Mobile App:** Student mobile interface
+4. **Automated Retraining:** Schedule weekly model updates
+5. **Frontend Testing:** Add Jest/React Testing Library tests for components

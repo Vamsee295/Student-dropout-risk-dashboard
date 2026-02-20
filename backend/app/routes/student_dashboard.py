@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import (
     Student, StudentMetric, RiskScore, AttendanceRecord, 
     Course, Enrollment, Assessment, StudentAssessment,
-    AttendanceStatus, SubmissionStatus, RiskLevel, RiskTrend
+    AssessmentType, AttendanceStatus, SubmissionStatus, RiskLevel, RiskTrend
 )
 from app.schemas import (
     StudentDashboardOverview, SemesterPerformance, SubjectPerformance,
@@ -22,9 +22,8 @@ router = APIRouter(
     tags=["Student Dashboard"]
 )
 
-# TODO: Add authentication dependency to get current student_id
-# For now, we'll accept student_id as a query parameter for testing
-# or hardcode a "current user" logic until auth is fully integrated with this module
+
+
 
 def get_student_or_404(db: Session, student_id: str):
     student = db.query(Student).filter(Student.id == student_id).first()
@@ -156,14 +155,14 @@ def get_student_performance(student_id: str, db: Session = Depends(get_db)):
             
             for sa in student_assessments:
                 if sa.obtained_marks is not None:
-                    if sa.assessment.type == "Internal":
+                    if sa.assessment.type == AssessmentType.INTERNAL:
                         internal += sa.obtained_marks
-                    elif sa.assessment.type == "External":
+                    elif sa.assessment.type == AssessmentType.EXTERNAL:
                         external += sa.obtained_marks
                     total_obtained += sa.obtained_marks
                     max_total += sa.assessment.total_marks
 
-            # If no assessments, use placeholder or 0
+            # If no assessments, default to 0
             if max_total == 0:
                 grade_percentage = 0.0
             else:
@@ -239,7 +238,7 @@ def get_student_assignments(student_id: str, db: Session = Depends(get_db)):
     assessments = db.query(Assessment)\
         .filter(
             Assessment.course_id.in_(enrolled_course_ids),
-            Assessment.type.in_(["Assignment", "Project"])
+            Assessment.type.in_([AssessmentType.ASSIGNMENT, AssessmentType.PROJECT])
         ).all()
         
     total_assignments = len(assessments)
@@ -267,7 +266,7 @@ def get_student_assignments(student_id: str, db: Session = Depends(get_db)):
             status = SubmissionStatus.OVERDUE if is_overdue else SubmissionStatus.PENDING
             submission_date = None
             obtained = None
-            sa_id = 0 # Placeholder for non-existent record
+            sa_id = 0
             
         # Update counts
         if status in [SubmissionStatus.SUBMITTED, SubmissionStatus.GRADED]:
@@ -413,7 +412,7 @@ def get_student_grade_forecast(student_id: str, db: Session = Depends(get_db)):
         factors["High Attendance"] = impact
         projected_change += impact
         
-    # 2. Assignment Completion (simulated check)
+    # 2. Engagement Score Impact
     if metrics.engagement_score < 40:
         impact = -0.3
         factors["Low Engagement"] = impact

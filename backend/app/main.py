@@ -34,6 +34,7 @@ from app.routes import (
     students,
     upload,
 )
+from app.routes import settings as settings_routes
 from app.services.realtime_prediction import init_prediction_service
 from app.services.risk_model import RiskModel
 from app.services.shap_explainer import SHAPExplainer
@@ -222,6 +223,7 @@ app.include_router(engagement.router, prefix="/api/engagement", tags=["Engagemen
 app.include_router(student_dashboard.router)
 app.include_router(faculty_dashboard.router)   # /api/faculty/*
 app.include_router(upload.router)              # /api/faculty/upload/*
+app.include_router(settings_routes.router, prefix="/api", tags=["Settings"])
 app.include_router(frontend.router, tags=["Frontend"])
 
 

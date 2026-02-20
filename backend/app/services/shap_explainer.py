@@ -38,9 +38,10 @@ class SHAPExplainer:
         """Initialize SHAP TreeExplainer."""
         try:
             # For CalibratedClassifierCV, we need to access the base estimator
-            if hasattr(self.model, 'calibrated_classifiers_'):
-                # Use first calibrated classifier's base estimator
+            if hasattr(self.model, 'calibrated_classifiers_') and self.model.calibrated_classifiers_:
                 base_model = self.model.calibrated_classifiers_[0].estimator
+            elif hasattr(self.model, 'estimator'):
+                base_model = self.model.estimator
             else:
                 base_model = self.model
             
@@ -152,21 +153,35 @@ class SHAPExplainer:
     
     def get_global_feature_importance(self) -> Dict[str, float]:
         """
-        Get global feature importance from SHAP explainer.
-        
-        Returns:
-            Dictionary mapping feature names to importance scores
+        Get global feature importance derived from the underlying tree model.
+        Uses the base estimator's ``feature_importances_`` when a full SHAP
+        dataset pass is unavailable.
         """
-        if self.explainer is None:
+        if self.explainer is None and self.model is None:
             return {}
-        
+
         try:
-            # Use expected value as a proxy for global importance
-            # Note: For true global importance, need to pass full dataset
-            # This is a placeholder - should be updated with actual global calculation
-            logger.warning("Global feature importance from SHAP not fully implemented")
+            base_model = self.model
+            if hasattr(base_model, 'calibrated_classifiers_') and base_model.calibrated_classifiers_:
+                base_model = base_model.calibrated_classifiers_[0].estimator
+            elif hasattr(base_model, 'estimator'):
+                base_model = base_model.estimator
+
+            if hasattr(base_model, 'feature_importances_'):
+                importances = base_model.feature_importances_
+                names = (
+                    list(base_model.feature_names_in_)
+                    if hasattr(base_model, 'feature_names_in_')
+                    else [f"feature_{i}" for i in range(len(importances))]
+                )
+                result = {
+                    self._format_feature_name(n): round(float(v), 4)
+                    for n, v in zip(names, importances)
+                }
+                return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
+
             return {}
-            
+
         except Exception as e:
             logger.error(f"Failed to get global feature importance: {e}")
             return {}

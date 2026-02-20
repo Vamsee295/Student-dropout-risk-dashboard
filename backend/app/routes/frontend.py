@@ -63,25 +63,25 @@ def get_all_students_frontend(db: Session = Depends(get_db)):
                 attendance = 85.0
                 engagement = 75.0
             
+            risk_level_val = risk_score_obj.risk_level.value if hasattr(risk_score_obj.risk_level, 'value') else str(risk_score_obj.risk_level)
+            risk_trend_val = risk_score_obj.risk_trend.value if hasattr(risk_score_obj.risk_trend, 'value') else "stable"
             student_data = {
                 "id": str(student.id),
-                "name": f"Student {student.id}",
-                "avatar": f"S{str(student.id)[-1]}",  # Use last digit for avatar
+                "name": student.name or f"Student {student.id}",
+                "avatar": student.avatar or (student.name[:2].upper() if student.name else f"S{str(student.id)[-1]}"),
                 "course": student.course or "Unknown",
                 "department": department,
-                "section": "A",  # Default section
-                "year": getattr(student, 'year', 1),  # Default to year 1
-                "email": f"student{student.id}@university.edu",  # Generated email
-                "risk_score": float(risk_score_obj.risk_score),  # Numeric risk score
-                "risk_level": risk_score_obj.risk_level,  # HIGH, MODERATE, LOW, SAFE
-                "riskStatus": risk_score_obj.risk_level,
-                "riskTrend": "stable",  # Default, can be enhanced from risk_history
+                "section": student.section.value if hasattr(student.section, 'value') else "A",
+                "risk_score": float(risk_score_obj.risk_score),
+                "risk_level": risk_level_val,
+                "riskStatus": risk_level_val,
+                "riskTrend": risk_trend_val,
                 "riskValue": f"{risk_score_obj.risk_score:.1f}%",
                 "attendance": attendance,
                 "engagementScore": engagement,
                 "lastInteraction": student.updated_at.strftime("%b %d, %Y") if student.updated_at else "Jan 01, 2024",
                 "updated_at": student.updated_at.isoformat() if student.updated_at else None,
-                "advisor": getattr(student, 'advisor', None)
+                "advisor": student.advisor_id
             }
             result.append(student_data)
         

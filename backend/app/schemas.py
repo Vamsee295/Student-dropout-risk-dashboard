@@ -38,6 +38,7 @@ class Token(BaseModel):
     role: str
     user_id: int
     student_id: Optional[str] = None
+    name: Optional[str] = None
 
 
 class StudentBase(BaseModel):
@@ -596,12 +597,3 @@ class SHAPExplanationResponse(BaseModel):
     top_features: List[SHAPFeatureItem]
 
 
-class AnalyticsOverview(BaseModel):
-    """Aggregated KPI summary for the faculty dashboard overview cards."""
-    total_students: int
-    high_risk_count: int
-    high_risk_percentage: float
-    average_risk_score: float
-    average_attendance: float
-    high_risk_department: Optional[str] = None
-    risk_distribution: dict  # {"High": N, "Moderate": N, "Stable": N, "Safe": N}

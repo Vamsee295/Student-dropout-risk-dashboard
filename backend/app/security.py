@@ -7,11 +7,11 @@ from app.config import get_settings
 # Password hashing
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
-# JWT Configuration
+# JWT Configuration — sourced from Settings (env vars)
 settings = get_settings()
-SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION_SECRET_KEY" # Fallback if not in env
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""

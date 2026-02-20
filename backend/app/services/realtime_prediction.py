@@ -65,6 +65,11 @@ def _require_model() -> RiskModel:
             "Prediction service not initialized. "
             "Call init_prediction_service() at startup."
         )
+    if _active_model_version_id is None:
+        raise RuntimeError(
+            "No active model version ID. "
+            "Ensure init_prediction_service() was called with a valid model_version_id."
+        )
     return _risk_model
 
 
@@ -84,8 +89,37 @@ def _clamp(value: float) -> float:
 # Core prediction
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _get_model_feature_names():
+    """Return the feature names the loaded model expects."""
+    if _risk_model and _risk_model.calibrated_model and hasattr(_risk_model.calibrated_model, 'feature_names_in_'):
+        return list(_risk_model.calibrated_model.feature_names_in_)
+    return None
+
+
 def _metric_to_dataframe(metric: StudentMetric) -> pd.DataFrame:
-    """Convert a StudentMetric row to a single-row DataFrame for inference."""
+    """Convert a StudentMetric row to a single-row DataFrame for inference.
+
+    Dynamically maps DB columns to whatever features the trained model expects.
+    """
+    model_features = _get_model_feature_names()
+
+    if model_features:
+        feature_map = {
+            "attendance_rate": _safe_float(metric.attendance_rate, 75.0),
+            "lms_score": _safe_float(metric.engagement_score, 70.0),
+            "avg_assignment_score": _safe_float(metric.academic_performance_index, 65.0) * 10,
+            "avg_quiz_score": _safe_float(metric.semester_performance_trend, 50.0),
+            "engagement_score": _safe_float(metric.engagement_score, 70.0),
+            "academic_performance_index": _safe_float(metric.academic_performance_index, 65.0),
+            "login_gap_days": int(_safe_float(metric.login_gap_days, 3)),
+            "failure_ratio": _safe_float(metric.failure_ratio, 0.1),
+            "financial_risk_flag": int(bool(metric.financial_risk_flag)),
+            "commute_risk_score": int(_safe_float(metric.commute_risk_score, 1)),
+            "semester_performance_trend": _safe_float(metric.semester_performance_trend, 0.0),
+        }
+        row = {f: feature_map.get(f, 0.0) for f in model_features}
+        return pd.DataFrame([row])
+
     return pd.DataFrame([{
         "attendance_rate": _safe_float(metric.attendance_rate, 75.0),
         "engagement_score": _safe_float(metric.engagement_score, 70.0),
