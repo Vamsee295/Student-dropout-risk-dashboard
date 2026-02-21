@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, TrendingUp, Users, AlertTriangle, BookOpen, ShieldAlert } from "lucide-react";
+import { NoDataGate } from "@/components/NoDataGate";
 import {
     BarChart,
     Bar,
@@ -54,9 +55,11 @@ export default function AnalyticsPage() {
 
     if (loading) {
         return (
+            <NoDataGate>
             <div className="flex h-full items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
             </div>
+            </NoDataGate>
         );
     }
 
@@ -88,6 +91,7 @@ export default function AnalyticsPage() {
     const highRiskPct = totalStudents > 0 ? ((highRiskTotal / totalStudents) * 100).toFixed(1) : "0";
 
     return (
+        <NoDataGate>
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Department Analytics</h1>
@@ -311,5 +315,6 @@ export default function AnalyticsPage() {
 
             </div>
         </div>
+        </NoDataGate>
     );
 }

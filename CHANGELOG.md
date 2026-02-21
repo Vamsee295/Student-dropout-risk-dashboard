@@ -4,7 +4,43 @@ All notable changes to the Student Dropout Risk Dashboard are documented here.
 
 ---
 
-## [Unreleased] - 2026-02-21 (Full Button Functionality & Network Fix)
+## [Unreleased] - 2026-02-21 (Session-Only Data Architecture)
+
+### All Pages Now Session-Gated
+
+Enforced the session-only architecture across the entire frontend. **No page shows data unless a CSV has been imported.** Previously the `/students` page and 8 other pages fetched directly from the database, bypassing the analysis store.
+
+#### New Component — `NoDataGate`
+- Created `frontend/src/components/NoDataGate.tsx` — a reusable wrapper that checks `useAnalysisStore().hasData`
+- When no CSV is imported, displays a centered empty state with an "Import CSV" call-to-action linking to `/dashboard`
+- Used consistently across all data-dependent pages
+
+#### `/students` Page — Fully Session-Based
+- **Removed** all DB API calls (`facultyService.getStudents()`, `apiClient.get('/analytics/department-breakdown')`)
+- **Reads from** `useAnalysisStore().students` — the in-memory data from the imported CSV
+- Departments and risk levels are derived from the session data
+- Wrapped in `NoDataGate` — shows "No Analysis Data" when no CSV is loaded
+
+#### `/students/[studentId]` Page — Fully Session-Based
+- **Removed** all DB API calls (`studentService.getOverview()`, `studentService.getRisk()`, `apiClient.get('/analytics/faculty')`)
+- Looks up the student from `useAnalysisStore().students` by ID
+- Risk factors derived from session metrics (attendance, engagement, risk score)
+- Action buttons (case note, counseling, email, escalate, reviewed) work locally via toasts — no DB writes since students exist only in session
+- Risk gauge adapts colors to actual risk level (red/amber/green) instead of always red
+
+#### 7 Additional Pages Gated with `NoDataGate`
+All of these pages now show the "Import CSV" prompt instead of making failed DB calls:
+- `/engagement`
+- `/performance`
+- `/risk-analysis`
+- `/interventions`
+- `/dashboard/analytics`
+- `/dashboard/reports`
+- `/dashboard/interventions`
+
+---
+
+## [Previous] - 2026-02-21 (Full Button Functionality & Network Fix)
 
 ### Every Button Wired to Real Backend Logic
 

@@ -16,15 +16,17 @@ A full-stack analytics platform that identifies students at risk of academic dro
 - **Department Breakdown**: Bar chart comparing average risk and attendance per department, plus a summary table.
 - **New Analysis**: One click clears the session and returns to the Import/Refine view.
 
-### Additional Pages
-- **Student Directory**: Search, filter, and sort students from the database by risk level, department, or attendance.
-- **Student Detail**: Full profile with case notes, mark-as-reviewed, escalate, schedule counseling, assign mentor, email student — all backed by real API calls that create Intervention records.
+### Session-Gated Pages
+All data pages are gated behind the analysis store — **no data is shown unless a CSV has been imported**. Navigating to any page without imported data displays a centered "No Analysis Data — Import CSV" prompt.
+
+- **Student Directory** (`/students`): Reads from the in-memory session store. Search, filter by department or risk level. No database calls.
+- **Student Detail** (`/students/[id]`): Looks up the student from session data. Shows risk gauge, metric cards, attendance chart, and risk factor analysis derived from session metrics. Action buttons (case note, counseling, email, escalate) work locally via toasts.
 - **Analytics**: Department-level analytics with detailed charts.
 - **Engagement**: LMS heatmaps, effort-vs-output charts, engagement metric cards. Export report downloads CSV.
-- **Interventions**: Kanban board with drag-and-drop. "New Case" button opens a modal to create interventions via API. Cards link to student profiles.
-- **Risk Analysis**: ML model metrics, feature importance, at-risk student lists. "Run New Analysis" triggers model recalculation. "Notify" sends email, "Details" navigates to student, "View All" links to directory.
-- **Performance**: GPA trends, course performance, early warning alerts. "Create Intervention" button in warnings creates a real intervention and navigates to the board.
-- **Coding Reports**: Sortable table of student coding profiles (HackerRank, LeetCode, CodeChef, CodeForces). Export CSV downloads filtered data.
+- **Interventions**: Kanban board with drag-and-drop. Cards link to student profiles.
+- **Risk Analysis**: ML model metrics, feature importance, at-risk student lists.
+- **Performance**: GPA trends, course performance, early warning alerts.
+- **Coding Reports**: Sortable table of student coding profiles. Export CSV downloads filtered data.
 - **Settings**: General, risk model, notifications, intervention policy, integrations, security, appearance. Theme and sidebar preferences persist to localStorage.
 
 ### ML & Prediction

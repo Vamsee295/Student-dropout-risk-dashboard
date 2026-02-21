@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+import { NoDataGate } from "@/components/NoDataGate";
 import { InterventionFilters } from "@/components/interventions/InterventionFilters";
 import { InterventionBoard } from "@/components/interventions/InterventionBoard";
 import { InterventionCardProps } from "@/components/interventions/InterventionCard";
@@ -79,6 +80,7 @@ export default function InterventionsPage() {
   };
 
   return (
+    <NoDataGate>
     <div className="flex flex-col h-[calc(100vh-80px)] space-y-4 relative">
       {/* Modals & Overlays */}
       {successData.visible && (
@@ -140,5 +142,6 @@ export default function InterventionsPage() {
         )}
       </section>
     </div>
+    </NoDataGate>
   );
 }

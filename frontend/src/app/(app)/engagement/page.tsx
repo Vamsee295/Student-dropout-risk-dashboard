@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
+import { NoDataGate } from "@/components/NoDataGate";
 import { EngagementMetricCards } from "@/components/engagement/EngagementMetricCards";
 import { LMSHeatmapChart } from "@/components/engagement/LMSHeatmapChart";
 import { EffortOutputChart } from "@/components/engagement/EffortOutputChart";
@@ -96,6 +97,7 @@ export default function EngagementPage() {
     };
 
     return (
+        <NoDataGate>
         <div className="space-y-8 relative pb-10">
             {showSuccess && (
                 <SuccessAnimation
@@ -163,5 +165,6 @@ export default function EngagementPage() {
                 </div>
             </section>
         </div>
+        </NoDataGate>
     );
 }

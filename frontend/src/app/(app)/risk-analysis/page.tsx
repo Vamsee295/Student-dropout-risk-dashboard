@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircle, School, AlertTriangle, Play } from "lucide-react";
+import { NoDataGate } from "@/components/NoDataGate";
 import { MLMetricCard } from "@/components/risk-analysis/MLMetricCard";
 import { FeatureImportanceChart } from "@/components/risk-analysis/FeatureImportanceChart";
 import { RiskProbabilityChart } from "@/components/risk-analysis/RiskProbabilityChart";
@@ -37,6 +38,7 @@ export default function RiskAnalysisPage() {
   };
 
   return (
+    <NoDataGate>
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -112,5 +114,6 @@ export default function RiskAnalysisPage() {
         <AtRiskStudentsTable />
       </section>
     </div>
+    </NoDataGate>
   );
 }

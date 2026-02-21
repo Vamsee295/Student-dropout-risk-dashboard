@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { NoDataGate } from "@/components/NoDataGate";
 import {
     MoreHorizontal,
     Plus,
@@ -131,13 +132,16 @@ export default function InterventionBoard() {
 
     if (loading) {
         return (
+            <NoDataGate>
             <div className="flex h-full items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
             </div>
+            </NoDataGate>
         );
     }
 
     return (
+        <NoDataGate>
         <div className="h-[calc(100vh-8rem)] flex flex-col">
             <div className="flex justify-between items-center mb-6">
                 <div>
@@ -262,5 +266,6 @@ export default function InterventionBoard() {
                 </div>
             )}
         </div>
+        </NoDataGate>
     );
 }

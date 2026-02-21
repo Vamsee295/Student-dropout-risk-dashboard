@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { NoDataGate } from "@/components/NoDataGate";
 import { PerformanceHeader } from "@/components/performance/PerformanceHeader";
 import { AcademicKPICards } from "@/components/performance/AcademicKPICards";
 import { GPATrendChart } from "@/components/performance/GPATrendChart";
@@ -69,6 +70,7 @@ export default function PerformancePage() {
     };
 
     return (
+        <NoDataGate>
         <div className="space-y-8">
             {/* ── Header ── */}
             <PerformanceHeader
@@ -229,5 +231,6 @@ export default function PerformancePage() {
                 </div>
             </section>
         </div>
+        </NoDataGate>
     );
 }

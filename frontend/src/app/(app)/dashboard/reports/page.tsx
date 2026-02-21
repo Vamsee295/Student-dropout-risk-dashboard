@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { NoDataGate } from "@/components/NoDataGate";
 import { facultyService, type StudentCodingStats } from "@/services/faculty";
 import {
     Loader2,
@@ -46,13 +47,16 @@ export default function CodingReportsPage() {
 
     if (loading) {
         return (
+            <NoDataGate>
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
             </div>
+            </NoDataGate>
         );
     }
 
     return (
+        <NoDataGate>
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -202,5 +206,6 @@ export default function CodingReportsPage() {
                 </div>
             </div>
         </div>
+        </NoDataGate>
     );
 }
