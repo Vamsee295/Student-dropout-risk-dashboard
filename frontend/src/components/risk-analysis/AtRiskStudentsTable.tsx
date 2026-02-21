@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import apiClient from "@/lib/api";
@@ -17,6 +18,7 @@ interface AtRiskStudent {
 }
 
 export function AtRiskStudentsTable() {
+    const router = useRouter();
     const [students, setStudents] = useState<AtRiskStudent[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -64,7 +66,7 @@ export function AtRiskStudentsTable() {
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => exportToCSV(students.map(s => ({ Name: s.name, ID: s.id, "Risk Score": s.riskScore, "Risk Level": s.riskLabel, "Primary Driver": s.primaryDriver, "Last Activity": s.lastActivity })), "at_risk_students")} className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50">Export CSV</button>
-                    <button className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-semibold text-white hover:bg-blue-700">View All</button>
+                    <button onClick={() => router.push("/students")} className="px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-semibold text-white hover:bg-blue-700">View All</button>
                 </div>
             </div>
 
@@ -110,9 +112,24 @@ export function AtRiskStudentsTable() {
                             </td>
                             <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-3 text-xs font-semibold">
-                                    <button className="text-blue-600 hover:underline">Notify</button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            apiClient.post(`/students/${student.id}/email`, {
+                                                subject: "Risk Alert Notification",
+                                                body: `Your current dropout risk score is ${student.riskScore}%. Please connect with your advisor.`,
+                                            }).catch(() => {});
+                                            const btn = e.currentTarget;
+                                            btn.textContent = "Sent!";
+                                            setTimeout(() => { btn.textContent = "Notify"; }, 2000);
+                                        }}
+                                        className="text-blue-600 hover:underline"
+                                    >Notify</button>
                                     <span className="text-gray-300">|</span>
-                                    <button className="text-gray-500 hover:text-gray-900">Details</button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); router.push(`/students/${student.id}`); }}
+                                        className="text-gray-500 hover:text-gray-900"
+                                    >Details</button>
                                 </div>
                             </td>
                         </tr>

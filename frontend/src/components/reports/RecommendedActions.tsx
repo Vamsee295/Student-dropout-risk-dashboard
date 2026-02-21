@@ -2,13 +2,15 @@
 
 import { Calendar, UserPlus, Mail, MessageSquare } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CounselingModal } from "./CounselingModal";
 import { AssignMentorModal } from "./AssignMentorModal";
 import { EmailStudentModal } from "./EmailStudentModal";
 import { SuccessAnimation } from "@/components/interventions/SuccessAnimation";
 
 export function RecommendedActions() {
-    // Modal State
+    const router = useRouter();
+
     const [isCounselingOpen, setIsCounselingOpen] = useState(false);
     const [isMentorOpen, setIsMentorOpen] = useState(false);
     const [isEmailOpen, setIsEmailOpen] = useState(false);
@@ -107,10 +109,10 @@ export function RecommendedActions() {
                         </div>
                         <div>
                             <h4 className="font-bold text-gray-900 text-sm">Faculty Advisor</h4>
-                            <button className="text-xs font-semibold text-blue-600 hover:underline">View Notes</button>
+                            <button onClick={() => router.push("/dashboard/interventions")} className="text-xs font-semibold text-blue-600 hover:underline">View Notes</button>
                         </div>
                     </div>
-                    <button className="text-gray-400 hover:text-gray-600">
+                    <button onClick={() => router.push("/engagement")} className="text-gray-400 hover:text-gray-600">
                         <MessageSquare size={20} />
                     </button>
                 </div>

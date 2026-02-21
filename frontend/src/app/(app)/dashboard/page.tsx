@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { facultyService } from "@/services/faculty";
-import apiClient from "@/lib/api";
+import { useAnalysisStore } from "@/store/analysisStore";
+import { AnalysisLanding } from "@/components/analysis/AnalysisLanding";
 import {
   Users,
   AlertTriangle,
   TrendingUp,
   Upload,
   RefreshCw,
-  Loader2,
   PieChart as PieChartIcon,
 } from "lucide-react";
 import {
@@ -27,23 +25,6 @@ import {
 } from "recharts";
 import Link from "next/link";
 
-interface FacultyOverview {
-  total_students: number;
-  high_risk_count: number;
-  average_attendance: number;
-  average_risk_score: number;
-  high_risk_department: string | null;
-  risk_distribution: Record<string, number>;
-}
-
-interface DeptAnalytics {
-  department: string;
-  total_students: number;
-  avg_risk_score: number;
-  avg_attendance: number;
-  high_risk_count: number;
-}
-
 const RISK_COLORS: Record<string, string> = {
   "High Risk": "#EF4444",
   "Moderate Risk": "#F59E0B",
@@ -52,53 +33,12 @@ const RISK_COLORS: Record<string, string> = {
 };
 
 export default function FacultyDashboard() {
-  const [overview, setOverview] = useState<FacultyOverview | null>(null);
-  const [deptData, setDeptData] = useState<DeptAnalytics[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [recalculating, setRecalculating] = useState(false);
+  const { hasData, overview, students, clearAnalysis } = useAnalysisStore();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [overviewData, analyticsRes] = await Promise.all([
-          facultyService.getOverview(),
-          apiClient.get('/faculty/analytics/department'),
-        ]);
-        setOverview(overviewData as FacultyOverview);
-        setDeptData(Array.isArray(analyticsRes.data) ? analyticsRes.data : []);
-      } catch (error) {
-        console.error("Failed to fetch faculty dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const handleRecalculate = async () => {
-    setRecalculating(true);
-    try {
-      await facultyService.recalculateRisk();
-      const overviewData = await facultyService.getOverview();
-      setOverview(overviewData as FacultyOverview);
-    } catch (error) {
-      console.error("Recalculation failed:", error);
-    } finally {
-      setRecalculating(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-      </div>
-    );
+  if (!hasData || !overview) {
+    return <AnalysisLanding />;
   }
 
-  if (!overview) return null;
-
-  // Build pie data from the actual API keys ("High Risk", "Moderate Risk", "Stable", "Safe")
   const pieData = Object.entries(overview.risk_distribution || {})
     .filter(([, v]) => v > 0)
     .map(([name, value]) => ({
@@ -107,32 +47,40 @@ export default function FacultyDashboard() {
       color: RISK_COLORS[name] || "#6B7280",
     }));
 
-  // Bar chart data — use avg_risk_score field from DepartmentAnalytics schema
-  const barData = deptData.map((d) => ({
-    department: d.department,
-    avg_risk: d.avg_risk_score,
-    attendance: d.avg_attendance,
-    high_risk: d.high_risk_count,
+  const deptMap = new Map<string, { total: number; riskSum: number; attSum: number; highRisk: number }>();
+  students.forEach((s) => {
+    const dept = s.department || "Other";
+    const cur = deptMap.get(dept) || { total: 0, riskSum: 0, attSum: 0, highRisk: 0 };
+    cur.total += 1;
+    cur.riskSum += s.riskScore;
+    cur.attSum += s.attendance_rate ?? 0;
+    if (s.riskLevel === "High Risk") cur.highRisk += 1;
+    deptMap.set(dept, cur);
+  });
+  const barData = Array.from(deptMap.entries()).map(([department, d]) => ({
+    department,
+    avg_risk: d.total ? d.riskSum / d.total : 0,
+    attendance: d.total ? d.attSum / d.total : 0,
+    high_risk: d.highRisk,
+    total_students: d.total,
   }));
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Faculty Overview</h1>
           <p className="text-gray-500">
-            Monitor student risk levels and engagement across departments.
+            Session analysis — data from your imported CSV.
           </p>
         </div>
         <div className="flex gap-3">
           <button
-            onClick={handleRecalculate}
-            disabled={recalculating}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            onClick={clearAnalysis}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 border border-amber-200 rounded-lg hover:bg-amber-200"
           >
-            <RefreshCw size={18} className={recalculating ? "animate-spin" : ""} />
-            {recalculating ? "Recalculating..." : "Recalculate Risk"}
+            <RefreshCw size={18} />
+            New Analysis
           </button>
           <Link
             href="/dashboard/upload"
@@ -144,7 +92,6 @@ export default function FacultyDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Students"
@@ -177,10 +124,7 @@ export default function FacultyDashboard() {
         />
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Risk Distribution Donut */}
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
           <h3 className="font-semibold text-gray-900 mb-4">Risk Distribution</h3>
           {pieData.length === 0 ? (
@@ -205,10 +149,7 @@ export default function FacultyDashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value, name) => [
-                      `${value} students`,
-                      String(name),
-                    ]}
+                    formatter={(value) => [`${value} students`, ""]}
                     contentStyle={{
                       borderRadius: "8px",
                       border: "none",
@@ -229,7 +170,6 @@ export default function FacultyDashboard() {
           )}
         </div>
 
-        {/* Department Risk Bar Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
           <h3 className="font-semibold text-gray-900 mb-4">Department Risk Levels</h3>
           {barData.length === 0 ? (
@@ -263,10 +203,12 @@ export default function FacultyDashboard() {
                   />
                   <Tooltip
                     cursor={{ fill: "#F3F4F6" }}
-                    formatter={(value, name) => {
-                      if (name === "avg_risk") return [`${Number(value).toFixed(1)}%`, "Avg Risk Score"];
-                      if (name === "attendance") return [`${Number(value).toFixed(1)}%`, "Avg Attendance"];
-                      return [`${value}`, String(name)];
+                    formatter={(value: number | undefined, name: string | undefined) => {
+                      const v = Number(value ?? 0);
+                      const n = String(name ?? "");
+                      if (n === "avg_risk") return [`${v.toFixed(1)}%`, "Avg Risk Score"];
+                      if (n === "attendance") return [`${v.toFixed(1)}%`, "Avg Attendance"];
+                      return [v, n];
                     }}
                     contentStyle={{
                       borderRadius: "8px",
@@ -302,11 +244,9 @@ export default function FacultyDashboard() {
             </div>
           )}
         </div>
-
       </div>
 
-      {/* Department Table */}
-      {deptData.length > 0 && (
+      {barData.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900">Department Summary</h3>
@@ -323,22 +263,29 @@ export default function FacultyDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {deptData.map((dept) => (
+                {barData.map((dept) => (
                   <tr key={dept.department} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{dept.department}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.total_students}</td>
                     <td className="px-6 py-4 text-right">
-                      <span className={`text-sm font-semibold ${dept.avg_risk_score >= 70 ? "text-red-600" :
-                          dept.avg_risk_score >= 55 ? "text-amber-600" :
-                            dept.avg_risk_score >= 40 ? "text-indigo-600" : "text-emerald-600"
-                        }`}>
-                        {dept.avg_risk_score.toFixed(1)}%
+                      <span
+                        className={`text-sm font-semibold ${
+                          dept.avg_risk >= 70
+                            ? "text-red-600"
+                            : dept.avg_risk >= 55
+                            ? "text-amber-600"
+                            : dept.avg_risk >= 40
+                            ? "text-indigo-600"
+                            : "text-emerald-600"
+                        }`}
+                      >
+                        {dept.avg_risk.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.avg_attendance.toFixed(1)}%</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.attendance.toFixed(1)}%</td>
                     <td className="px-6 py-4 text-right">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
-                        {dept.high_risk_count}
+                        {dept.high_risk}
                       </span>
                     </td>
                   </tr>
@@ -352,14 +299,25 @@ export default function FacultyDashboard() {
   );
 }
 
-function StatCard({ title, value, icon, color, subText }: any) {
-  const bgColors: any = {
+function StatCard({
+  title,
+  value,
+  icon,
+  color,
+  subText,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  subText?: string;
+}) {
+  const bgColors: Record<string, string> = {
     blue: "bg-blue-50",
     red: "bg-red-50",
     green: "bg-green-50",
     purple: "bg-purple-50",
   };
-
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">

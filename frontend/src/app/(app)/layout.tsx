@@ -47,20 +47,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Role-based Access Control
-    if (user?.role === "STUDENT") {
-      // Students should not access faculty routes
-      const studentAllowedRoutes = ["/student-dashboard", "/profile", "/reports", "/settings"];
-      const isAllowed = studentAllowedRoutes.some(route => pathname.startsWith(route));
-
-      if (!isAllowed) {
-        router.push("/student-dashboard");
-      }
-    } else if (user?.role === "FACULTY" || user?.role === "ADMIN") {
-      // Faculty should not access student dashboard (optional, but good for clarity)
-      if (pathname === "/student-dashboard") {
-        router.push("/dashboard");
-      }
+    // Faculty/Admin only - redirect to dashboard if on removed student routes
+    if (pathname.startsWith("/student-dashboard") || pathname === "/profile") {
+      router.push("/dashboard");
     }
   }, [isAuthenticated, user, pathname, router]);
 
@@ -104,13 +93,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </div>
 
                     <div className="py-1">
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <User size={14} /> Profile
-                      </Link>
                       <Link
                         href="/settings"
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

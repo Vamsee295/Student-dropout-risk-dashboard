@@ -1,6 +1,8 @@
 import apiClient from '@/lib/api';
 
 export interface StudentOverview {
+    student_name?: string;
+    department?: string;
     attendance_rate: number;
     avg_marks: number;
     engagement_score: number;

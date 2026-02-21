@@ -24,6 +24,7 @@ from app.config import get_settings
 from app.database import SessionLocal, init_db
 from app.routes import (
     analytics,
+    analysis,
     auth,
     engagement,
     faculty_dashboard,
@@ -224,6 +225,7 @@ app.include_router(student_dashboard.router)
 app.include_router(faculty_dashboard.router)   # /api/faculty/*
 app.include_router(upload.router)              # /api/faculty/upload/*
 app.include_router(settings_routes.router, prefix="/api", tags=["Settings"])
+app.include_router(analysis.router)
 app.include_router(frontend.router, tags=["Frontend"])
 
 

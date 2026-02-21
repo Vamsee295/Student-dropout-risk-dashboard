@@ -95,8 +95,8 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                         })));
                     })
                     .catch(() => {});
-            } catch (error) {
-                console.error("Failed to fetch student details:", error);
+            } catch {
+                // Overview/risk data unavailable — handled by the !overview || !risk check in render
             } finally {
                 setLoading(false);
             }
@@ -114,42 +114,82 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
 
     // --- Action Handlers ---
 
-    const handleAddNote = () => {
+    const handleAddNote = async () => {
         if (!noteText.trim()) return;
-        showToast("Case note added successfully to student record.");
+        try {
+            await apiClient.post(`/students/${params.studentId}/notes`, { note: noteText });
+            showToast("Case note added successfully to student record.");
+        } catch {
+            showToast("Failed to add case note.", "error");
+        }
         setNoteText("");
         setIsNoteModalOpen(false);
     };
 
-    const handleMarkReviewed = () => {
-        setIsReviewed(true);
-        showToast("Student profile marked as reviewed.");
+    const handleMarkReviewed = async () => {
+        try {
+            await apiClient.patch(`/students/${params.studentId}/reviewed`);
+            setIsReviewed(true);
+            showToast("Student profile marked as reviewed.");
+        } catch {
+            showToast("Failed to mark as reviewed.", "error");
+        }
     };
 
-    const handleEscalate = () => {
-        setIsEscalated(true);
-        showToast("Case escalated to Dean of Students.", "error");
+    const handleEscalate = async () => {
+        try {
+            await apiClient.post(`/students/${params.studentId}/escalate`);
+            setIsEscalated(true);
+            showToast("Case escalated to Dean of Students.", "error");
+        } catch {
+            showToast("Failed to escalate case.", "error");
+        }
     };
 
-    const handleScheduleCounselingSubmit = (e: React.FormEvent) => {
+    const handleScheduleCounselingSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        showToast(`Counseling scheduled for ${counselingDate} without ${counselingTime}.`);
+        try {
+            await apiClient.post(`/students/${params.studentId}/counseling`, {
+                date: counselingDate,
+                time: counselingTime,
+                type: counselingType,
+            });
+            showToast(`Counseling scheduled for ${counselingDate} at ${counselingTime}.`);
+        } catch {
+            showToast("Failed to schedule counseling.", "error");
+        }
         setIsCounselingModalOpen(false);
         setCounselingDate("");
         setCounselingTime("");
     };
 
-    const handleAssignMentorSubmit = () => {
+    const handleAssignMentorSubmit = async () => {
         if (!selectedMentor) return;
-        setHasPeerMentor(true);
-        const mentorName = availableMentors.find(m => m.id === selectedMentor)?.name;
-        showToast(`Mentor ${mentorName} assigned successfully.`);
+        const mentor = availableMentors.find(m => m.id === selectedMentor);
+        try {
+            await apiClient.post(`/students/${params.studentId}/mentor`, {
+                mentor_id: selectedMentor,
+                mentor_name: mentor?.name ?? selectedMentor,
+            });
+            setHasPeerMentor(true);
+            showToast(`Mentor ${mentor?.name} assigned successfully.`);
+        } catch {
+            showToast("Failed to assign mentor.", "error");
+        }
         setIsMentorModalOpen(false);
     };
 
-    const handleEmailSubmit = (e: React.FormEvent) => {
+    const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        showToast("Email sent to student successfully.");
+        try {
+            await apiClient.post(`/students/${params.studentId}/email`, {
+                subject: emailSubject,
+                body: emailBody,
+            });
+            showToast("Email sent to student successfully.");
+        } catch {
+            showToast("Failed to send email.", "error");
+        }
         setIsEmailModalOpen(false);
         setEmailSubject("");
         setEmailBody("");
@@ -434,7 +474,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                                     <div className="flex items-start gap-4">
                                         <div className="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center text-2xl font-bold text-indigo-600 border border-indigo-100 shadow-sm">
                                             {(() => {
-                                                const initials = ((overview as StudentOverview & { student_name?: string }).student_name || "ST").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+                                                const initials = (overview.student_name || "ST").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
                                                 return overview.risk_level === 'High Risk' ? (
                                                     <div className="relative">
                                                         <span className="absolute bottom-0 right-0 h-4 w-4 bg-red-500 border-2 border-white rounded-full"></span>
@@ -445,7 +485,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{(overview as StudentOverview & { student_name?: string }).student_name || `Student #${params.studentId}`}</h2>
+                                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{overview.student_name || `Student #${params.studentId}`}</h2>
                                             </div>
                                             <p className="text-sm text-gray-500 mt-1 font-medium">ID: #{params.studentId} • {risk.risk_level} • Attendance: {overview.attendance_rate}%</p>
                                             <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
@@ -680,7 +720,15 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                             </div>
                         </div>
                         <div className="mt-6 pt-5 border-t border-gray-50 flex gap-3">
-                            <button className="flex-1 text-xs font-semibold py-2.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200/50">View Profile</button>
+                            <button
+                                onClick={() => {
+                                    const advisor = availableMentors.length > 0 ? availableMentors[0] : null;
+                                    if (advisor) {
+                                        showToast(`${advisor.name} — ${advisor.role}, ${advisor.dept}`);
+                                    }
+                                }}
+                                className="flex-1 text-xs font-semibold py-2.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200/50"
+                            >View Profile</button>
                             <button
                                 onClick={() => setIsChatOpen(true)}
                                 className="flex-1 text-xs font-semibold py-2.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors border border-indigo-100"

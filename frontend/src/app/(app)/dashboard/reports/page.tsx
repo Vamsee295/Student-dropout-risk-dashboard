@@ -12,6 +12,7 @@ import {
     ExternalLink
 } from "lucide-react";
 import Link from "next/link";
+import { exportToCSV } from "@/utils/exportUtils";
 
 export default function CodingReportsPage() {
     const [students, setStudents] = useState<StudentCodingStats[]>([]);
@@ -62,7 +63,25 @@ export default function CodingReportsPage() {
                     <p className="text-gray-500">Comprehensive view of student performance across competitive programming platforms.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50">
+                    <button
+                        onClick={() => {
+                            const rows = filteredStudents.map((s, i) => ({
+                                Rank: i + 1,
+                                Name: s.name,
+                                ID: s.id,
+                                Department: s.department,
+                                HackerRank_Score: s.coding_profile?.hackerrank_score || 0,
+                                HackerRank_Solved: s.coding_profile?.hackerrank_solved || 0,
+                                LeetCode_Rating: s.coding_profile?.leetcode_rating || 0,
+                                LeetCode_Solved: s.coding_profile?.leetcode_solved || 0,
+                                CodeChef_Rating: s.coding_profile?.codechef_rating || 0,
+                                CodeForces_Rating: s.coding_profile?.codeforces_rating || 0,
+                                Overall_Score: s.coding_profile?.overall_score || 0,
+                            }));
+                            exportToCSV(rows, "coding_profiles_report");
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
                         <Download size={18} />
                         Export CSV
                     </button>

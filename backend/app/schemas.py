@@ -393,6 +393,8 @@ class StudentAssessmentResponse(BaseModel):
 
 class StudentDashboardOverview(BaseModel):
     """Overview data for student dashboard."""
+    student_name: Optional[str] = None
+    department: Optional[str] = None
     attendance_rate: float
     avg_marks: float
     engagement_score: float

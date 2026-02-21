@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a **Machine Learning-powered Student Dropout Risk Dashboard** designed to identify, monitor, and intervene with at-risk students. The system provides real-time risk predictions, SHAP-based explanations for model interpretability, and comprehensive intervention tracking for educational institutions.
+This is a **Machine Learning-powered Student Dropout Risk Dashboard** designed for faculty and administrators to identify, monitor, and intervene with at-risk students. Faculty upload CSV data (or refine raw data client-side), the system computes risk scores via a trained ML model, and the dashboard visualizes results with department breakdowns, risk distributions, and intervention tracking. All analysis is session-based — data lives in the browser until the tab is closed or "New Analysis" is clicked.
 
 ---
 
@@ -14,8 +14,7 @@ This is a **Machine Learning-powered Student Dropout Risk Dashboard** designed t
 | **FastAPI** | Python web framework for building RESTful APIs |
 | **SQLAlchemy 2.0+** | ORM for database operations |
 | **MySQL 8.0** | Primary database (PostgreSQL-ready) |
-| **scikit-learn** | Machine learning (GradientBoostingClassifier) |
-| **XGBoost** | Alternative ML model support |
+| **scikit-learn** | Machine learning (RandomForestClassifier) |
 | **SHAP** | Model explainability and feature importance |
 | **Pandas/NumPy** | Data manipulation and analysis |
 | **JWT (python-jose)** | Authentication tokens |
@@ -57,7 +56,7 @@ Student-dropout-risk-dashboard/
 │   │   ├── models.py          # SQLAlchemy ORM models
 │   │   ├── schemas.py         # Pydantic schemas
 │   │   ├── security.py        # JWT & password hashing (config-driven)
-│   │   ├── routes/            # API endpoints (11 files)
+│   │   ├── routes/            # API endpoints (12 route modules)
 │   │   ├── services/          # Business logic services
 │   │   └── utils/             # Helper utilities
 │   ├── scripts/               # Database & ML scripts (20+)
@@ -137,7 +136,7 @@ The system uses **15+ database tables** to manage all aspects of student data an
 - **RiskTrend**: UP, DOWN, STABLE
 - **InterventionType**: COUNSELING, TUTORING, MENTORING, FINANCIAL, ACADEMIC
 - **InterventionStatus**: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
-- **Role**: STUDENT, FACULTY, ADMIN
+- **Role**: STUDENT (deprecated — blocked at login), FACULTY, ADMIN
 
 ---
 
@@ -156,11 +155,20 @@ The system uses **15+ database tables** to manage all aspects of student data an
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/students` | List all students with risk scores |
+| GET | `/api/students/all` | Alias for student list (frontend convenience) |
 | GET | `/api/students/{id}` | Get student details |
 | GET | `/api/students/{id}/risk` | Get risk with SHAP explanation |
+| GET | `/api/students/{id}/coding-profile` | Get coding platform scores (HackerRank, LeetCode, etc.) |
+| POST | `/api/students/{id}/notes` | Add a case note (creates Intervention record) |
+| PATCH | `/api/students/{id}/reviewed` | Mark student profile as reviewed |
+| POST | `/api/students/{id}/escalate` | Escalate case to Dean of Students |
+| POST | `/api/students/{id}/counseling` | Schedule counseling for a single student |
+| POST | `/api/students/{id}/mentor` | Assign peer mentor (updates advisor, creates Intervention) |
+| POST | `/api/students/{id}/email` | Log email notification (creates Intervention record) |
 | POST | `/api/students/{id}/metrics` | Update metrics (triggers prediction) |
-| POST | `/api/students/assign-advisor` | Assign advisor to student |
-| POST | `/api/students/schedule-counseling` | Schedule counseling (creates Intervention records) |
+| POST | `/api/students/assign-advisor` | Assign advisor to multiple students |
+| POST | `/api/students/schedule-counseling` | Schedule group counseling (creates Intervention records) |
+| POST | `/api/faculty/interventions` | Create a new intervention case for any student |
 
 ### Prediction (`/api`)
 | Method | Endpoint | Description |
@@ -181,6 +189,11 @@ The system uses **15+ database tables** to manage all aspects of student data an
 | GET | `/api/analytics/department-breakdown` | Risk by department |
 | GET | `/api/analytics/notifications` | Data-driven notifications based on system state |
 | POST | `/api/analytics/chat` | Context-aware advisor chat with student data |
+
+### Session Analysis (`/api/analysis`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/analysis/import` | Import any CSV (raw or refined), auto-map columns if needed, reject irrelevant files (422), compute risks in-memory (no DB), stream progress as NDJSON |
 
 ### Settings (`/api`)
 | Method | Endpoint | Description |
@@ -244,23 +257,43 @@ The system uses **15+ database tables** to manage all aspects of student data an
 
 ### Model Architecture
 
-- **Algorithm**: GradientBoostingClassifier (scikit-learn)
-- **Training**: 5-fold cross-validation (StratifiedKFold)
+- **Loaded Model**: `RandomForestClassifier` (scikit-learn) from `ml_models/dropout_risk_model.joblib`
+- **Fallback Training**: GradientBoosting/RandomForest with 5-fold cross-validation
 - **Calibration**: CalibratedClassifierCV (sigmoid) for probability calibration
 - **Output**: Risk score (0-100), risk level, SHAP explanations
 
-### ML Features (8 Engineered Features)
+### Actual Model Features (4 Features)
 
-| Feature | Type | Description |
-|---------|------|-------------|
-| `attendance_rate` | 0-100 | Calculated from raw attendance records |
-| `engagement_score` | 0-100 | Assignment submission rate × average score |
-| `academic_performance_index` | Float | Weighted GPA from marks |
-| `login_gap_days` | Integer | Days since last LMS login |
-| `failure_ratio` | 0-1 | Failed courses / total courses |
-| `financial_risk_flag` | Boolean | Financial risk indicator |
-| `commute_risk_score` | 1-4 | Commute difficulty score |
-| `semester_performance_trend` | Float | Recent vs historical performance trend |
+The loaded `.joblib` model expects exactly these 4 features:
+
+| Model Feature | Source (CSV Column) | Transform |
+|---|---|---|
+| `attendance_rate` | `attendance_rate` | Direct (0-100) |
+| `lms_score` | `engagement_score` | Direct (0-100) |
+| `avg_assignment_score` | `academic_performance_index` | Multiplied by 10 |
+| `avg_quiz_score` | `semester_performance_trend` | Direct |
+
+The mapping is performed by `_metric_to_dataframe()` in `realtime_prediction.py`, which dynamically reads `model.feature_names_in_` and maps from the 8-column CSV schema.
+
+### CSV Schema (11 Columns)
+
+The refined CSV used for import must contain:
+
+| Column | Type | Range | Description |
+|--------|------|-------|-------------|
+| `id` | string | — | Student identifier |
+| `name` | string | — | Student name |
+| `department` | string | — | Department code (CSE, ECE, etc.) |
+| `attendance_rate` | float | 0–100 | Attendance percentage |
+| `engagement_score` | float | 0–100 | LMS engagement metric → model's `lms_score` |
+| `academic_performance_index` | float | 0–10 | GPA-scale index → model's `avg_assignment_score` (×10) |
+| `login_gap_days` | int | 0+ | Days since last LMS login |
+| `failure_ratio` | float | 0–1 | Failed / total courses |
+| `financial_risk_flag` | int | 0 or 1 | Financial risk indicator |
+| `commute_risk_score` | int | 1–4 | Commute difficulty |
+| `semester_performance_trend` | float | -100–100 | Performance trend → model's `avg_quiz_score` |
+
+Columns `login_gap_days`, `failure_ratio`, `financial_risk_flag`, and `commute_risk_score` are stored for display and future model versions but are not consumed by the current model.
 
 ### Risk Level Classification
 
@@ -271,7 +304,29 @@ The system uses **15+ database tables** to manage all aspects of student data an
 | 56-70 | Moderate | Yellow/Orange |
 | 71-100 | High Risk | Red |
 
-### Real-Time Prediction Pipeline
+### Session-Based Analysis Pipeline (CSV Import)
+
+```
+1. Faculty uploads refined CSV via /api/analysis/import
+         ↓
+2. Backend validates columns against REQUIRED_COLUMNS
+         ↓
+3. Each row parsed → metrics dict created
+         ↓
+4. compute_risk_from_metrics_dict() called (in-memory, no DB)
+         ↓
+5. _metric_to_dataframe() maps 8 CSV fields → 4 model features
+         ↓
+6. ML model inference → risk score (0-100) + risk level
+         ↓
+7. Progress streamed as NDJSON (phase, count, distribution)
+         ↓
+8. Final event: full overview + student array
+         ↓
+9. Frontend analysisStore receives data → dashboard renders
+```
+
+### Database-Backed Prediction Pipeline (Traditional)
 
 ```
 1. Student metrics updated via API
@@ -295,7 +350,7 @@ The system uses **15+ database tables** to manage all aspects of student data an
 
 The system uses **SHAP (SHapley Additive exPlanations)** for model interpretability:
 
-- **TreeExplainer** for GradientBoosting models
+- **TreeExplainer** for tree-based models (RandomForest / GradientBoosting)
 - Returns **top 5 contributing features** per prediction
 - Shows feature impact and direction (positive/negative)
 - Stored as JSON in `RiskScore.shap_explanation`
@@ -317,27 +372,28 @@ The system uses **SHAP (SHapley Additive exPlanations)** for model interpretabil
 
 | Page | Route | Description |
 |------|-------|-------------|
-| **Faculty Dashboard** | `/dashboard` | KPIs, risk distribution, alerts |
-| **Students Directory** | `/students` | Student list with filters |
-| **Student Detail** | `/students/[id]` | Individual student profile |
-| **Risk Analysis** | `/risk-analysis` | Risk analysis with charts |
-| **Performance** | `/performance` | Academic performance analytics |
-| **Engagement** | `/engagement` | Engagement metrics and heatmaps |
-| **Interventions** | `/interventions` | Intervention management board |
-| **Student Dashboard** | `/student-dashboard` | Student-facing dashboard |
-| **Settings** | `/settings` | Application settings |
+| **Dashboard** | `/dashboard` | Initially shows Import/Refine CSV landing; after import, shows KPIs, risk distribution, department charts |
+| **Students Directory** | `/students` | Student list from DB with filters by risk, department, attendance |
+| **Student Detail** | `/students/[id]` | Individual student profile with risk, metrics, advisor |
+| **Risk Analysis** | `/risk-analysis` | ML model metrics, feature importance, at-risk lists |
+| **Performance** | `/performance` | GPA trends, course performance, early warnings |
+| **Engagement** | `/engagement` | Engagement metrics, LMS heatmaps, effort-output charts |
+| **Interventions** | `/interventions` | Kanban board for intervention tracking |
+| **Settings** | `/settings` | General, risk model, notifications, intervention policy, integrations, security |
+
+Student-facing pages (`/student-dashboard/*`, `/profile`) redirect to `/dashboard`.
 
 ### Key Component Categories
 
 | Category | Components |
 |----------|------------|
+| **Analysis** | AnalysisLanding (Import/Refine CSV with animated pipeline UI) |
 | **Dashboard** | DashboardMetrics, RiskDistributionChart, DropoutRiskTrendChart, RecentCriticalAlerts, InterventionStatus |
 | **Students** | StudentTable, DirectoryFilters, AssignAdvisorModal, GroupCounselingModal |
 | **Risk Analysis** | FeatureImportanceChart, RiskProbabilityChart, AtRiskStudentsTable, MLMetricCard |
 | **Performance** | AcademicKPICards, GPATrendChart, CourseRadarChart, EarlyWarningPanel, AIInsightCard |
 | **Engagement** | EngagementMetricCards, LMSHeatmapChart, EffortOutputChart, MyActivityHeatmap |
 | **Interventions** | InterventionBoard, InterventionCard, InterventionColumn, NewInterventionModal |
-| **Profile** | ProfileSidebar, ScoreDistributionChart, GlobalRankChart, PlatformRatingCard |
 | **Shared** | Sidebar, Logo, KpiCard, ChatWidget, NotificationBell, CinematicBackground |
 
 ---
@@ -359,10 +415,13 @@ The system uses **SHAP (SHapley Additive exPlanations)** for model interpretabil
 
 #### RealtimePredictionService (`backend/app/services/realtime_prediction.py`)
 ```python
-- compute_student_risk()     # Compute risk for single student
-- compute_all_risk_scores()  # Batch computation for all students
-- _save_risk_result()        # Save to database
-- _trigger_intervention()    # Auto-create interventions for high-risk
+- compute_student_risk()            # Compute risk for single student (DB-backed)
+- compute_all_risk_scores()         # Batch computation for all students
+- compute_risk_from_metrics_dict()  # Compute risk from plain dict (session-only, no DB)
+- _metric_to_dataframe()            # Map 8 metric fields → 4 model features
+- _get_model_feature_names()        # Read model.feature_names_in_ dynamically
+- _save_risk_result()               # Save to database
+- _trigger_intervention()           # Auto-create interventions for high-risk
 ```
 
 #### FeatureEngineer (`backend/app/services/feature_engineering.py`)
@@ -418,11 +477,53 @@ All frontend services use a centralized Axios instance that:
 - getStudentById()  # Get single student details (via apiClient)
 ```
 
+#### analysisStore (`frontend/src/store/analysisStore.ts`)
+```typescript
+- hasData             # Boolean: whether session analysis data is loaded
+- overview            # AnalysisOverview | null (total, at-risk, avg risk, dept breakdown)
+- students            # AnalysisStudent[] (id, name, department, risk_score, risk_level, metrics)
+- setAnalysisData()   # Load overview + students into store
+- clearAnalysis()     # Reset to empty (returns to landing view)
+```
+
+#### refineCsvAsync (`frontend/src/utils/refineCsv.ts`)
+```typescript
+- refineCsvAsync(file, onProgress)  # Async client-side CSV refinement
+  # Steps: parse → map columns → compute means → fill missing → build rows → detect outliers → generate output
+  # Emits RefineStepData[] at each stage for animated UI
+  # Returns { csvString, rowCount }
+```
+
 ---
 
 ## Data Flow
 
-### Data Ingestion Pipeline
+### Session-Based Analysis Flow (Primary — CSV Import)
+
+```
+Option A: Import CSV (raw or refined) via /api/analysis/import
+  1. Faculty uploads any CSV via AnalysisLanding
+  2. Backend checks for refined columns
+     — If all 11 present → proceed directly
+     — If missing → auto-map raw columns (_refine_dataframe):
+       • Map ID/Name/Department/Attendance_%/CGPA etc. to refined names
+       • Engineer engagement_score from MID exam columns
+       • Compute semester_performance_trend from Sem1/Sem2 GPA
+       • Estimate login_gap_days, failure_ratio from available data
+       • Default financial_risk_flag=0, commute_risk_score=1
+  3. compute_risk_from_metrics_dict() runs per-student (in-memory, no DB)
+  4. Progress streamed as NDJSON (phase, student name, risk level, distribution)
+  5. Frontend receives "done" event → analysisStore.setAnalysisData()
+  6. Dashboard renders with overview + student list
+
+Option B: Refine Raw CSV Client-Side First
+  1. Faculty uploads raw CSV via AnalysisLanding → client-side refineCsvAsync()
+  2. Browser: parse → map columns → fill missing (mean) → cap outliers (IQR) → generate output
+  3. Each step emits progress for animated pipeline UI
+  4. Faculty downloads refined CSV or clicks "Import to Dashboard" for direct import
+```
+
+### Database-Backed Ingestion Pipeline (Legacy)
 
 ```
 CSV Upload (Attendance/Marks/Assignments)
@@ -440,17 +541,6 @@ RiskScore + RiskHistory Tables
 Auto-Intervention (if HIGH risk)
          ↓
 Intervention Table
-```
-
-### Real-Time Update Flow
-
-```
-1. Metrics updated via API (POST /api/students/{id}/metrics)
-2. Features recomputed (feature_engineering.py)
-3. Risk recalculated (realtime_prediction.py)
-4. SHAP explanation generated
-5. Database updated
-6. Frontend refreshes via API calls
 ```
 
 ---
@@ -475,7 +565,7 @@ Intervention Table
 ### ML Operation Scripts
 | Script | Purpose |
 |--------|---------|
-| `train_model.py` | Train XGBoost model |
+| `train_model.py` | Train ML model (RandomForest / GradientBoosting) |
 | `compute_all_risks.py` | Compute risk scores for all students |
 | `compute_risk_scores.py` | Risk computation utility |
 | `generate_risk_scores.py` | Generate risk scores |
@@ -494,8 +584,8 @@ Intervention Table
 ## Authentication & Security
 
 ### Authentication Flow
-1. User submits credentials to `/api/auth/login`
-2. Server validates credentials against `User` table (auto-registration enabled for testing)
+1. Faculty submits credentials to `/api/auth/login` (student login is blocked with `403 Forbidden`)
+2. Server validates credentials against `User` table (auto-registration creates `FACULTY` role)
 3. JWT token generated with user info and expiration (config-driven via `app.config.Settings`)
 4. Token returned to client
 5. Client stores token in Zustand auth store (persisted to localStorage as `auth-storage`)
@@ -506,9 +596,9 @@ Intervention Table
 ### Security Features
 - **Password Hashing**: pbkdf2_sha256 via passlib (CryptContext)
 - **JWT Tokens**: python-jose with config-driven SECRET_KEY, ALGORITHM, and expiration (sourced from `get_settings()`)
-- **Role-Based Access**: STUDENT, FACULTY, ADMIN roles
+- **Role-Based Access**: FACULTY and ADMIN roles (student role deprecated and blocked at login)
 - **CORS**: Configured middleware for cross-origin requests
-- **Auto-Registration**: Enabled for testing (configurable)
+- **Auto-Registration**: Enabled for testing — new emails auto-register as FACULTY
 - **Centralized Auth Handling**: Frontend interceptors eliminate manual token management across services
 
 ---
@@ -581,41 +671,44 @@ docker-compose down
 
 ## Key Features Summary
 
+### Session-Based CSV Analysis (Primary Workflow)
+- **Import CSV**: Upload refined CSV → real-time streaming risk computation → dashboard populates instantly
+- **Refine CSV**: Upload raw data → client-side pipeline maps columns, fills missing values, caps outliers → download or import
+- **Session-Only**: Data lives in browser memory — clears on tab close or "New Analysis" click
+- **Animated Pipeline UI**: Both import and refine show step-by-step animated progress with live statistics
+
 ### For Faculty/Administrators
 - **Dashboard Analytics**: Real-time KPIs, risk distribution charts, department breakdowns
-- **Student Directory**: Searchable/filterable list with risk indicators
+- **Student Directory**: Searchable/filterable list with risk indicators (database-backed)
 - **Risk Analysis**: Feature importance visualization, at-risk student lists
 - **Intervention Management**: Kanban-style board for tracking interventions
-- **Bulk Data Upload**: CSV upload for attendance, marks, assignments
+- **Bulk Data Upload**: CSV upload for attendance, marks, assignments (database-backed)
 - **AI Insights**: ML-generated insights and recommendations
 
-### For Students
-- **Personal Dashboard**: View own risk status and metrics
-- **Performance Tracking**: GPA trends, course performance
-- **Engagement Metrics**: Activity heatmaps, effort visualization
-- **Profile Management**: Coding platform scores, personal info
-
 ### ML Capabilities
-- **Real-Time Prediction**: Instant risk score updates on data changes
-- **SHAP Explanations**: Interpretable feature contributions
+- **Real-Time Prediction**: Instant risk score computation from CSV data (session) or DB metrics
+- **Streaming Progress**: NDJSON streaming during import shows per-student risk computation
+- **SHAP Explanations**: Interpretable feature contributions via TreeExplainer
 - **Model Versioning**: Track and compare model performance
-- **Auto-Interventions**: Automatic intervention creation for high-risk students
+- **Auto-Interventions**: Automatic intervention creation for high-risk students (DB mode)
 - **Alert Detection**: Notify when risk increases significantly
 
 ---
 
 ## Summary
 
-This Student Dropout Risk Dashboard is a **production-ready, full-stack application** that combines:
+This Student Dropout Risk Dashboard is a **hackathon-ready, full-stack application** that combines:
 
 - **FastAPI backend** with SQLAlchemy ORM and MySQL database
 - **Next.js 16 frontend** with React 19, TypeScript, and Tailwind CSS
-- **Machine Learning pipeline** using GradientBoosting with SHAP explainability
+- **Session-based CSV analysis** — import refined CSVs for instant risk computation or refine raw data client-side
+- **Real-time streaming progress** — backend streams NDJSON during import; frontend shows animated pipeline steps
+- **RandomForestClassifier** ML model with 4 features, SHAP explainability, and robust CSV-to-model mapping
+- **Faculty-only authentication** — student login deprecated and blocked at the API level
 - **15+ database tables** covering students, metrics, risks, interventions, and academics
-- **RESTful API** with comprehensive endpoints for all features
-- **JWT authentication** with role-based access control and centralized frontend auth handling
-- **Centralized API client** (`src/lib/api.ts`) — all 30+ components use `apiClient` with request/response interceptors for automatic JWT injection; zero raw `fetch()` calls remain
-- **Zero mock/placeholder data** — every chart, metric card, modal, dropdown, and dashboard component renders real-time data from the database via API calls
+- **RESTful API** with comprehensive endpoints including the new `/api/analysis/import` streaming endpoint
+- **Centralized API client** (`src/lib/api.ts`) — all 30+ components use `apiClient` with JWT interceptors
+- **Zero mock/placeholder data** — every chart, metric card, modal, and dashboard component uses real API data
 - **108 backend tests** covering unit, route, and frontend-backend integration contract validation
 - **Docker deployment** for easy containerized setup
 

@@ -1,11 +1,27 @@
 "use client";
 
 import { Moon, Sun, Sidebar as SidebarIcon, Layout } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function AppearanceSettings() {
-    const [theme, setTheme] = useState('light');
-    const [sidebarMode, setSidebarMode] = useState('expanded');
+    const [theme, setTheme] = useState(() => {
+        if (typeof window !== "undefined") return localStorage.getItem("app-theme") || "light";
+        return "light";
+    });
+    const [sidebarMode, setSidebarMode] = useState(() => {
+        if (typeof window !== "undefined") return localStorage.getItem("app-sidebar") || "expanded";
+        return "expanded";
+    });
+
+    useEffect(() => {
+        localStorage.setItem("app-theme", theme);
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
+
+    useEffect(() => {
+        localStorage.setItem("app-sidebar", sidebarMode);
+        window.dispatchEvent(new CustomEvent("sidebar-mode-change", { detail: sidebarMode }));
+    }, [sidebarMode]);
 
     return (
         <div className="space-y-6">

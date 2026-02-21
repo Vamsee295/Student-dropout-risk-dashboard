@@ -58,7 +58,7 @@ export default function EngagementPage() {
 
     const handleExportReport = () => {
         if (!engagementData) {
-            alert("No data available to export");
+            console.warn("No data available to export");
             return;
         }
 

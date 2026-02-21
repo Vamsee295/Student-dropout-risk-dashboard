@@ -59,6 +59,8 @@ function AlertItem({ name, avatar, time, title, description, actions, isCritical
 
 export function RecentCriticalAlerts() {
     const [alerts, setAlerts] = useState<AlertItemProps[]>([]);
+    const [allRiskStudents, setAllRiskStudents] = useState<any[]>([]);
+    const [visibleCount, setVisibleCount] = useState(4);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -69,10 +71,12 @@ export function RecentCriticalAlerts() {
 
                 const highRiskStudents = students
                     .filter((s: any) => s.riskStatus === 'High Risk' || s.riskStatus === 'Moderate Risk')
-                    .sort((a: any, b: any) => parseFloat(b.riskValue) - parseFloat(a.riskValue))
-                    .slice(0, 4); // Top 4 at-risk students
+                    .sort((a: any, b: any) => parseFloat(b.riskValue) - parseFloat(a.riskValue));
 
-                const alertsData = highRiskStudents.map((student: any) => ({
+                setAllRiskStudents(highRiskStudents);
+                const highRiskStudentsSlice = highRiskStudents.slice(0, 4);
+
+                const alertsData = highRiskStudentsSlice.map((student: any) => ({
                     name: student.name,
                     avatar: student.avatar,
                     time: student.lastInteraction,
@@ -113,9 +117,30 @@ export function RecentCriticalAlerts() {
                 ))}
             </div>
 
-            <button className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                Load older alerts <ChevronDown className="h-4 w-4" />
-            </button>
+            {allRiskStudents.length > visibleCount && (
+                <button
+                    onClick={() => {
+                        const nextCount = visibleCount + 4;
+                        setVisibleCount(nextCount);
+                        const newAlerts = allRiskStudents.slice(0, nextCount).map((student: any) => ({
+                            name: student.name,
+                            avatar: student.avatar,
+                            time: student.lastInteraction,
+                            title: student.riskStatus === 'High Risk' ? 'Critical Risk Detected' : 'Elevated Risk Warning',
+                            description: `AI prediction shows ${student.riskValue} dropout risk. Attendance: ${student.attendance}%, Engagement: ${student.engagementScore}%.`,
+                            actions: [
+                                { label: "Send Email", href: `mailto:${student.id}@university.edu` },
+                                { label: "Inform Parent", primary: true, href: "#" }
+                            ],
+                            isCritical: student.riskStatus === 'High Risk'
+                        }));
+                        setAlerts(newAlerts);
+                    }}
+                    className="mt-4 flex w-full items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                    Load older alerts ({allRiskStudents.length - visibleCount} more) <ChevronDown className="h-4 w-4" />
+                </button>
+            )}
         </div>
     );
 }

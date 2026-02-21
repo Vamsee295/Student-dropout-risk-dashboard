@@ -61,7 +61,16 @@ export function SecuritySettings() {
                                 <p className="text-xs text-gray-500">Minimum 12 characters, special chars</p>
                             </div>
                         </div>
-                        <button onClick={() => alert("Password policy is managed via JWT-based authentication. Contact your system administrator to modify security policies.")} className="text-xs font-bold text-blue-600 hover:underline">Edit</button>
+                        <button
+                            onClick={() => {
+                                const el = document.getElementById("security-policy-toast");
+                                if (el) { el.classList.remove("hidden"); setTimeout(() => el.classList.add("hidden"), 4000); }
+                            }}
+                            className="text-xs font-bold text-blue-600 hover:underline"
+                        >Edit</button>
+                        <div id="security-policy-toast" className="hidden fixed bottom-4 right-4 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg max-w-sm">
+                            Password policy is managed via JWT-based authentication. Contact your system administrator to modify security policies.
+                        </div>
                     </div>
                 </div>
 

@@ -2,12 +2,12 @@
 
 ## 🎯 Project Overview
 
-Real-time ML-powered student dropout risk prediction dashboard with:
-- **450 Real Students** from CSV dataset
-- **GradientBoosting ML Model** with SHAP explainability
-- **Real-time Predictions** triggered by data updates
-- **Faculty Dashboard** with risk analytics
-- **Student Dashboard** with personal risk insights
+ML-powered student dropout risk prediction dashboard (faculty-only) with:
+- **Session-Based CSV Analysis** — import any CSV (raw or refined) for instant risk computation, or refine raw data client-side
+- **RandomForest ML Model** with SHAP explainability
+- **Real-time Streaming** — backend streams progress during import, frontend shows animated pipeline
+- **Faculty Dashboard** with risk analytics, department breakdowns, intervention tracking
+- **450 Real Students** in the database from CSV dataset
 - **Centralized API Client** with JWT interceptors for secure frontend-backend communication
 - **108 Backend Tests** covering unit, route, and integration testing
 - **Docker Setup** for team collaboration
@@ -33,9 +33,9 @@ docker-compose up --build
 5. Starts backend API server
 
 **Access Points:**
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- Health Check: http://localhost:8000/health
+- Backend API: http://127.0.0.1:8000
+- API Docs: http://127.0.0.1:8000/docs
+- Health Check: http://127.0.0.1:8000/health
 
 **Start Frontend Separately:**
 ```bash
@@ -44,6 +44,8 @@ npm install
 npm run dev
 ```
 Frontend: http://localhost:3000
+
+> **Windows / Docker Desktop note**: The frontend uses `127.0.0.1` instead of `localhost` to avoid IPv6 resolution issues with Docker Desktop + WSL2. The `.env.local` file configures this automatically. If the backend is unreachable, verify the Docker container is running with `docker ps` and test connectivity with `Invoke-WebRequest http://127.0.0.1:8000/health`.
 
 ---
 
@@ -101,7 +103,7 @@ python scripts/seed_users.py
 ### Step 4: Train ML Model & Compute Risks
 
 ```bash
-# Train GradientBoosting model (5-fold cross-validation + SHAP)
+# Train ML model (5-fold cross-validation + SHAP)
 python scripts/train_model.py
 
 # Compute risk scores for all students
@@ -154,9 +156,7 @@ npm run dev
 - Email: `faculty@klu.ac.in`
 - Password: `faculty123`
 
-**Student Account:**
-- Email: `student@klu.ac.in`
-- Password: `student123`
+> **Note:** Student login has been removed. The system is faculty-only. Any new email auto-registers as a faculty user during the testing phase.
 
 ---
 
@@ -216,15 +216,25 @@ curl http://localhost:8000/api/faculty/students
 curl -X POST http://localhost:8000/api/faculty/recalculate
 ```
 
-### 4. Test Frontend Dashboard
+### 4. Test CSV Analysis (Session-Based)
 1. Open http://localhost:3000
 2. Login with faculty credentials
-3. Navigate to Faculty Dashboard
-4. Verify:
-   - Total students = 450
+3. Dashboard shows two buttons: **Import CSV** and **Refine CSV**
+4. Click **Import CSV** and upload either:
+   - `backend/data/refined_sample.csv` (refined, 5 students) — columns match schema directly
+   - `backend/data/raw/student_dataset_450.csv` (raw, 450 students) — columns auto-mapped server-side
+5. Verify:
+   - Streaming progress shows live risk computation
+   - Progress message indicates "refined" or "auto-mapped from raw"
+   - Dashboard renders with risk distribution, department breakdown
+   - "New Analysis" button clears the session
+
+### 5. Test Frontend Dashboard (Database-Backed)
+1. Navigate to Students, Engagement, Interventions, etc.
+2. Verify:
+   - Student directory shows 450 students from DB
    - Risk distribution shows real data
    - Student names from CSV are displayed
-   - Each student has ML-computed risk score
 
 ---
 
@@ -259,16 +269,16 @@ Via Frontend:
 Student-dropout-risk-dashboard/
 ├── backend/
 │   ├── app/
-│   │   ├── routes/                    # API endpoints (11 modules)
-│   │   │   ├── auth.py               # Authentication (login, register)
+│   │   ├── routes/                    # API endpoints (12 modules)
+│   │   │   ├── auth.py               # Authentication (faculty-only login, register)
+│   │   │   ├── analysis.py           # POST /api/analysis/import (session CSV, streaming)
 │   │   │   ├── students.py           # Student CRUD & risk
 │   │   │   ├── faculty_dashboard.py  # Faculty API endpoints
-│   │   │   ├── student_dashboard.py  # Student personal dashboard
 │   │   │   ├── frontend.py           # Frontend-formatted data
-│   │   │   └── ...                   # analytics, engagement, performance, etc.
+│   │   │   └── ...                   # analytics, engagement, performance, settings, etc.
 │   │   ├── services/
-│   │   │   ├── risk_model.py         # GradientBoosting ML model
-│   │   │   ├── realtime_prediction.py # Real-time risk service
+│   │   │   ├── risk_model.py         # RandomForest ML model
+│   │   │   ├── realtime_prediction.py # Risk computation (DB + session-based)
 │   │   │   ├── feature_engineering.py # Feature extraction from raw data
 │   │   │   └── shap_explainer.py     # SHAP model explainability
 │   │   ├── models.py                 # SQLAlchemy ORM models (15+ tables)
@@ -300,7 +310,9 @@ Student-dropout-risk-dashboard/
 │   │   │   ├── student.ts          # Student dashboard API
 │   │   │   ├── faculty.ts          # Faculty dashboard API
 │   │   │   └── studentService.ts   # Student directory API
-│   │   ├── store/                   # Zustand auth store
+│   │   ├── store/                   # Zustand stores (auth, analysis, settings)
+│   │   ├── utils/
+│   │   │   └── refineCsv.ts        # Client-side CSV refinement (async pipeline)
 │   │   └── lib/
 │   │       └── api.ts              # Centralized Axios client (JWT interceptors)
 │   └── package.json
@@ -364,10 +376,11 @@ netstat -ano | findstr :8000
 
 ## 📊 ML Model Details
 
-- **Algorithm:** GradientBoostingClassifier (scikit-learn)
+- **Loaded Model:** RandomForestClassifier from `ml_models/dropout_risk_model.joblib`
+- **Model Features (4):** `attendance_rate`, `lms_score`, `avg_assignment_score`, `avg_quiz_score`
+- **CSV Schema (11 columns):** id, name, department + 8 metric columns (mapped to model features via `_metric_to_dataframe`)
 - **Training:** 5-fold stratified cross-validation
 - **Calibration:** CalibratedClassifierCV (sigmoid) for probability outputs
-- **Features:** 8 engineered features
 - **Output:** Risk score (0-100) + SHAP explanations
 - **Versioning:** Automatic model versioning in database with accuracy, precision, recall, F1
 
@@ -384,6 +397,7 @@ netstat -ano | findstr :8000
 **Interactive Docs:** http://localhost:8000/docs
 
 **Key Endpoints:**
+- `POST /api/analysis/import` - Session CSV import with streaming progress (NDJSON)
 - `GET /api/faculty/overview` - Dashboard KPIs
 - `GET /api/faculty/students` - Student list with risks
 - `GET /api/faculty/analytics/department` - Department analytics
@@ -400,9 +414,13 @@ netstat -ano | findstr :8000
 - [ ] Risk scores computed for all students
 - [ ] Backend API responding at :8000
 - [ ] Frontend running at :3000
-- [ ] Faculty dashboard shows real data
+- [ ] Login page shows faculty-only form (no student option)
+- [ ] Dashboard landing shows Import CSV / Refine CSV buttons
+- [ ] Import CSV streams progress and populates dashboard
+- [ ] Refine CSV shows animated pipeline and produces downloadable output
+- [ ] "New Analysis" button clears session
+- [ ] Student directory shows real DB data
 - [ ] No static/fake data visible
-- [ ] Risk recalculation works
 
 ---
 

@@ -1,169 +1,211 @@
-# 🎓 Student Dropout Risk Dashboard
+# Student Dropout Risk Dashboard
 
-A comprehensive, real-time analytics platform designed to identify, monitor, and intervene with students at risk of academic dropout. This project leverages machine learning to predict dropout probability based on attendance, engagement, and academic performance metrics.
+A full-stack analytics platform that identifies students at risk of academic dropout using machine learning. Faculty upload CSV data, the system computes risk scores via a trained RandomForest model, and the dashboard visualizes results with department breakdowns, risk distributions, and intervention tracking.
 
-## 🚀 Features
+## Features
 
-### For Administrators & Advisors
-- **Real-Time Dashboard**: Monitor institutional health, average risk scores, and total at-risk student counts.
-- **Predictive Analytics**: ML-powered risk scoring (Safe, Stable, Moderate, High) for every student.
-- **Intervention Management**: Create, assign, and track intervention strategies (Academic Support, Counseling, Financial Aid).
-- **Automated Alerts**: System flags students crossing risk thresholds for immediate attention.
-- **Engagement Tracking**: Visualize student activity via LMS login heatmaps and effort vs. output charts.
+### Session-Based CSV Analysis
+- **Import CSV**: Upload **any** CSV — refined or raw. If the file already matches the 11-column refined schema, risk computation starts immediately. If raw columns are detected (e.g. `ID`, `CGPA`, `Attendance_%`, `MID1_Subject1`), the backend auto-maps them to the model schema and engineers missing features server-side before computing risks. Progress streams back to the browser in real-time.
+- **Refine CSV**: Upload raw data and the browser-side pipeline maps columns, fills missing values (mean imputation), caps outliers (IQR), and produces a downloadable model-ready CSV.
+- **Irrelevant File Detection**: If a CSV has no recognizable student-metric columns (e.g. a course registration list), both Import and Refine stop immediately with a clear message: *"This file doesn't match any student risk records. Please try with a different file."*
+- **Session-Only**: Analysis data lives in the browser (Zustand store) — it lasts until the tab is closed or "New Analysis" is clicked. Nothing is written to the database.
 
-### For Faculty
-- **Student Directory**: Search, filter, and sort students by risk level, department, or attendance.
-- **Performance Insights**: Detailed breakdown of student performance across assignments, quizzes, and projects.
-- **Communication Tools**: Assign advisors and schedule counseling sessions directly from the dashboard.
+### Faculty Dashboard
+- **Risk Overview**: Total students, at-risk count, average attendance, average risk score.
+- **Risk Distribution**: Pie chart showing High Risk / Moderate / Stable / Safe breakdown.
+- **Department Breakdown**: Bar chart comparing average risk and attendance per department, plus a summary table.
+- **New Analysis**: One click clears the session and returns to the Import/Refine view.
 
-### For Students
-- **Personal Dashboard**: View own risk status, metrics, and SHAP-based explanations.
-- **Performance Tracking**: GPA trends, course performance, and assignment progress.
-- **Engagement Metrics**: Activity heatmaps and effort visualization.
+### Additional Pages
+- **Student Directory**: Search, filter, and sort students from the database by risk level, department, or attendance.
+- **Student Detail**: Full profile with case notes, mark-as-reviewed, escalate, schedule counseling, assign mentor, email student — all backed by real API calls that create Intervention records.
+- **Analytics**: Department-level analytics with detailed charts.
+- **Engagement**: LMS heatmaps, effort-vs-output charts, engagement metric cards. Export report downloads CSV.
+- **Interventions**: Kanban board with drag-and-drop. "New Case" button opens a modal to create interventions via API. Cards link to student profiles.
+- **Risk Analysis**: ML model metrics, feature importance, at-risk student lists. "Run New Analysis" triggers model recalculation. "Notify" sends email, "Details" navigates to student, "View All" links to directory.
+- **Performance**: GPA trends, course performance, early warning alerts. "Create Intervention" button in warnings creates a real intervention and navigates to the board.
+- **Coding Reports**: Sortable table of student coding profiles (HackerRank, LeetCode, CodeChef, CodeForces). Export CSV downloads filtered data.
+- **Settings**: General, risk model, notifications, intervention policy, integrations, security, appearance. Theme and sidebar preferences persist to localStorage.
 
-## 🛠️ Tech Stack
+### ML & Prediction
+- **Model**: RandomForestClassifier (scikit-learn) loaded from `ml_models/dropout_risk_model.joblib`.
+- **Features**: The model uses 4 features internally (`attendance_rate`, `lms_score`, `avg_assignment_score`, `avg_quiz_score`), mapped from the 8-column CSV schema via `_metric_to_dataframe`.
+- **SHAP Explainability**: Per-student feature importance via TreeExplainer.
+- **Real-Time Streaming**: Backend streams progress as NDJSON during import; frontend renders live progress bars, risk distribution, and processing log.
+
+## Tech Stack
 
 ### Frontend
-- **Framework**: [Next.js 16](https://nextjs.org/) (React 19)
-- **Language**: TypeScript 5.x
-- **Styling**: Tailwind CSS 4.x
-- **Components**: Radix UI (Accessible Primitives), Lucide React (Icons), Recharts 3.x (Data Visualization)
-- **State Management**: Zustand 5.x (Auth store with localStorage persistence)
-- **HTTP Client**: Axios 1.x with centralized API client (`src/lib/api.ts`) featuring request/response interceptors for JWT auth
+- **Next.js 16** (React 19, App Router), TypeScript 5.x
+- **Tailwind CSS 4.x**, Radix UI, Lucide React icons
+- **Recharts 3.x** for data visualization
+- **Zustand 5.x** for state management (auth store with localStorage, analysis store session-only)
+- **Axios 1.x** with centralized JWT interceptors (`src/lib/api.ts`)
 
 ### Backend
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
-- **Database**: MySQL 8.0 (Development & Production)
-- **ORM**: SQLAlchemy 2.0+
-- **Validation**: Pydantic 2.x with pydantic-settings
-- **ML Libraries**: scikit-learn (GradientBoostingClassifier), SHAP, Pandas, NumPy
-- **Authentication**: JWT (python-jose) + bcrypt password hashing (passlib)
-- **Logging**: Loguru
-- **Scheduling**: APScheduler
-
-### Testing
-- **Backend**: pytest with in-memory SQLite, 108 tests covering unit, route, and integration
-- **Test Coverage**: Security, models, schemas, feature engineering, risk model, all API routes, frontend-backend contract
+- **FastAPI** (Python 3.10)
+- **MySQL 8.0** via SQLAlchemy 2.0+ ORM
+- **scikit-learn** (RandomForestClassifier), SHAP, Pandas, NumPy
+- **JWT** (python-jose) + bcrypt (passlib) for auth
+- **Loguru** for logging
 
 ### DevOps
-- **Docker / Docker Compose**: Containerized MySQL + backend
-- **Database Migrations**: Alembic
+- **Docker / Docker Compose** — containerized MySQL + backend
+- **108 backend tests** — pytest with in-memory SQLite
 
-## 📂 Project Structure
+## CSV Schema
+
+Import CSV accepts both **refined** and **raw** CSVs. Raw CSVs are auto-mapped server-side (see *Raw column auto-mapping* below). A refined CSV contains these 11 columns:
+
+| Column | Type | Range | Description |
+|--------|------|-------|-------------|
+| `id` | string | — | Student identifier |
+| `name` | string | — | Student name |
+| `department` | string | — | Department code (e.g. CSE, ECE) |
+| `attendance_rate` | float | 0–100 | Attendance percentage |
+| `engagement_score` | float | 0–100 | LMS engagement metric |
+| `academic_performance_index` | float | 0–10 | GPA-scale academic index (model multiplies by 10) |
+| `login_gap_days` | int | 0+ | Days since last LMS login |
+| `failure_ratio` | float | 0–1 | Failed courses / total courses |
+| `financial_risk_flag` | int | 0 or 1 | Financial risk indicator |
+| `commute_risk_score` | int | 1–4 | Commute difficulty |
+| `semester_performance_trend` | float | -100–100 | Performance trend percentage |
+
+**Model feature mapping** (CSV column → model feature):
+
+| CSV Column | Model Feature | Transform |
+|---|---|---|
+| `attendance_rate` | `attendance_rate` | Direct |
+| `engagement_score` | `lms_score` | Direct |
+| `academic_performance_index` | `avg_assignment_score` | ×10 |
+| `semester_performance_trend` | `avg_quiz_score` | Direct |
+
+The remaining columns (`login_gap_days`, `failure_ratio`, `financial_risk_flag`, `commute_risk_score`) are used for display and future model versions but not consumed by the current model.
+
+**Raw column auto-mapping**: When Import detects missing refined columns, it attempts to map common raw column names to the schema:
+
+| Raw Column(s) | Mapped To | Engineering |
+|---|---|---|
+| `ID`, `Student_ID`, `Roll_No` | `id` | Direct |
+| `Name`, `Student_Name` | `name` | Direct |
+| `Department`, `Dept`, `Branch` | `department` | Direct |
+| `Attendance_%`, `Attendance` | `attendance_rate` | Direct (0-100) |
+| `Engagement_Score`, or `MID1_Subject*` columns | `engagement_score` | Avg MID scores / 30 × 100 |
+| `CGPA`, `GPA` | `academic_performance_index` | Auto-scale if >10 |
+| — | `login_gap_days` | Estimated from engagement |
+| — | `failure_ratio` | Estimated from GPA + attendance |
+| — | `financial_risk_flag` | Default 0 |
+| — | `commute_risk_score` | Default 1 |
+| `Sem1_GPA` + `Sem2_GPA` | `semester_performance_trend` | (Sem2 − Sem1) / Sem1 × 100 |
+
+A sample refined CSV is provided at `backend/data/refined_sample.csv`. The raw dataset at `backend/data/raw/student_dataset_450.csv` can also be imported directly.
+
+## Project Structure
 
 ```
 ├── backend/
-│   ├── app/                    # Main application logic
-│   │   ├── routes/             # API endpoints (12 route modules)
-│   │   ├── services/           # Business logic (risk_model, feature_engineering, shap_explainer, realtime_prediction)
-│   │   ├── models.py           # SQLAlchemy ORM models (15+ tables)
-│   │   ├── schemas.py          # Pydantic request/response schemas
-│   │   ├── security.py         # JWT & password hashing (config-driven)
-│   │   ├── database.py         # DB connection & session management
-│   │   └── config.py           # Environment-based settings
-│   ├── tests/                  # Comprehensive test suite (108 tests)
-│   │   ├── conftest.py         # Test fixtures (SQLite, monkeypatched DB)
-│   │   ├── test_security.py    # JWT & password hashing tests
-│   │   ├── test_models.py      # ORM model & schema tests
-│   │   ├── test_risk_model.py  # ML risk model logic tests
-│   │   ├── test_feature_engineering.py  # Feature engineering tests
-│   │   ├── test_routes.py      # API route integration tests
-│   │   └── test_integration.py # Frontend-backend contract tests
-│   ├── scripts/                # Utility scripts (data seeding, model training)
-│   ├── data/raw/               # Raw CSV datasets
-│   ├── ml_models/              # Pre-trained models (.joblib)
-│   └── requirements.txt        # Python dependencies
+│   ├── app/
+│   │   ├── main.py                # FastAPI app with lifespan (model loading)
+│   │   ├── routes/
+│   │   │   ├── auth.py            # Login (faculty-only), register, password reset
+│   │   │   ├── analysis.py        # POST /api/analysis/import — session CSV import with streaming
+│   │   │   ├── analytics.py       # Dashboard analytics, notifications, chat
+│   │   │   ├── students.py        # Student CRUD, case notes, reviewed, escalate, counseling, mentor, email, coding-profile, interventions
+│   │   │   ├── faculty_dashboard.py
+│   │   │   ├── settings.py        # Persist/retrieve app settings
+│   │   │   ├── upload.py          # CSV upload (attendance, marks, assignments)
+│   │   │   ├── performance.py, engagement.py, prediction.py
+│   │   │   ├── student_dashboard.py, student_management.py, frontend.py
+│   │   │   └── ...
+│   │   ├── services/
+│   │   │   ├── risk_model.py           # RiskModel class (train, predict, SHAP)
+│   │   │   ├── realtime_prediction.py  # compute_risk_from_metrics_dict (session analysis)
+│   │   │   ├── shap_explainer.py       # SHAP TreeExplainer
+│   │   │   └── feature_engineering.py  # Feature extraction from raw data
+│   │   ├── models.py              # SQLAlchemy ORM (15+ tables)
+│   │   ├── schemas.py             # Pydantic request/response schemas
+│   │   ├── security.py            # JWT + password hashing
+│   │   └── config.py              # Environment settings
+│   ├── data/
+│   │   ├── refined_sample.csv     # Sample refined CSV for testing
+│   │   └── raw/                   # Raw CSV datasets
+│   ├── ml_models/                 # Pre-trained model (.joblib)
+│   ├── tests/                     # 108 tests (pytest + SQLite)
+│   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                # Next.js App Router pages
-│   │   ├── components/         # Reusable UI components (100+)
-│   │   ├── services/           # API service clients (auth, student, faculty)
-│   │   ├── store/              # Zustand auth store
-│   │   ├── lib/
-│   │   │   └── api.ts          # Centralized Axios client with JWT interceptors
-│   │   └── context/            # React contexts
-│   └── package.json            # Frontend dependencies
+│   │   ├── app/
+│   │   │   ├── (app)/             # Authenticated pages (sidebar layout)
+│   │   │   │   ├── dashboard/     # Main dashboard (conditional: landing or charts)
+│   │   │   │   ├── students/      # Student directory + detail pages
+│   │   │   │   ├── engagement/, interventions/, performance/, risk-analysis/
+│   │   │   │   └── profile/, student-dashboard/  # Redirect stubs → /dashboard
+│   │   │   ├── (auth)/            # Login, signup, forgot-password
+│   │   │   └── settings/          # Settings with dedicated sidebar layout
+│   │   ├── components/
+│   │   │   ├── analysis/
+│   │   │   │   └── AnalysisLanding.tsx  # Import/Refine CSV with animated pipeline UI
+│   │   │   ├── dashboard/, settings/, ...
+│   │   │   ├── Sidebar.tsx         # Faculty-only navigation
+│   │   │   └── ChatWidget.tsx      # Context-aware advisor chat
+│   │   ├── store/
+│   │   │   ├── useAuthStore.ts     # Auth (persisted to localStorage)
+│   │   │   ├── analysisStore.ts    # Session-only analysis data (no persistence)
+│   │   │   └── settingsStore.ts    # Settings (persisted to localStorage)
+│   │   ├── utils/
+│   │   │   └── refineCsv.ts        # Client-side CSV refinement (async, step-by-step progress)
+│   │   ├── services/               # API clients (auth, student, faculty)
+│   │   ├── lib/api.ts              # Centralized Axios with JWT interceptors
+│   │   └── context/                # NotificationsContext
+│   └── package.json
 │
-├── SETUP_GUIDE.md              # Complete setup instructions
-├── DOCKER_SETUP.md             # Docker deployment guide
-├── CHANGELOG.md                # Bug fixes & improvements log
-└── summary.md                  # Detailed project summary
+├── docker-compose.yml
+├── CHANGELOG.md, SETUP_GUIDE.md, DOCKER_SETUP.md, summary.md
+└── README.md
 ```
 
-## ⚡ Getting Started
+## Getting Started
 
-### Complete Setup Guides
+### Prerequisites
+- Node.js v18+, Python 3.9+, Docker Desktop
 
-- 📖 **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - Detailed step-by-step setup for first-time users
-- 🐳 **[DOCKER_SETUP.md](./DOCKER_SETUP.md)** - Docker-based setup for teams
+### Quick Start (Docker)
+```bash
+# Start MySQL + backend
+docker-compose up -d --build
 
-### Quick Overview
+# Wait ~60s for model loading, then verify
+curl http://127.0.0.1:8000/health
 
-1. **Prerequisites**: Node.js (v18+), Python (3.9+), MySQL (8.0+)
-2. **Backend**: Create virtual environment → Install dependencies → Configure `.env` → Start server
-3. **Frontend**: Install dependencies → Start dev server
-4. **Database**: Create MySQL database → Initialize tables → Load CSV data → Train model → Compute risks
+# Start frontend
+cd frontend && npm install && npm run dev
+```
 
-**Backend runs on**: `http://localhost:8000` (API docs at `/docs`)  
-**Frontend runs on**: `http://localhost:3000`
+**Backend**: `http://127.0.0.1:8000` (API docs at `/docs`)
+**Frontend**: `http://localhost:3000`
 
-## 🤖 Machine Learning Pipeline
+> **Windows note**: The frontend `.env.local` defaults to `http://127.0.0.1:8000/api` to avoid IPv6 resolution issues with `localhost` on Docker Desktop + WSL2. If you change the backend port, update `frontend/.env.local` accordingly.
 
-The project uses a **GradientBoostingClassifier** (scikit-learn) with **CalibratedClassifierCV** for probability calibration, trained on historical student data.
+### Login
+Faculty-only login. Test credentials: `faculty1@gmail.com` / `password`
 
-- **Features Used (8 engineered)**: Attendance Rate, Engagement Score, Academic Performance Index, Login Gap Days, Failure Ratio, Financial Risk Flag, Commute Risk Score, Semester Performance Trend.
-- **Explainability**: SHAP (TreeExplainer) generates per-student feature importance.
-- **Training**: Run `python scripts/train_model.py` to retrain with new data (5-fold stratified CV).
-- **Inference**: Real-time risk scoring via `/api/predict` and batch via `/api/faculty/recalculate`.
-- **Versioning**: Models tracked in the database with accuracy, precision, recall, and F1-score.
+Any new email auto-registers as faculty during testing phase.
 
-## 🧪 Testing
+### Workflow
+1. Login as faculty
+2. Click **Import CSV** to upload any CSV (raw or refined) → the backend auto-maps columns if needed → dashboard populates immediately with risk analysis
+3. Or click **Refine CSV** to process raw data client-side first → download the refined output or import directly to dashboard
 
-The project includes a comprehensive backend test suite with **108 tests**:
+## Testing
+
+108 backend tests covering security, models, routes, and frontend-backend contracts:
 
 ```bash
 cd backend
 python -m pytest tests/ -v
 ```
 
-| Test Module | Coverage |
-|-------------|----------|
-| `test_security.py` | JWT creation, password hashing/verification |
-| `test_models.py` | ORM models, enums, relationships, Pydantic schemas |
-| `test_risk_model.py` | Risk level classification, trend calculation, alert detection |
-| `test_feature_engineering.py` | Feature engineering helpers and DB integration |
-| `test_routes.py` | All API route endpoints (auth, students, faculty, analytics) |
-| `test_integration.py` | Frontend-backend contract validation (response shapes, field types) |
+## Recent Changes
 
-Tests use an **in-memory SQLite** database via monkeypatched fixtures, requiring no external database.
-
-## 🏆 Hackathon-Ready
-
-This project is fully production-ready with:
-- **Zero placeholder data** — every chart, metric, modal, and dashboard displays real-time data from the database
-- **Zero placeholder functionality** — every button, form, setting, and export actually works
-- **Zero `Math.random()`** in frontend — all rendered data is deterministic and API-driven
-- **Zero `random` usage** in backend routes — all API responses are deterministic and reproducible
-- **Zero mock comments** — no `simulate`, `mock`, or `placeholder` references in any source code
-- **Zero raw `fetch()` calls** — all API calls use centralized `apiClient` with JWT interceptors (30+ components)
-- **Persistent settings** — all settings (general, risk model, notifications, intervention policy) persist via Zustand + backend API
-- **Working password reset** — forgot-password generates real JWT tokens, reset-password updates credentials
-- **Working counseling sessions** — schedule-counseling creates actual Intervention records in the database
-- **Working chat assistant** — context-aware advisor chat analyzes actual student risk, attendance, and engagement data
-- **Working notifications** — real-time notifications driven by actual system state (high-risk counts, pending interventions)
-- **Working exports** — CSV export for at-risk students, audit logs, engagement reports; model card download
-- **Working user management** — add/edit/delete users with role management
-- **Working integration settings** — LMS selection, API key regeneration, CSV upload, sync status
-- **Dynamic faculty/mentor lists** — all assignment modals fetch from `/api/analytics/faculty`
-- **Dynamic intervention boards** — Kanban boards populated from `/api/analytics/at-risk-students`
-- **Dynamic department filters** — all dropdown lists fetched from `/api/analytics/department-breakdown`
-- **Dynamic feature importance** — ML model feature weights from `/api/analytics/feature-importance`
-- **SHAP global importance** — computed from actual model `feature_importances_`
-- **108 automated tests** with full coverage of security, models, routes, and frontend-backend contracts
-- **Centralized API architecture** — JWT auth handled globally via Axios interceptors
-- **Complete ML pipeline** — model training, versioning, SHAP explainability, and real-time prediction
-
-## 📝 Recent Changes
-
-See **[CHANGELOG.md](./CHANGELOG.md)** for a detailed log of all bug fixes, improvements, and new features.
+See **[CHANGELOG.md](./CHANGELOG.md)** for the full log.

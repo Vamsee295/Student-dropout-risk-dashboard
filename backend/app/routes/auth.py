@@ -45,91 +45,20 @@ async def login_for_access_token(
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
     
-    # Auto-Registration Logic for Testing Phase
+    # Auto-Registration Logic for Testing Phase (Faculty/Admin only - no student accounts)
     if not user:
         try:
             print(f"Attempting auto-signup for {form_data.username}")
-            
-            # Determine role: faculty1@, faculty.test@, etc. -> FACULTY, else STUDENT
-            role = Role.FACULTY if "faculty" in form_data.username.lower() else Role.STUDENT
-            
-            import random
-            import string
-            
-            def generate_id(prefix):
-                return f"{prefix}{''.join(random.choices(string.digits, k=4))}"
-
-            student_id = generate_id("ST") if role == Role.STUDENT else None
+            role = Role.FACULTY  # All new users are faculty
             name = form_data.username.split("@")[0].replace(".", " ").replace("_", " ").title()
-            
-            # If Student, sow default data so dashboard doesn't crash
-            if role == Role.STUDENT:
-                from app.models import Student, Department, Section, StudentMetric, RiskScore, RiskLevel, RiskTrend, ModelVersion
-                
-                # 1. Create Student Profile (MUST BE BEFORE USER due to FK)
-                student_profile = Student(
-                    id=student_id,
-                    name=name,
-                    avatar=name[:2].upper(),
-                    course="B.Tech Computer Science",
-                    department=Department.CSE,
-                    section=Section.A,
-                    advisor_id="FAC001" 
-                )
-                db.add(student_profile)
-                db.flush() # Ensure Student exists for User FK
-                
-                # Ensure Model Version exists for Risk Score FK
-                model_v = db.query(ModelVersion).filter(ModelVersion.is_active == True).first()
-                if not model_v:
-                    model_v = ModelVersion(
-                        version="v1.0-auto",
-                        model_path="models/auto-generated",
-                        is_active=True,
-                        accuracy=0.85,
-                        precision=0.85,
-                        recall=0.85,
-                        f1_score=0.85,
-                        training_samples=100,
-                        feature_importance={}
-                    )
-                    db.add(model_v)
-                    db.flush()
 
-                # 2. Create Default Metrics
-                metrics = StudentMetric(
-                    student_id=student_id,
-                    attendance_rate=85.0, # Default to healthy for new users
-                    engagement_score=75.0,
-                    academic_performance_index=7.5,
-                    login_gap_days=0,
-                    failure_ratio=0.0,
-                    financial_risk_flag=False,
-                    commute_risk_score=1,
-                    semester_performance_trend=0.0
-                )
-                db.add(metrics)
-                
-                # 3. Create Default Risk Score (Safe by default)
-                risk = RiskScore(
-                    student_id=student_id,
-                    risk_score=15.0,
-                    risk_level=RiskLevel.SAFE,
-                    risk_trend=RiskTrend.STABLE,
-                    risk_value="15% (New)",
-                    model_version_id=model_v.id,
-                    shap_explanation={"top_factors": []}
-                )
-                db.add(risk)
-
-            # Create new user
             hashed_password = get_password_hash(form_data.password)
             user = User(
                 email=form_data.username,
                 password_hash=hashed_password,
                 name=name,
                 role=role,
-                student_id=student_id
+                student_id=None
             )
             db.add(user)
             db.flush() # Get user.id without committing yet
@@ -150,6 +79,12 @@ async def login_for_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if user.role == Role.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Student accounts are no longer supported. Please contact your administrator.",
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -13,15 +13,15 @@ This guide covers running the Student Dropout Risk Dashboard using Docker for te
    - Create MySQL database
    - Initialize database tables
    - Load 450 students from CSV
-   - Train GradientBoosting ML model with SHAP explainability
+   - Train ML model with SHAP explainability
    - Compute risk scores for all students
    - Start backend API server
    - All teammates get the SAME data
 
 2. **Access the application**
-   - Backend API: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
-   - Health Check: http://localhost:8000/health
+   - Backend API: http://127.0.0.1:8000
+   - API Docs: http://127.0.0.1:8000/docs
+   - Health Check: http://127.0.0.1:8000/health
 
 3. **Start frontend separately**
    ```bash
@@ -31,21 +31,22 @@ This guide covers running the Student Dropout Risk Dashboard using Docker for te
    ```
    - Frontend: http://localhost:3000
 
+   > **Windows note**: The frontend `.env.local` uses `127.0.0.1` instead of `localhost` to avoid IPv6 resolution issues with Docker Desktop + WSL2. If `curl localhost:8000` hangs but `Invoke-WebRequest http://127.0.0.1:8000/health` works, this is the cause.
+
 4. **Default login credentials** (created automatically)
    - **Faculty**: 
      - Email: `faculty@klu.ac.in`
      - Password: `faculty123`
-   - **Student**:
-     - Email: `student@klu.ac.in`
-     - Password: `student123`
+   
+   > Student login has been removed. The system is faculty-only. Any new email auto-registers as faculty.
 
 ---
 
 ## Development Workflow
 
 **Backend changes**: 
-- Code changes auto-reload (volume mounted)
-- No need to rebuild container
+- Code is volume-mounted (`./backend:/app`), but Uvicorn runs without `--reload`
+- After code changes, restart with `docker-compose up -d --build backend`
 
 **Run backend tests** (no Docker or MySQL needed):
 ```bash

@@ -9,12 +9,8 @@ import {
   LineChart,
   FileText,
   Settings as SettingsIcon,
-  BarChart,
   ClipboardList,
   Upload,
-  UserCheck,
-  BookOpen,
-  AlertTriangle,
   LogOut
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -44,16 +40,6 @@ export function Sidebar({ activePath }: SidebarProps) {
     router.push("/login");
   };
 
-  const studentItems: NavItem[] = [
-    { label: "Overview", href: "/student-dashboard", icon: <LayoutDashboard size={20} /> },
-    { label: "My Performance", href: "/student-dashboard/performance", icon: <BarChart size={20} /> },
-    { label: "Attendance", href: "/student-dashboard/attendance", icon: <UserCheck size={20} /> },
-    { label: "Assignments", href: "/student-dashboard/assignments", icon: <BookOpen size={20} /> },
-    { label: "Engagement", href: "/student-dashboard/engagement", icon: <LineChart size={20} /> },
-    { label: "Risk Status", href: "/student-dashboard/risk", icon: <AlertTriangle size={20} /> },
-    { label: "Profile", href: "/profile", icon: <Users size={20} /> },
-  ];
-
   const facultyItems: NavItem[] = [
     { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { label: "Students", href: "/students", icon: <Users size={20} /> },
@@ -65,7 +51,7 @@ export function Sidebar({ activePath }: SidebarProps) {
     { label: "Settings", href: "/settings", icon: <SettingsIcon size={20} /> },
   ];
 
-  const items = role === "STUDENT" ? studentItems : facultyItems;
+  const items = facultyItems;
 
   return (
     <aside className="hidden w-64 flex-col border-r bg-white shadow-sm md:flex">

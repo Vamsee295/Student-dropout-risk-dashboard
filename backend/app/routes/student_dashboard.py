@@ -101,6 +101,8 @@ def get_student_overview(student_id: str, db: Session = Depends(get_db)):
     dropout_prob = risk.risk_score if risk else 0.0
 
     return StudentDashboardOverview(
+        student_name=student.name,
+        department=student.department.value if student.department else None,
         attendance_rate=attendance_rate,
         avg_marks=avg_marks,
         engagement_score=engagement_score,
@@ -109,7 +111,7 @@ def get_student_overview(student_id: str, db: Session = Depends(get_db)):
         risk_value=risk_value,
         dropout_probability=dropout_prob,
         upcoming_deadlines=assessment_response,
-        recent_attendance=attendance_response
+        recent_attendance=attendance_response,
     )
 
 @router.get("/{student_id}/performance", response_model=List[SemesterPerformance])

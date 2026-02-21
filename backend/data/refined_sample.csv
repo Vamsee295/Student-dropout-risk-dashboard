@@ -1,0 +1,6 @@
+id,name,department,attendance_rate,engagement_score,academic_performance_index,login_gap_days,failure_ratio,financial_risk_flag,commute_risk_score,semester_performance_trend
+2300031000,Rohit Gupta,ECE,21,48.89,6.2,10,0.2,1,3,52.3
+2300031001,Nikhil Patel,ECE,56,73.33,7.58,5,0.1,0,2,38.0
+2300031002,Deepika Singh,CSIT,23,70.0,7.95,8,0.15,0,4,-24.9
+2300031003,Arun Kumar,CSE,85,82.5,8.4,2,0.05,0,1,15.7
+2300031004,Priya Sharma,CSIT,42,55.0,5.1,14,0.35,1,3,-40.2

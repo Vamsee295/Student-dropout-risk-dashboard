@@ -194,7 +194,7 @@ def get_primary_driver(shap_explanation: dict) -> str:
 # === New Endpoints for Student Management ===
 
 from pydantic import BaseModel
-from typing import List as TypingList
+from typing import List as TypingList, Optional
 
 class AssignAdvisorRequest(BaseModel):
     student_ids: TypingList[str]
@@ -206,6 +206,26 @@ class ScheduleCounselingRequest(BaseModel):
     topic: str
     date: str
     time: str
+
+
+class CaseNoteRequest(BaseModel):
+    note: str
+
+
+class CounselingRequest(BaseModel):
+    date: str
+    time: str
+    type: str = "Academic"
+
+
+class MentorRequest(BaseModel):
+    mentor_id: str
+    mentor_name: str
+
+
+class EmailRequest(BaseModel):
+    subject: str
+    body: str
 
 
 @router.post("/students/assign-advisor")
@@ -281,4 +301,181 @@ def schedule_counseling(request: ScheduleCounselingRequest, db: Session = Depend
         db.rollback()
         logger.error(f"Error scheduling counseling: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Single-student action endpoints ─────────────────────────────────────────
+
+@router.post("/students/{student_id}/notes")
+def add_case_note(student_id: str, request: CaseNoteRequest, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    intervention = Intervention(
+        student_id=student_id,
+        intervention_type=InterventionType.ACADEMIC,
+        status=InterventionStatus.IN_PROGRESS,
+        assigned_to=student.advisor_id,
+        notes=request.note,
+    )
+    db.add(intervention)
+    student.updated_at = datetime.utcnow()
+    db.commit()
+    return {"success": True, "message": "Case note added.", "intervention_id": intervention.id}
+
+
+@router.patch("/students/{student_id}/reviewed")
+def mark_reviewed(student_id: str, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    student.updated_at = datetime.utcnow()
+    db.commit()
+    return {"success": True, "message": "Student profile marked as reviewed.", "reviewed_at": student.updated_at.isoformat()}
+
+
+@router.post("/students/{student_id}/escalate")
+def escalate_case(student_id: str, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    intervention = Intervention(
+        student_id=student_id,
+        intervention_type=InterventionType.COUNSELING,
+        status=InterventionStatus.PENDING,
+        assigned_to="Dean of Students",
+        notes="ESCALATED — Requires immediate review by Dean of Students.",
+    )
+    db.add(intervention)
+    db.commit()
+    return {"success": True, "message": "Case escalated to Dean of Students.", "intervention_id": intervention.id}
+
+
+@router.post("/students/{student_id}/counseling")
+def schedule_single_counseling(student_id: str, request: CounselingRequest, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    intervention = Intervention(
+        student_id=student_id,
+        intervention_type=InterventionType.COUNSELING,
+        status=InterventionStatus.PENDING,
+        assigned_to=student.advisor_id,
+        notes=f"{request.type} counseling — Scheduled {request.date} at {request.time}",
+    )
+    db.add(intervention)
+    db.commit()
+    return {"success": True, "message": f"Counseling scheduled for {request.date} at {request.time}.", "intervention_id": intervention.id}
+
+
+@router.post("/students/{student_id}/mentor")
+def assign_mentor(student_id: str, request: MentorRequest, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    student.advisor_id = request.mentor_name
+    intervention = Intervention(
+        student_id=student_id,
+        intervention_type=InterventionType.MENTORING,
+        status=InterventionStatus.IN_PROGRESS,
+        assigned_to=request.mentor_name,
+        notes=f"Peer mentor {request.mentor_name} assigned.",
+    )
+    db.add(intervention)
+    db.commit()
+    return {"success": True, "message": f"Mentor {request.mentor_name} assigned.", "intervention_id": intervention.id}
+
+
+@router.post("/students/{student_id}/email")
+def email_student(student_id: str, request: EmailRequest, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    intervention = Intervention(
+        student_id=student_id,
+        intervention_type=InterventionType.ACADEMIC,
+        status=InterventionStatus.COMPLETED,
+        assigned_to=student.advisor_id,
+        notes=f"Email sent — Subject: {request.subject}",
+        outcome_label="Email sent",
+    )
+    db.add(intervention)
+    db.commit()
+    return {"success": True, "message": "Email sent to student."}
+
+
+@router.get("/students/{student_id}/coding-profile")
+def get_coding_profile(student_id: str, db: Session = Depends(get_db)):
+    from app.models import StudentCodingProfile
+
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    profile = db.query(StudentCodingProfile).filter(StudentCodingProfile.student_id == student_id).first()
+    if not profile:
+        return {
+            "student_id": student_id,
+            "hackerrank_score": 0, "hackerrank_solved": 0,
+            "leetcode_rating": 0, "leetcode_solved": 0,
+            "codechef_rating": 0, "codeforces_rating": 0,
+            "overall_score": 0, "global_rank": 0,
+        }
+
+    return {
+        "student_id": student_id,
+        "hackerrank_score": profile.hackerrank_score or 0,
+        "hackerrank_solved": profile.hackerrank_solved or 0,
+        "leetcode_rating": profile.leetcode_rating or 0,
+        "leetcode_solved": profile.leetcode_solved or 0,
+        "codechef_rating": profile.codechef_rating or 0,
+        "codeforces_rating": profile.codeforces_rating or 0,
+        "overall_score": profile.overall_score or 0,
+        "global_rank": 0,
+    }
+
+
+# ── Faculty intervention creation ────────────────────────────────────────────
+
+class CreateInterventionRequest(BaseModel):
+    student_id: str
+    type: str = "counseling"
+    notes: str = ""
+    assigned_to: Optional[str] = None
+
+
+@router.post("/faculty/interventions")
+def create_intervention(request: CreateInterventionRequest, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.id == request.student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    type_map = {
+        "counseling": InterventionType.COUNSELING,
+        "tutoring": InterventionType.TUTORING,
+        "mentoring": InterventionType.MENTORING,
+        "financial": InterventionType.FINANCIAL,
+        "academic": InterventionType.ACADEMIC,
+    }
+    i_type = type_map.get(request.type.lower(), InterventionType.ACADEMIC)
+
+    intervention = Intervention(
+        student_id=request.student_id,
+        intervention_type=i_type,
+        status=InterventionStatus.PENDING,
+        assigned_to=request.assigned_to or student.advisor_id,
+        notes=request.notes,
+    )
+    db.add(intervention)
+    db.commit()
+    return {
+        "success": True,
+        "intervention_id": intervention.id,
+        "message": f"Intervention created for student {student.name}.",
+    }
 

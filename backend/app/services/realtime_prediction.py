@@ -132,6 +132,39 @@ def _metric_to_dataframe(metric: StudentMetric) -> pd.DataFrame:
     }])
 
 
+def compute_risk_from_metrics_dict(metrics: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Compute risk from a metrics dict (no DB). For session-only analysis.
+    metrics: dict with attendance_rate, engagement_score, academic_performance_index,
+             login_gap_days, failure_ratio, financial_risk_flag, commute_risk_score,
+             semester_performance_trend
+    """
+    model = _require_model()
+    # Build a minimal object with the required attributes for _metric_to_dataframe
+    class MetricLike:
+        pass
+    m = MetricLike()
+    m.attendance_rate = metrics.get("attendance_rate", 75.0)
+    m.engagement_score = metrics.get("engagement_score", 70.0)
+    m.academic_performance_index = metrics.get("academic_performance_index", 6.5)
+    m.login_gap_days = int(metrics.get("login_gap_days", 3))
+    m.failure_ratio = float(metrics.get("failure_ratio", 0.1))
+    m.financial_risk_flag = bool(metrics.get("financial_risk_flag", False))
+    m.commute_risk_score = int(metrics.get("commute_risk_score", 1))
+    m.semester_performance_trend = float(metrics.get("semester_performance_trend", 0.0))
+    X = _metric_to_dataframe(m)
+    prediction = model.predict_risk_score(X)
+    risk_score = _clamp(_safe_float(prediction["risk_score"], 50.0))
+    risk_level: RiskLevel = prediction["risk_level"]
+    risk_trend, risk_value = RiskModel.calculate_risk_trend(risk_score, None)
+    return {
+        "risk_score": round(risk_score, 2),
+        "risk_level": risk_level.value,
+        "risk_trend": risk_trend.value,
+        "risk_value": risk_value,
+    }
+
+
 def compute_student_risk(
     student_id: str,
     db: Session,

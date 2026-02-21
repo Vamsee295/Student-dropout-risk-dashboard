@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, AlertTriangle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import apiClient from "@/lib/api";
 
@@ -35,6 +36,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function EarlyWarningPanel({ department = "All Departments" }: EarlyWarningPanelProps) {
+    const router = useRouter();
     const [data, setData] = useState<WarningData | null>(null);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -133,7 +135,21 @@ export function EarlyWarningPanel({ department = "All Departments" }: EarlyWarni
                                 <div className="mt-3 ml-11 rounded-lg bg-gray-50 p-3">
                                     <p className="text-xs text-gray-500">Student ID: <span className="font-mono font-semibold text-gray-700">{alert.student_id}</span></p>
                                     <p className="text-xs text-gray-500 mt-1">Recommended action: Schedule an academic counseling session immediately.</p>
-                                    <button className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await apiClient.post('/faculty/interventions', {
+                                                    student_id: alert.student_id,
+                                                    type: "counseling",
+                                                    notes: alert.message,
+                                                });
+                                                router.push("/dashboard/interventions");
+                                            } catch {
+                                                router.push("/dashboard/interventions");
+                                            }
+                                        }}
+                                        className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                    >
                                         + Create Intervention →
                                     </button>
                                 </div>

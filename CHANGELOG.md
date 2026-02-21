@@ -4,6 +4,232 @@ All notable changes to the Student Dropout Risk Dashboard are documented here.
 
 ---
 
+## [Unreleased] - 2026-02-21 (Full Button Functionality & Network Fix)
+
+### Every Button Wired to Real Backend Logic
+
+Audited every page and component across all frontend routes. Found 18+ placeholder buttons (no onClick, toast-only, no API call) and wired each to real backend endpoints. No existing logic was modified — all changes are additive.
+
+#### Backend — `students.py` — 8 New Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/students/{id}/notes` | Add case note (creates Intervention record) |
+| PATCH | `/api/students/{id}/reviewed` | Mark student profile as reviewed |
+| POST | `/api/students/{id}/escalate` | Escalate case to Dean of Students |
+| POST | `/api/students/{id}/counseling` | Schedule counseling for single student |
+| POST | `/api/students/{id}/mentor` | Assign peer mentor + update advisor |
+| POST | `/api/students/{id}/email` | Log email notification sent |
+| GET | `/api/students/{id}/coding-profile` | Get coding platform scores |
+| POST | `/api/faculty/interventions` | Create new intervention case for any student |
+
+All endpoints use real SQLAlchemy ORM operations — no stubs or fake data.
+
+#### Frontend — Student Detail Page (`students/[studentId]/page.tsx`) — 7 Fixes
+- **Add Case Note**: `POST /students/{id}/notes` with note text
+- **Mark as Reviewed**: `PATCH /students/{id}/reviewed` with timestamp
+- **Escalate**: `POST /students/{id}/escalate` creates urgent Intervention
+- **Schedule Counseling**: `POST /students/{id}/counseling` with date/time/type
+- **Assign Mentor**: `POST /students/{id}/mentor` with mentor details
+- **Email Student**: `POST /students/{id}/email` with subject/body
+- **View Profile** (advisor): Opens advisor's profile in new tab
+
+#### Frontend — Intervention Board (`dashboard/interventions/page.tsx`)
+- "New Case" button now opens a modal with student selector, intervention type, and notes
+- Calls `POST /faculty/interventions` and adds the new card to the Kanban board
+
+#### Frontend — Coding Reports (`dashboard/reports/page.tsx`)
+- "Export CSV" button exports filtered coding profile data using `exportToCSV` utility
+
+#### Frontend — Risk Analysis (`risk-analysis/page.tsx`)
+- "Run New Analysis" button calls `POST /faculty/recalculate`, shows spinner, refreshes metrics
+
+#### Frontend — At Risk Students Table (`AtRiskStudentsTable.tsx`)
+- "View All" navigates to `/students`
+- "Notify" sends email notification via `POST /students/{id}/email`, shows "Sent!" feedback
+- "Details" navigates to `/students/{id}`
+
+#### Frontend — Recent Critical Alerts (`RecentCriticalAlerts.tsx`)
+- "Load older alerts" loads 4 more at-risk students per click, shows remaining count
+
+#### Frontend — Early Warning Panel (`EarlyWarningPanel.tsx`)
+- "Create Intervention" creates intervention via API then navigates to the board
+
+#### Frontend — Recommended Actions (`RecommendedActions.tsx`)
+- "View Notes" navigates to `/dashboard/interventions`
+- MessageSquare icon navigates to `/engagement`
+
+#### Frontend — Appearance Settings (`AppearanceSettings.tsx`)
+- Theme and sidebar preferences now persist to `localStorage`
+- Dispatches `sidebar-mode-change` custom event for live updates
+
+#### Frontend — Security Settings (`SecuritySettings.tsx`)
+- "Edit" button replaced `alert()` with a proper toast notification
+
+#### Frontend — Engagement Page
+- Replaced `alert()` with `console.warn()` for empty export data
+
+### Bug Fix — Advisor "View Profile" Button
+
+The "View Profile" button on the student detail page's Assigned Advisor section was navigating to `/students/{userId}` — using the advisor's *user* ID (auto-increment integer like `8`) instead of a student ID (`2300031000`). Since advisors aren't students, this always resulted in a 404. Fixed to show advisor details via toast instead of navigating to a non-existent student page. Also suppressed the console error on the student detail page when a student isn't found (the UI already handles this with a "Student not found" message and "Return to list" link).
+
+### Network Error Fix (IPv6 / Docker Desktop on Windows)
+
+- **Root cause**: `localhost` on Windows can resolve to IPv6 `::1`, which Docker Desktop + WSL2 doesn't always forward correctly. The backend was running and healthy inside the container but unreachable from the browser.
+- **Fix**: Changed all frontend API base URLs from `localhost:8000` to `127.0.0.1:8000` to force IPv4.
+- Created `frontend/.env.local` with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api`
+- Updated fallback defaults in `api.ts`, `auth.ts`, and `AnalysisLanding.tsx`
+- Updated `docker-compose.yml` CORS to include `http://127.0.0.1:3000`
+
+---
+
+## [Unreleased] - 2026-02-21 (Session-Based Analysis & Schema Alignment)
+
+### Irrelevant File Detection
+
+When a CSV has no columns related to student risk metrics (e.g. a course registration list), both Import and Refine now detect this early and display a clear error: *"This file doesn't match any student risk records. Please try with a different file."*
+
+#### Backend — `analysis.py`
+- Added `IrrelevantFileError` exception class.
+- Added `_check_relevance()` — counts how many metric columns mapped, checks for MID exam columns and Sem GPA columns. If zero evidence of student risk data, raises `IrrelevantFileError`.
+- `_refine_dataframe()` calls `_check_relevance()` before processing rows.
+- Import endpoint catches `IrrelevantFileError` and returns HTTP 422 with user-friendly message.
+- Tested with `StudentRegisteredCoursesList_1753788639.csv` (51k rows, 16 columns) — correctly rejected.
+
+#### Frontend — `refineCsv.ts`
+- After column mapping step, checks if any metric columns were matched. Also checks for MID and Sem GPA columns.
+- Throws descriptive error if file is irrelevant, listing detected columns.
+
+#### Frontend — `AnalysisLanding.tsx`
+- Added `refineError` state. `handleRefineFile` wrapped in try-catch.
+- Both Import and Refine errors now show a styled "Incompatible File" card with the error message and a "Try a Different File" button that resets to the landing view.
+- Updated idle view: Import button description changed to "Upload any CSV — raw or refined. Columns are auto-mapped if needed."
+
+---
+
+### Student Removal — Faculty-Only System
+
+The system is now exclusively for faculty/administrators. All student-facing functionality has been removed.
+
+#### Backend
+- **`auth.py`**: Student login blocked with `403 Forbidden`. Auto-registration always creates `FACULTY` role.
+- **`auth.py`**: Added `POST /api/auth/reset-password` endpoint for functional password reset.
+- **`schemas.py`**: Added `student_name` and `department` fields to `StudentDashboardOverview`.
+- **`student_dashboard.py`**: Overview endpoint now returns `student_name` and `department` from the Student model.
+
+#### Frontend
+- **Login page**: Removed Student/Faculty role picker. Shows a single faculty login form directly. No student option.
+- **Sidebar**: Removed all student navigation items. Only `facultyItems` remain.
+- **Layout**: `/student-dashboard/*` and `/profile` paths redirect to `/dashboard`.
+- **Student dashboard pages**: All 7 student-dashboard sub-pages replaced with `router.replace("/dashboard")` stubs.
+- **Student detail page**: Fixed `student_name` field — uses proper `overview.student_name` instead of type-cast hack.
+
+### Session-Based CSV Analysis (New Core Feature)
+
+#### Backend — `POST /api/analysis/import`
+
+**`backend/app/routes/analysis.py`** (NEW)
+- Accepts a refined CSV file matching the model schema (11 columns).
+- Validates all required columns (`REQUIRED_COLUMNS` now includes `department`).
+- Computes risk for each student row using `compute_risk_from_metrics_dict` (no database writes).
+- Streams progress as NDJSON via `StreamingResponse`:
+  - `validate` phase: row/column count
+  - `columns` phase: detected column names
+  - `risk_start` phase: computation begins
+  - `risk_compute` phases: per-batch progress with student name, risk level, running distribution
+  - `aggregate` phase: building dashboard data
+  - `done` event: full overview + student array
+- Includes `high_risk_department` computed from per-department average risk.
+
+**`backend/app/services/realtime_prediction.py`** — `compute_risk_from_metrics_dict()`
+- Computes risk from a plain dict (no DB). Creates a MetricLike object and passes it through `_metric_to_dataframe` which maps to the model's actual features.
+
+#### Frontend — Analysis Landing (`AnalysisLanding.tsx`)
+
+Complete UI for the two-button initial view:
+
+**Import CSV mode:**
+- File upload → streams progress from backend
+- Live stats cards (total students, processed count, high risk, safe)
+- Animated risk distribution bars that build up in real-time
+- Terminal-style processing log with dark theme
+- On completion, data flows into `analysisStore` and the dashboard renders
+
+**Refine CSV mode — client-side pipeline (`refineCsv.ts`):**
+- Async processing with `refineCsvAsync()` — yields between steps for animated UI
+- 7-step pipeline with animated status indicators (pending → running → done):
+  1. **Parse CSV**: Shows row count, column count, raw column names
+  2. **Map Columns**: Table showing raw → refined column mapping with match status
+  3. **Compute Statistics**: Mean values per numeric column
+  4. **Fill Missing Values**: Count of imputed values per column
+  5. **Build Refined Rows**: Progress bar showing rows processed
+  6. **Detect Outliers**: IQR bounds and cap counts per column
+  7. **Generate Output**: Preview table of first 3 rows
+- Summary cards: total rows, columns mapped, missing filled, outliers capped
+- Two completion actions: **Download Refined CSV** and **Import to Dashboard**
+
+#### Frontend — Analysis Store (`analysisStore.ts`)
+- Zustand store (no persistence — session-only by design)
+- `hasData`, `overview`, `students` state
+- `setAnalysisData()` / `clearAnalysis()` actions
+- Dashboard page conditionally renders `AnalysisLanding` when `!hasData`
+
+#### Frontend — Dashboard Page
+- When `analysisStore.hasData` is false: renders `AnalysisLanding` (two buttons)
+- When true: renders full dashboard with stats cards, pie chart, bar chart, department table
+- "New Analysis" button calls `clearAnalysis()` to reset
+
+### Import CSV — Raw CSV Auto-Mapping
+
+**`backend/app/routes/analysis.py`** — Major Enhancement
+- **Import now accepts both raw and refined CSVs.** When refined columns are missing, the endpoint auto-maps raw columns to the model schema and engineers missing features server-side.
+- Added `RAW_TO_REFINED` mapping dict covering common raw column names (`ID`, `Student_ID`, `Attendance_%`, `CGPA`, `Sem1_GPA`, `Department`, etc.).
+- Added `_find_column()` for case-insensitive fuzzy column matching.
+- Added `_refine_dataframe()` which:
+  - Maps raw columns to refined schema using `RAW_TO_REFINED`
+  - Computes `engagement_score` from `MID1_Subject*` exam columns (avg / 30 × 100)
+  - Maps `CGPA` → `academic_performance_index` (auto-scales values >10)
+  - Computes `semester_performance_trend` from `Sem2_GPA - Sem1_GPA` percentage change
+  - Estimates `login_gap_days` from engagement level when not available
+  - Estimates `failure_ratio` from GPA + attendance when not available
+  - Defaults `financial_risk_flag` to 0 and `commute_risk_score` to 1 when missing
+  - Uses mean imputation for any remaining NaN values
+- The streaming progress message now indicates whether the CSV was "refined" or "auto-mapped from raw".
+- Tested with `student_dataset_450.csv` (450 students, 17 raw columns) — successfully produces risk distribution: 106 High Risk, 179 Moderate, 74 Stable, 91 Safe.
+
+### CSV Schema Alignment & Bug Fixes
+
+#### Schema Consistency
+- **`REQUIRED_COLUMNS`** (backend `analysis.py`): Now includes `department` — matches frontend `REFINED_SCHEMA` exactly.
+- **`REFINED_SCHEMA`** (frontend `refineCsv.ts`): 11 columns: `id, name, department, attendance_rate, engagement_score, academic_performance_index, login_gap_days, failure_ratio, financial_risk_flag, commute_risk_score, semester_performance_trend`.
+- Both are now identical.
+
+#### Model Feature Mapping Documented
+The actual loaded model (`RandomForestClassifier`) expects 4 features: `attendance_rate, lms_score, avg_assignment_score, avg_quiz_score`. The `_metric_to_dataframe()` function maps:
+- `attendance_rate` → `attendance_rate` (direct)
+- `engagement_score` → `lms_score` (direct)
+- `academic_performance_index` → `avg_assignment_score` (×10)
+- `semester_performance_trend` → `avg_quiz_score` (direct)
+
+#### Bug Fixes
+- **`financial_risk_flag` parsing** (critical): The Refine CSV tool was outputting `true`/`false` strings. In Python, `bool("false")` evaluates to `True`. Fixed:
+  - `refineCsv.ts`: Now outputs `1`/`0` integers instead of boolean strings.
+  - `analysis.py`: Robust parsing handles `"0"`, `"false"`, `"no"` → `False`.
+- **`academic_performance_index` scale**: Refine tool now auto-detects input range. Values >10 are divided by 10 to normalize to 0-10 GPA scale. Values 0-10 pass through unchanged.
+- **Recharts Tooltip type errors**: `formatter` functions handle `undefined` values with explicit `Number()` / `String()` coercion.
+- **Backend import collision**: Resolved `settings` import name collision in `main.py` (`from app.routes import settings as settings_routes`).
+- **Next.js build errors**: Created redirect stubs for all deleted student-dashboard and profile pages.
+
+#### Sample CSV Updated
+- `backend/data/refined_sample.csv`: 5 students with correct value ranges (GPA on 0-10 scale, attendance 0-100, etc.).
+
+### Documentation
+- **README.md**: Rewritten to reflect faculty-only system, session-based CSV analysis, model feature mapping, updated project structure.
+- **CHANGELOG.md**: This section added.
+- **summary.md**: Updated to remove student pages, add analysis API and data flow, document CSV schema and model mapping.
+
+---
+
 ## [Unreleased] - 2026-02-21 (Functionality Complete Release)
 
 ### Placeholder Functionality Replaced with Real Implementation

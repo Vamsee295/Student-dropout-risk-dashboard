@@ -3,14 +3,18 @@
 import { UserPlus, Users, Download } from "lucide-react";
 import Link from "next/link";
 
+type ViewRole = "Admin" | "Advisor" | "Faculty";
+
 interface DirectoryHeaderProps {
     onAssignAdvisor: () => void;
     onGroupCounseling: () => void;
     onExport: () => void;
     selectedCount: number;
+    activeRole?: ViewRole;
+    onRoleChange?: (role: ViewRole) => void;
 }
 
-export function DirectoryHeader({ onAssignAdvisor, onGroupCounseling, onExport, selectedCount }: DirectoryHeaderProps) {
+export function DirectoryHeader({ onAssignAdvisor, onGroupCounseling, onExport, selectedCount, activeRole = "Admin", onRoleChange }: DirectoryHeaderProps) {
     return (
         <div className="space-y-4">
             {/* Breadcrumbs */}
@@ -29,15 +33,15 @@ export function DirectoryHeader({ onAssignAdvisor, onGroupCounseling, onExport, 
                             Student Directory
                         </h1>
                         <div className="flex rounded-lg bg-gray-100 p-1 text-xs font-medium">
-                            <button className="rounded px-3 py-1 bg-white text-gray-900 shadow-sm">
-                                Admin
-                            </button>
-                            <button className="rounded px-3 py-1 text-gray-500 hover:text-gray-900">
-                                Advisor
-                            </button>
-                            <button className="rounded px-3 py-1 text-gray-500 hover:text-gray-900">
-                                Faculty
-                            </button>
+                            {(["Admin", "Advisor", "Faculty"] as ViewRole[]).map(role => (
+                                <button
+                                    key={role}
+                                    onClick={() => onRoleChange?.(role)}
+                                    className={`rounded px-3 py-1 transition-all ${activeRole === role ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
+                                >
+                                    {role}
+                                </button>
+                            ))}
                         </div>
                     </div>
                     <p className="mt-2 text-sm text-gray-500">
