@@ -45,7 +45,7 @@ npm run dev
 ```
 Frontend: http://localhost:3000
 
-> **Windows / Docker Desktop note**: The frontend uses `127.0.0.1` instead of `localhost` to avoid IPv6 resolution issues with Docker Desktop + WSL2. The `.env.local` file configures this automatically. If the backend is unreachable, verify the Docker container is running with `docker ps` and test connectivity with `Invoke-WebRequest http://127.0.0.1:8000/health`.
+> **Windows / Docker Desktop note**: The frontend normalizes the API URL at runtime (any `localhost` is replaced with `127.0.0.1`) to avoid IPv6 resolution issues. Use `.env.local` with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api` if needed. If the backend is unreachable, the **Engagement** page shows an amber banner with a **Retry** button and instructions; verify the container with `docker ps` and test `Invoke-WebRequest http://127.0.0.1:8000/health`.
 
 ---
 

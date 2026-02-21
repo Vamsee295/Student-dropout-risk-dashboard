@@ -31,7 +31,7 @@ This guide covers running the Student Dropout Risk Dashboard using Docker for te
    ```
    - Frontend: http://localhost:3000
 
-   > **Windows note**: The frontend `.env.local` uses `127.0.0.1` instead of `localhost` to avoid IPv6 resolution issues with Docker Desktop + WSL2. If `curl localhost:8000` hangs but `Invoke-WebRequest http://127.0.0.1:8000/health` works, this is the cause.
+   > **Windows note**: The frontend forces the API base URL to `127.0.0.1` at runtime (replacing `localhost`) to avoid IPv6 issues with Docker Desktop + WSL2. If the backend is unreachable, the Engagement page shows a banner with a **Retry** button. If `curl localhost:8000` hangs but `Invoke-WebRequest http://127.0.0.1:8000/health` works, use 127.0.0.1 in `.env.local`.
 
 4. **Default login credentials** (created automatically)
    - **Faculty**: 

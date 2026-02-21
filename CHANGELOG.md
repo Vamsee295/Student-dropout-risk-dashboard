@@ -21,6 +21,11 @@ All notable changes to the Student Dropout Risk Dashboard are documented here.
 
 - Dashboard and Students pages remain session-gated (no data until a CSV is imported). After import, session store drives the Dashboard and Student Directory/Detail; **in addition**, the same data is persisted so that Engagement, Performance, Analytics, Reports, and Interventions display real-time API data for the same cohort.
 
+### Network Error Fix & Engagement Page Resilience
+
+- **API base URL** — `frontend/src/lib/api.ts` now normalizes the API base URL at runtime: any `localhost` in `NEXT_PUBLIC_API_URL` is replaced with `127.0.0.1` to avoid IPv6 resolution issues (e.g. Docker on Windows). The same replacement is applied in `auth.ts` and `AnalysisLanding.tsx` for auth and CSV import requests. Request timeout increased to 20s.
+- **Engagement page** — When engagement API calls fail with a network error (e.g. backend not running), the page no longer only logs to the console. It sets a safe empty state and shows an **amber banner** with: “Cannot reach the backend. Start it with `docker-compose up -d backend` or run the API at http://127.0.0.1:8000, then refresh.” A **Retry** button re-runs the fetch. This avoids unhandled Axios network errors and gives users a clear recovery path.
+
 ---
 
 ## [Previous] - 2026-02-21 (Session-Only Data Architecture)

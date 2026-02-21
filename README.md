@@ -187,7 +187,7 @@ cd frontend && npm install && npm run dev
 **Backend**: `http://127.0.0.1:8000` (API docs at `/docs`)
 **Frontend**: `http://localhost:3000`
 
-> **Windows note**: The frontend `.env.local` defaults to `http://127.0.0.1:8000/api` to avoid IPv6 resolution issues with `localhost` on Docker Desktop + WSL2. If you change the backend port, update `frontend/.env.local` accordingly.
+> **Windows note**: The frontend forces the API base URL to use `127.0.0.1` (replacing `localhost` at runtime) to avoid IPv6 resolution issues with Docker Desktop + WSL2. Use `frontend/.env.local` with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api` if needed. If the backend is not running, the Engagement page shows a banner with a **Retry** button and instructions to start the backend.
 
 ### Login
 Faculty-only login. Test credentials: `faculty1@gmail.com` / `password`

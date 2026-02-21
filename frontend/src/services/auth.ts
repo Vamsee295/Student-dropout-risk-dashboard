@@ -1,7 +1,8 @@
 import axios from 'axios';
 import apiClient from '@/lib/api';
 
-const AUTH_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api') + '/auth';
+const base = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api').replace(/localhost/i, '127.0.0.1');
+const AUTH_URL = base + '/auth';
 
 export const authService = {
     login: async (email: string, password: string) => {

@@ -18,12 +18,14 @@ export default function EngagementPage() {
     const [selectedStudent, setSelectedStudent] = useState<{ name: string; id: string; risk: number } | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [engagementData, setEngagementData] = useState<any>(null);
+    const [backendUnreachable, setBackendUnreachable] = useState(false);
 
     useEffect(() => {
         fetchEngagementData();
     }, []);
 
     const fetchEngagementData = async () => {
+        setBackendUnreachable(false);
         try {
             const [overviewResp, highRiskResp] = await Promise.all([
                 apiClient.get('/engagement/overview'),
@@ -34,8 +36,10 @@ export default function EngagementPage() {
                 overview: overviewResp.data,
                 highRisk: highRiskResp.data.students || []
             });
-        } catch (error) {
-            console.error("Error fetching engagement data:", error);
+        } catch (err: any) {
+            const isNetworkError = err?.code === 'ERR_NETWORK' || err?.message === 'Network Error';
+            if (isNetworkError) setBackendUnreachable(true);
+            setEngagementData({ overview: null, highRisk: [] });
         }
     };
 
@@ -99,6 +103,12 @@ export default function EngagementPage() {
     return (
         <NoDataGate>
         <div className="space-y-8 relative pb-10">
+            {backendUnreachable && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
+                    <span>Cannot reach the backend. Start it with <code className="bg-amber-100 px-1.5 py-0.5 rounded">docker-compose up -d backend</code> or run the API at <strong>http://127.0.0.1:8000</strong>, then refresh.</span>
+                    <button type="button" onClick={fetchEngagementData} className="shrink-0 rounded-md bg-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-300">Retry</button>
+                </div>
+            )}
             {showSuccess && (
                 <SuccessAnimation
                     message="Intervention Created"

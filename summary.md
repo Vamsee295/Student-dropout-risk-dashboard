@@ -443,7 +443,7 @@ Student-facing pages (`/student-dashboard/*`, `/profile`) redirect to `/dashboar
 
 #### Centralized API Client (`frontend/src/lib/api.ts`)
 All frontend services use a centralized Axios instance that:
-- Sets `baseURL` from `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:8000/api`)
+- Sets `baseURL` from `NEXT_PUBLIC_API_URL` (default `http://127.0.0.1:8000/api`); any `localhost` is replaced with `127.0.0.1` at runtime to avoid IPv6 issues. Engagement page shows a retry banner when the backend is unreachable.
 - Attaches JWT tokens automatically via a request interceptor (reads from Zustand's persisted `auth-storage` in localStorage)
 - Handles 401 responses globally by clearing auth state and redirecting to `/login`
 - Configures a 15-second request timeout

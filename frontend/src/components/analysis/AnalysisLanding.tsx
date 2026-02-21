@@ -181,7 +181,7 @@ export function AnalysisLanding() {
       formData.append("file", f);
 
       const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api").replace(/localhost/i, "127.0.0.1");
       const res = await fetch(`${apiUrl}/analysis/import`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
