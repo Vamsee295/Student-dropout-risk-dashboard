@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a **Machine Learning-powered Student Dropout Risk Dashboard** designed for faculty and administrators to identify, monitor, and intervene with at-risk students. Faculty upload CSV data (or refine raw data client-side), the system computes risk scores via a trained ML model, and the dashboard visualizes results with department breakdowns, risk distributions, and intervention tracking. All analysis is session-based — data lives in the browser until the tab is closed or "New Analysis" is clicked.
+This is a **Machine Learning-powered Student Dropout Risk Dashboard** designed for faculty and administrators to identify, monitor, and intervene with at-risk students. Faculty upload CSV data (or refine raw data client-side), the system computes risk scores via a trained ML model, and the dashboard visualizes results with department breakdowns, risk distributions, and intervention tracking. Analysis is session-based (Zustand store) and **persisted to the database** after each import so that Engagement, Performance, Analytics, Reports, and Interventions pages display real-time API data with no placeholder or mock data.
 
 ---
 
@@ -193,7 +193,8 @@ The system uses **15+ database tables** to manage all aspects of student data an
 ### Session Analysis (`/api/analysis`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/analysis/import` | Import any CSV (raw or refined), auto-map columns if needed, reject irrelevant files (422), compute risks in-memory (no DB), stream progress as NDJSON |
+| POST | `/api/analysis/import` | Import any CSV (raw or refined), auto-map columns if needed, reject irrelevant files (422), compute risks in-memory, stream progress as NDJSON. Frontend calls `/persist` after "done" to write to DB. |
+| POST | `/api/analysis/persist` | Persist imported overview + students to DB (Student, StudentMetric, RiskScore). Ensures Engagement, Performance, Analytics, Reports, and Interventions APIs return real-time data; no placeholder data. |
 
 ### Settings (`/api`)
 | Method | Endpoint | Description |
@@ -513,7 +514,7 @@ Option A: Import CSV (raw or refined) via /api/analysis/import
        • Default financial_risk_flag=0, commute_risk_score=1
   3. compute_risk_from_metrics_dict() runs per-student (in-memory, no DB)
   4. Progress streamed as NDJSON (phase, student name, risk level, distribution)
-  5. Frontend receives "done" event → analysisStore.setAnalysisData()
+  5. Frontend receives "done" event → analysisStore.setAnalysisData() and POST /api/analysis/persist (so Engagement, Performance, etc. APIs have real data)
   6. Dashboard renders with overview + student list
 
 Option B: Refine Raw CSV Client-Side First

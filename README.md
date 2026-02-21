@@ -8,7 +8,7 @@ A full-stack analytics platform that identifies students at risk of academic dro
 - **Import CSV**: Upload **any** CSV — refined or raw. If the file already matches the 11-column refined schema, risk computation starts immediately. If raw columns are detected (e.g. `ID`, `CGPA`, `Attendance_%`, `MID1_Subject1`), the backend auto-maps them to the model schema and engineers missing features server-side before computing risks. Progress streams back to the browser in real-time.
 - **Refine CSV**: Upload raw data and the browser-side pipeline maps columns, fills missing values (mean imputation), caps outliers (IQR), and produces a downloadable model-ready CSV.
 - **Irrelevant File Detection**: If a CSV has no recognizable student-metric columns (e.g. a course registration list), both Import and Refine stop immediately with a clear message: *"This file doesn't match any student risk records. Please try with a different file."*
-- **Session-Only**: Analysis data lives in the browser (Zustand store) — it lasts until the tab is closed or "New Analysis" is clicked. Nothing is written to the database.
+- **Session + Persist**: Analysis data is stored in the browser (Zustand store) and **also persisted to the database** after a successful import. Engagement, Performance, Analytics, Reports, and Interventions pages read **real-time data from backend APIs** (no placeholder or mock data). When no CSV has been imported, all data pages show a single "No Analysis Data — Import CSV" prompt.
 
 ### Faculty Dashboard
 - **Risk Overview**: Total students, at-risk count, average attendance, average risk score.
@@ -19,14 +19,14 @@ A full-stack analytics platform that identifies students at risk of academic dro
 ### Session-Gated Pages
 All data pages are gated behind the analysis store — **no data is shown unless a CSV has been imported**. Navigating to any page without imported data displays a centered "No Analysis Data — Import CSV" prompt.
 
-- **Student Directory** (`/students`): Reads from the in-memory session store. Search, filter by department or risk level. No database calls.
-- **Student Detail** (`/students/[id]`): Looks up the student from session data. Shows risk gauge, metric cards, attendance chart, and risk factor analysis derived from session metrics. Action buttons (case note, counseling, email, escalate) work locally via toasts.
-- **Analytics**: Department-level analytics with detailed charts.
-- **Engagement**: LMS heatmaps, effort-vs-output charts, engagement metric cards. Export report downloads CSV.
-- **Interventions**: Kanban board with drag-and-drop. Cards link to student profiles.
-- **Risk Analysis**: ML model metrics, feature importance, at-risk student lists.
-- **Performance**: GPA trends, course performance, early warning alerts.
-- **Coding Reports**: Sortable table of student coding profiles. Export CSV downloads filtered data.
+- **Student Directory** (`/students`): Reads from the in-memory session store (from last import). Search, filter by department or risk level.
+- **Student Detail** (`/students/[id]`): Looks up the student from session data. Risk gauge, metric cards, attendance chart, and risk factor analysis. Action buttons work locally via toasts.
+- **Analytics** (`/dashboard/analytics`): Department-level analytics from `GET /api/faculty/analytics/department`. Real DB data.
+- **Engagement** (`/engagement`): LMS heatmaps, effort-vs-output, engagement metric cards from `/api/engagement/*`. Export report uses API data.
+- **Interventions** (`/dashboard/interventions`, `/interventions`): Kanban board and at-risk lists from `/api/analytics/at-risk-students` and related APIs.
+- **Risk Analysis** (`/risk-analysis`): ML metrics and at-risk tables from `/api/analytics/ml-metrics` and faculty endpoints.
+- **Performance** (`/performance`): GPA trends, KPIs, early warnings from `/api/performance/*`. All real-time API data.
+- **Coding Reports** (`/dashboard/reports`): Student coding profiles from `facultyService.getCodingReports()`. Export CSV from API data.
 - **Settings**: General, risk model, notifications, intervention policy, integrations, security, appearance. Theme and sidebar preferences persist to localStorage.
 
 ### ML & Prediction

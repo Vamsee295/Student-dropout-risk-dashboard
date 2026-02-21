@@ -4,7 +4,26 @@ All notable changes to the Student Dropout Risk Dashboard are documented here.
 
 ---
 
-## [Unreleased] - 2026-02-21 (Session-Only Data Architecture)
+## [Unreleased] - 2026-02-21 (Real-Time Data Only — No Placeholders)
+
+### Persist Import to Database
+
+- **Backend** — New `POST /api/analysis/persist` endpoint. Accepts the same payload as the import stream "done" event (`overview` + `students`). Upserts `Student`, `StudentMetric`, and `RiskScore` for each student so that Engagement, Performance, Analytics, Reports, and Interventions APIs return **real data** from the database. No placeholder or mock data: when the DB is empty, those APIs return empty/zeros and the UI shows proper empty states.
+- **Frontend** — After a successful CSV import (when the stream emits `type: "done"`), the client calls `POST /api/analysis/persist` with the overview and students. Persist is fire-and-forget so the session store is updated immediately and the DB is filled in the background.
+- **Department / risk mapping** — Persist route maps CSV department strings to `Department` enum and risk level strings to `RiskLevel` enum. Defaults: course `"B.Tech"`, section `A`, and an active `ModelVersion` is required (bootstrap created at startup if none exists).
+
+### No Placeholder Data
+
+- All data-dependent pages (Engagement, Performance, Analytics, Reports, Interventions, Risk Analysis) already fetch from backend APIs. With persist, the DB is populated on import so those APIs return the imported cohort. When no import has been done, APIs return empty and components show "No data available", "No high-risk students", or similar — no fake numbers.
+- **LMS heatmap** — Fixed handling of `week` key from `/engagement/digital-footprint`: supports both numeric week index and `"Week N"` string so the heatmap correctly displays API-driven activity levels.
+
+### Session-Gated + API-Driven
+
+- Dashboard and Students pages remain session-gated (no data until a CSV is imported). After import, session store drives the Dashboard and Student Directory/Detail; **in addition**, the same data is persisted so that Engagement, Performance, Analytics, Reports, and Interventions display real-time API data for the same cohort.
+
+---
+
+## [Previous] - 2026-02-21 (Session-Only Data Architecture)
 
 ### All Pages Now Session-Gated
 

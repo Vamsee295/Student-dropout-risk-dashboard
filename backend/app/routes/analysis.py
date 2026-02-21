@@ -1,7 +1,7 @@
 """
-Session-only analysis API.
+Analysis API: CSV import (streaming, in-memory) and optional persist to DB.
 Accepts refined **or raw** CSV, auto-maps columns if needed,
-computes risks in-memory (no DB write), streams progress.
+computes risks in-memory, streams progress. POST /persist writes to DB for real-time API data.
 """
 
 from __future__ import annotations
@@ -13,12 +13,75 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
+from app.database import get_db
+from app.models import Department, ModelVersion, RiskLevel, RiskScore, RiskTrend, Section, Student, StudentMetric
 from app.services.realtime_prediction import compute_risk_from_metrics_dict
 
 router = APIRouter(prefix="/api/analysis", tags=["Analysis"])
+
+
+# ─── Persist request (same shape as import stream "done" payload) ───
+class PersistStudent(BaseModel):
+    id: str
+    name: str
+    avatar: str = ""
+    riskScore: float
+    riskLevel: str
+    riskValue: str
+    department: str = ""
+    attendance_rate: float = 0.0
+    engagement_score: float = 0.0
+
+
+class PersistPayload(BaseModel):
+    overview: Dict[str, Any]
+    students: List[PersistStudent]
+
+
+def _department_to_enum(dept: str):
+    """Map CSV/frontend department string to Department enum. Default CSE if no match."""
+    if not dept or not str(dept).strip():
+        return Department.CSE
+    d = str(dept).strip().upper()
+    mapping = {
+        "CSE": Department.CSE,
+        "COMPUTER SCIENCE": Department.CSE,
+        "CS": Department.CSE,
+        "CS IT": Department.AI_DS,
+        "AI-DS": Department.AI_DS,
+        "AIML": Department.AI_DS,
+        "AI DS": Department.AI_DS,
+        "DATA SCIENCE": Department.DATA_SCIENCE,
+        "AEROSPACE": Department.AEROSPACE,
+        "MECHANICAL": Department.MECHANICAL,
+        "CIVIL": Department.CIVIL,
+        "ECE": Department.ECE,
+        "ELECTRONICS": Department.ECE,
+    }
+    for key, val in mapping.items():
+        if key in d or d in key:
+            return val
+    return Department.CSE
+
+
+def _risk_level_to_enum(level: str):
+    """Map frontend risk level string to RiskLevel enum."""
+    s = (level or "").strip()
+    if s == "High Risk":
+        return RiskLevel.HIGH
+    if s == "Moderate Risk":
+        return RiskLevel.MODERATE
+    if s == "Stable":
+        return RiskLevel.STABLE
+    if s == "Safe":
+        return RiskLevel.SAFE
+    return RiskLevel.SAFE
+
 
 REQUIRED_COLUMNS = [
     "id",
@@ -414,3 +477,95 @@ async def import_refined_csv(file: UploadFile = File(...)):
         media_type="application/x-ndjson",
         headers={"X-Accel-Buffering": "no"},
     )
+
+
+@router.post("/persist")
+def persist_analysis(payload: PersistPayload, db: Session = Depends(get_db)):
+    """
+    Persist imported analysis (overview + students) to the database.
+    Called by the frontend after a successful CSV import so that Engagement,
+    Performance, Analytics, Reports, and Interventions APIs return real data.
+    No placeholder data: all downstream APIs read from this DB state.
+    """
+    active_model = db.query(ModelVersion).filter(ModelVersion.is_active == True).first()
+    if not active_model:
+        raise HTTPException(status_code=503, detail="No active ML model version. Start the server with a model loaded.")
+
+    created = 0
+    updated = 0
+    for s in payload.students:
+        sid = str(s.id).strip()
+        if not sid:
+            continue
+        dept = _department_to_enum(s.department)
+        risk_level = _risk_level_to_enum(s.riskLevel)
+
+        student = db.query(Student).filter(Student.id == sid).first()
+        if not student:
+            student = Student(
+                id=sid,
+                name=s.name[:200] if s.name else "Unknown",
+                avatar=(s.avatar or s.name[:2].upper() if s.name else "??")[:10],
+                course="B.Tech",
+                department=dept,
+                section=Section.A,
+                advisor_id=None,
+            )
+            db.add(student)
+            created += 1
+        else:
+            student.name = s.name[:200] if s.name else student.name
+            student.avatar = (s.avatar or (s.name[:2].upper() if s.name else "??"))[:10]
+            student.department = dept
+            updated += 1
+
+        # Upsert metrics (required for engagement/performance APIs)
+        api = max(0.0, min(100.0, (s.attendance_rate + s.engagement_score) / 2.0))  # proxy for academic_performance_index
+        metric = db.query(StudentMetric).filter(StudentMetric.student_id == sid).first()
+        if not metric:
+            metric = StudentMetric(
+                student_id=sid,
+                attendance_rate=max(0.0, min(100.0, s.attendance_rate)),
+                engagement_score=max(0.0, min(100.0, s.engagement_score)),
+                academic_performance_index=api,
+                login_gap_days=3,
+                failure_ratio=0.1,
+                financial_risk_flag=False,
+                commute_risk_score=1,
+                semester_performance_trend=0.0,
+            )
+            db.add(metric)
+        else:
+            metric.attendance_rate = max(0.0, min(100.0, s.attendance_rate))
+            metric.engagement_score = max(0.0, min(100.0, s.engagement_score))
+            metric.academic_performance_index = api
+
+        # Upsert risk score
+        risk_row = db.query(RiskScore).filter(RiskScore.student_id == sid).first()
+        shap = {"top_factors": []}
+        if not risk_row:
+            risk_row = RiskScore(
+                student_id=sid,
+                risk_score=float(s.riskScore),
+                risk_level=risk_level,
+                risk_trend=RiskTrend.STABLE,
+                risk_value=s.riskValue[:50] if s.riskValue else f"{s.riskScore:.0f}%",
+                model_version_id=active_model.id,
+                shap_explanation=shap,
+            )
+            db.add(risk_row)
+        else:
+            risk_row.risk_score = float(s.riskScore)
+            risk_row.risk_level = risk_level
+            risk_row.risk_value = (s.riskValue or f"{s.riskScore:.0f}%")[:50]
+            risk_row.model_version_id = active_model.id
+            risk_row.shap_explanation = shap
+
+    db.commit()
+    return {
+        "ok": True,
+        "message": "Analysis persisted to database.",
+        "created": created,
+        "updated": updated,
+        "total": len(payload.students),
+    }

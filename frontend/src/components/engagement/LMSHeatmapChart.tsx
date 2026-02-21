@@ -30,17 +30,18 @@ export function LMSHeatmapChart() {
                 const weeklyTotals: Record<number, { sum: number; count: number }> = {};
                 for (const student of students) {
                     for (const entry of student.weekly_activity || []) {
-                        if (!weeklyTotals[entry.week]) {
-                            weeklyTotals[entry.week] = { sum: 0, count: 0 };
-                        }
-                        weeklyTotals[entry.week].sum += entry.activity;
-                        weeklyTotals[entry.week].count += 1;
+                        const weekIdx = typeof entry.week === "number" ? entry.week : parseInt(String(entry.week).replace(/\D/g, ""), 10) - 1;
+                        if (Number.isNaN(weekIdx) || weekIdx < 0) continue;
+                        if (!weeklyTotals[weekIdx]) weeklyTotals[weekIdx] = { sum: 0, count: 0 };
+                        weeklyTotals[weekIdx].sum += entry.activity ?? 0;
+                        weeklyTotals[weekIdx].count += 1;
                     }
                 }
 
                 const weeklyAvg: Record<number, number> = {};
                 for (const [week, val] of Object.entries(weeklyTotals)) {
-                    weeklyAvg[Number(week)] = Math.round((val.sum / val.count) / 25);
+                    const idx = Number(week);
+                    if (!Number.isNaN(idx)) weeklyAvg[idx] = Math.round((val.sum / val.count) / 25);
                 }
 
                 const data: { date: Date; count: number }[] = [];

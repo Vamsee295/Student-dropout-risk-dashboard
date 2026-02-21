@@ -29,6 +29,7 @@ import {
   REFINED_SCHEMA,
 } from "@/utils/refineCsv";
 import { useAnalysisStore } from "@/store/analysisStore";
+import apiClient from "@/lib/api";
 
 /* ── Step icons for refine pipeline ───────────────────────────────── */
 
@@ -215,6 +216,8 @@ export function AnalysisLanding() {
                 if (obj.distribution) setImportDistribution(obj.distribution);
               } else if (obj.type === "done" && obj.overview && obj.students) {
                 setAnalysisData(obj.overview as any, obj.students as any);
+                // Persist to DB so Engagement, Performance, Analytics, Reports use real API data
+                apiClient.post("/analysis/persist", { overview: obj.overview, students: obj.students }).catch(() => {});
               } else if (obj.type === "error") {
                 setImportError(obj.message || "Error during import");
               }
