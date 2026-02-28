@@ -5,7 +5,8 @@ import { ArrowLeft, Mail, Phone, Building } from "lucide-react";
 
 export default function SignupPage() {
     return (
-        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-md w-full">
             <div className="mb-6">
                 <Link href="/login" className="text-sm font-semibold text-gray-500 hover:text-gray-900 flex items-center gap-2 mb-4">
                     <ArrowLeft size={16} /> Back to Login
@@ -53,6 +54,7 @@ export default function SignupPage() {
                     Reference ID: <span className="font-mono text-gray-600">REQ-{new Date().getFullYear()}{String(new Date().getMonth() + 1).padStart(2, '0')}</span>
                 </p>
             </div>
+        </div>
         </div>
     );
 }

@@ -18,7 +18,8 @@ export default function ForgotPasswordPage() {
 
     if (isSent) {
         return (
-            <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 text-center">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+            <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 text-center max-w-md w-full">
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle size={32} />
                 </div>
@@ -33,11 +34,13 @@ export default function ForgotPasswordPage() {
                     <ArrowLeft size={16} /> Return to Login
                 </Link>
             </div>
+            </div>
         );
     }
 
     return (
-        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-md w-full">
             <div className="mb-8">
                 <Link href="/login" className="text-sm font-semibold text-gray-500 hover:text-gray-900 flex items-center gap-2 mb-4">
                     <ArrowLeft size={16} /> Back
@@ -79,6 +82,7 @@ export default function ForgotPasswordPage() {
                     )}
                 </button>
             </form>
+        </div>
         </div>
     );
 }
