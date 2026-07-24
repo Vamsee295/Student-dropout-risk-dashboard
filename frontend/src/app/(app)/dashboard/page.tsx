@@ -159,19 +159,19 @@ export default function FacultyDashboard() {
           color="red"
           subText={
             overview.total_students > 0
-              ? `${((overview.high_risk_count / overview.total_students) * 100).toFixed(1)}% of total`
+              ? `${Math.round((overview.high_risk_count / overview.total_students) * 100)}% of total`
               : ""
           }
         />
         <StatCard
           title="Avg Attendance"
-          value={`${(overview.average_attendance || 0).toFixed(1)}%`}
+          value={`${Math.round(overview.average_attendance || 0)}%`}
           icon={<TrendingUp className="text-green-600" />}
           color="green"
         />
         <StatCard
           title="Avg Risk Score"
-          value={(overview.average_risk_score || 0).toFixed(1)}
+          value={Math.round(overview.average_risk_score || 0).toString()}
           icon={<PieChartIcon className="text-purple-600" />}
           color="purple"
         />
@@ -264,8 +264,8 @@ export default function FacultyDashboard() {
                   <Tooltip
                     cursor={{ fill: "#F3F4F6" }}
                     formatter={(value, name) => {
-                      if (name === "avg_risk") return [`${Number(value).toFixed(1)}%`, "Avg Risk Score"];
-                      if (name === "attendance") return [`${Number(value).toFixed(1)}%`, "Avg Attendance"];
+                      if (name === "avg_risk") return [`${Math.round(Number(value))}%`, "Avg Risk Score"];
+                      if (name === "attendance") return [`${Math.round(Number(value))}%`, "Avg Attendance"];
                       return [`${value}`, String(name)];
                     }}
                     contentStyle={{
@@ -329,13 +329,13 @@ export default function FacultyDashboard() {
                     <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.total_students}</td>
                     <td className="px-6 py-4 text-right">
                       <span className={`text-sm font-semibold ${dept.avg_risk_score >= 70 ? "text-red-600" :
-                          dept.avg_risk_score >= 55 ? "text-amber-600" :
-                            dept.avg_risk_score >= 40 ? "text-indigo-600" : "text-emerald-600"
+                        dept.avg_risk_score >= 55 ? "text-amber-600" :
+                          dept.avg_risk_score >= 40 ? "text-indigo-600" : "text-emerald-600"
                         }`}>
-                        {dept.avg_risk_score.toFixed(1)}%
+                        {Math.round(dept.avg_risk_score)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-right">{dept.avg_attendance.toFixed(1)}%</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 text-right">{Math.round(dept.avg_attendance)}%</td>
                     <td className="px-6 py-4 text-right">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
                         {dept.high_risk_count}

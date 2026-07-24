@@ -50,8 +50,8 @@ async def login_for_access_token(
         try:
             print(f"Attempting auto-signup for {form_data.username}")
             
-            # Determine role: faculty1@, faculty.test@, etc. -> FACULTY, else STUDENT
-            role = Role.FACULTY if "faculty" in form_data.username.lower() else Role.STUDENT
+            # Determine role: faculty1@, faculty.test@, etc. -> FACULTY, dean@ -> DEAN, else STUDENT
+            role = Role.DEAN if "dean" in form_data.username.lower() else (Role.FACULTY if "faculty" in form_data.username.lower() else Role.STUDENT)
             
             import random
             import string

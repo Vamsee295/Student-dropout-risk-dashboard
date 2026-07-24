@@ -22,7 +22,7 @@ export default function StudentListPage() {
         );
         setDepartments(depts);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function StudentListPage() {
                   <div className="text-right">
                     <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1 leading-none">Attendance</p>
                     <p className="text-lg font-black text-gray-900">
-                      {typeof student.attendance === 'number' ? student.attendance.toFixed(1) : student.attendance}%
+                      {typeof student.attendance === 'number' ? Math.round(student.attendance) : (Number(student.attendance) ? Math.round(Number(student.attendance)) : student.attendance)}%
                     </p>
                   </div>
                 </div>

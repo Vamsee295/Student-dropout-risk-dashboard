@@ -56,9 +56,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       if (!isAllowed) {
         router.push("/student-dashboard");
       }
+    } else if (user?.role === "DEAN") {
+      // Dean can only access /dean/* and /settings
+      const deanAllowedPrefixes = ["/dean", "/settings", "/profile"];
+      const isAllowed = deanAllowedPrefixes.some(prefix => pathname.startsWith(prefix));
+      if (!isAllowed) {
+        router.push("/dean/dashboard");
+      }
     } else if (user?.role === "FACULTY" || user?.role === "ADMIN") {
-      // Faculty should not access student dashboard (optional, but good for clarity)
-      if (pathname === "/student-dashboard") {
+      // Faculty should not access student dashboard
+      if (pathname === "/student-dashboard" || pathname.startsWith("/student-dashboard/")) {
+        router.push("/dashboard");
+      }
+      // Faculty should not access dean routes
+      if (pathname.startsWith("/dean/")) {
         router.push("/dashboard");
       }
     }

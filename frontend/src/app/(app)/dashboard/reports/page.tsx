@@ -145,29 +145,33 @@ export default function CodingReportsPage() {
 
                                         {/* HackerRank */}
                                         <td className="px-6 py-4 text-center border-l border-gray-100">
-                                            <div className="font-medium text-gray-900">{student.coding_profile?.hackerrank_score || '-'}</div>
+                                            <div className="font-medium text-gray-900">
+                                                {student.coding_profile?.hackerrank_score !== undefined ? Math.round(student.coding_profile.hackerrank_score) : '-'}
+                                            </div>
                                             <div className="text-xs text-gray-500">{student.coding_profile?.hackerrank_solved || 0} Solved</div>
                                         </td>
 
                                         {/* LeetCode */}
                                         <td className="px-6 py-4 text-center border-l border-gray-100">
-                                            <div className="font-medium text-amber-600">{student.coding_profile?.leetcode_rating || '-'}</div>
+                                            <div className="font-medium text-amber-600">
+                                                {student.coding_profile?.leetcode_rating !== undefined ? Math.round(student.coding_profile.leetcode_rating) : '-'}
+                                            </div>
                                             <div className="text-xs text-gray-500">{student.coding_profile?.leetcode_solved || 0} Solved</div>
                                         </td>
 
                                         {/* CodeChef */}
                                         <td className="px-6 py-4 text-center border-l border-gray-100 text-sm text-gray-700">
-                                            {student.coding_profile?.codechef_rating || '-'}
+                                            {student.coding_profile?.codechef_rating !== undefined ? Math.round(student.coding_profile.codechef_rating) : '-'}
                                         </td>
 
                                         {/* CodeForces */}
                                         <td className="px-6 py-4 text-center border-l border-gray-100 text-sm text-gray-700">
-                                            {student.coding_profile?.codeforces_rating || '-'}
+                                            {student.coding_profile?.codeforces_rating !== undefined ? Math.round(student.coding_profile.codeforces_rating) : '-'}
                                         </td>
 
                                         {/* Overall */}
                                         <td className="px-6 py-4 text-center border-l border-gray-100 bg-indigo-50/30 group-hover:bg-indigo-50/60 font-bold text-indigo-700">
-                                            {student.coding_profile?.overall_score || '-'}
+                                            {student.coding_profile?.overall_score !== undefined ? Math.round(student.coding_profile.overall_score) : '-'}
                                         </td>
                                     </tr>
                                 ))

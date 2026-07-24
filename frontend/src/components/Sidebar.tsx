@@ -15,11 +15,16 @@ import {
   UserCheck,
   BookOpen,
   AlertTriangle,
-  LogOut
+  LogOut,
+  Building2,
+  GraduationCap,
+  BrainCircuit,
+  TrendingUp,
+  Target,
+  Activity,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
-
 import { Logo } from "@/components/Logo";
 
 type NavItem = {
@@ -65,7 +70,26 @@ export function Sidebar({ activePath }: SidebarProps) {
     { label: "Settings", href: "/settings", icon: <SettingsIcon size={20} /> },
   ];
 
-  const items = role === "STUDENT" ? studentItems : facultyItems;
+  const deanItems: NavItem[] = [
+    { label: "Dashboard", href: "/dean/dashboard", icon: <LayoutDashboard size={20} /> },
+    { label: "Dept Analytics", href: "/dean/department-analytics", icon: <Building2 size={20} /> },
+    { label: "Faculty Insights", href: "/dean/faculty-insights", icon: <GraduationCap size={20} /> },
+    { label: "Academic Trends", href: "/dean/academic-trends", icon: <TrendingUp size={20} /> },
+    { label: "Engagement", href: "/dean/engagement", icon: <Activity size={20} /> },
+    { label: "Interventions", href: "/dean/interventions", icon: <Target size={20} /> },
+    { label: "Predictive AI", href: "/dean/predictive-insights", icon: <BrainCircuit size={20} /> },
+    { label: "Reports", href: "/dean/reports", icon: <FileText size={20} /> },
+    { label: "Settings", href: "/settings", icon: <SettingsIcon size={20} /> },
+  ];
+
+  const items =
+    role === "STUDENT"
+      ? studentItems
+      : role === "DEAN"
+        ? deanItems
+        : facultyItems;
+
+  const isDean = role === "DEAN";
 
   return (
     <aside className="hidden w-64 flex-col border-r bg-white shadow-sm md:flex">
@@ -73,9 +97,18 @@ export function Sidebar({ activePath }: SidebarProps) {
         <Logo variant="light" className="scale-90 origin-left" />
       </div>
 
-      <nav className="mt-6 flex-1 space-y-1 px-3">
+      {isDean && (
+        <div className="mx-3 mt-4 rounded-lg bg-violet-50 border border-violet-200 px-3 py-2">
+          <p className="text-xs font-semibold text-violet-700 uppercase tracking-wider">Dean / HOD</p>
+          <p className="text-xs text-violet-500 mt-0.5">Strategic Dashboard</p>
+        </div>
+      )}
+
+      <nav className="mt-4 flex-1 space-y-1 px-3">
         {items.map((item) => {
-          const isActive = currentPath === item.href;
+          const isActive =
+            currentPath === item.href ||
+            (item.href !== "/settings" && currentPath.startsWith(item.href + "/"));
 
           return (
             <Link
@@ -84,11 +117,22 @@ export function Sidebar({ activePath }: SidebarProps) {
               className={`
                 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
                 ${isActive
-                  ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}
+                  ? isDean
+                    ? "bg-violet-50 text-violet-700 shadow-sm ring-1 ring-violet-200"
+                    : "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }
               `}
             >
-              <span className={`${isActive ? "text-indigo-600" : "text-gray-400 group-hover:text-gray-500"}`}>
+              <span
+                className={
+                  isActive
+                    ? isDean
+                      ? "text-violet-600"
+                      : "text-indigo-600"
+                    : "text-gray-400"
+                }
+              >
                 {item.icon}
               </span>
               {item.label}

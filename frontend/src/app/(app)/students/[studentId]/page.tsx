@@ -94,7 +94,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                             id: f.id, name: f.name, role: f.role, dept: f.department,
                         })));
                     })
-                    .catch(() => {});
+                    .catch(() => { });
             } catch (error) {
                 console.error("Failed to fetch student details:", error);
             } finally {
@@ -177,7 +177,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
 
     const rate = overview.attendance_rate;
     const classAvg = 90;
-    const attendanceHistory = Array.from({length: 8}, (_, i) => ({
+    const attendanceHistory = Array.from({ length: 8 }, (_, i) => ({
         week: `Week ${i + 1}`,
         student: Math.round(Math.min(100, rate + (7 - i) * 3)),
         classAvg: Math.round(classAvg + (7 - i) * 0.3),
@@ -447,7 +447,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                                             <div className="flex items-center gap-2">
                                                 <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{(overview as StudentOverview & { student_name?: string }).student_name || `Student #${params.studentId}`}</h2>
                                             </div>
-                                            <p className="text-sm text-gray-500 mt-1 font-medium">ID: #{params.studentId} • {risk.risk_level} • Attendance: {overview.attendance_rate}%</p>
+                                            <p className="text-sm text-gray-500 mt-1 font-medium">ID: #{params.studentId} • {risk.risk_level} • Attendance: {Math.round(overview.attendance_rate)}%</p>
                                             <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
                                                 <a href="#" onClick={(e) => { e.preventDefault(); setIsEmailModalOpen(true); }} className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors">
                                                     <Mail size={14} />
@@ -476,7 +476,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
 
                                         {isRiskExpanded && (
                                             <div className="mt-2 space-y-3 pl-0 animate-in slide-in-from-top-2 duration-300">
-                                                {risk.explanation?.top_factors.map((factor, idx) => (
+                                                {risk.explanation?.top_factors.map((factor: any, idx: number) => (
                                                     <div key={idx} className="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition-colors border-b last:border-0 border-gray-50">
                                                         <div className="flex items-center gap-3">
                                                             <div className={`w-2 h-2 rounded-full ${factor.direction === 'negative' ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
@@ -541,7 +541,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                                 </div>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 leading-none">{overview.engagement_score > 50 ? "Active" : "Inactive"}</h3>
-                            <p className="text-xs text-gray-500 mt-2 font-medium">Engagement: {overview.engagement_score}%</p>
+                            <p className="text-xs text-gray-500 mt-2 font-medium">Engagement: {Math.round(overview.engagement_score)}%</p>
                         </div>
                         <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-red-500 border border-gray-100 hover:shadow-md transition-shadow">
                             <div className="flex justify-between items-start mb-3">
@@ -550,7 +550,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                                     <TrendingDown size={14} className="text-red-500" />
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">{overview.avg_marks || 0} Avg</h3>
+                            <h3 className="text-xl font-bold text-gray-900 leading-none">{Math.round(overview.avg_marks || 0)} Avg</h3>
                             <p className="text-xs text-gray-500 mt-2 font-medium">Academic performance</p>
                         </div>
                         <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-amber-400 border border-gray-100 hover:shadow-md transition-shadow">
@@ -560,7 +560,7 @@ export default function StudentDetailPage(props: { params: Promise<{ studentId: 
                                     <Calendar size={14} className="text-amber-500" />
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">{overview.attendance_rate}% Rate</h3>
+                            <h3 className="text-xl font-bold text-gray-900 leading-none">{Math.round(overview.attendance_rate)}% Rate</h3>
                             <p className="text-xs text-gray-500 mt-2 font-medium">{overview.attendance_rate < 75 ? "Below 75% threshold" : "Above threshold"}</p>
                         </div>
                         <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-blue-500 border border-gray-100 hover:shadow-md transition-shadow">

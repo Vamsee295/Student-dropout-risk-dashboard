@@ -104,8 +104,8 @@ export function DashboardMetrics() {
         : 0;
 
     const avgEngagement = students && students.length > 0
-        ? (students.reduce((sum, s) => sum + (s?.engagementScore || 0), 0) / students.length / 10).toFixed(1)
-        : "0.0";
+        ? Math.round(students.reduce((sum, s) => sum + (s?.engagementScore || 0), 0) / students.length / 10).toString()
+        : "0";
 
     const metrics = [
         {
@@ -124,7 +124,7 @@ export function DashboardMetrics() {
         {
             title: "High Risk Students",
             value: overview?.high_risk_count?.toString() || "0",
-            trend: `${overview?.high_risk_percentage?.toFixed(1) || 0}%`,
+            trend: `${Math.round(overview?.high_risk_percentage || 0)}%`,
             trendLabel: "of total students",
             trendDirection: "up" as const,
             trendColor: "text-red-600",
@@ -138,7 +138,7 @@ export function DashboardMetrics() {
         {
             title: "Avg Attendance",
             value: `${avgAttendance}%`,
-            trend: `${avgAttendance >= 85 ? '+' : ''}${(avgAttendance - 85).toFixed(1)}%`,
+            trend: `${avgAttendance >= 85 ? '+' : ''}${Math.round(avgAttendance - 85)}%`,
             trendLabel: avgAttendance >= 85 ? "above target" : "below target",
             trendDirection: avgAttendance >= 85 ? "up" as const : "down" as const,
             trendColor: avgAttendance >= 85 ? "text-emerald-600" : "text-red-600",
@@ -151,7 +151,7 @@ export function DashboardMetrics() {
         {
             title: "Avg Engagement",
             value: `${avgEngagement}/10`,
-            trend: `${Number(avgEngagement) >= 5 ? '+' : ''}${(Number(avgEngagement) - 5).toFixed(1)}`,
+            trend: `${Number(avgEngagement) >= 5 ? '+' : ''}${Math.round(Number(avgEngagement) - 5)}`,
             trendLabel: Number(avgEngagement) >= 5 ? "above baseline" : "below baseline",
             trendDirection: Number(avgEngagement) >= 5 ? "up" as const : "down" as const,
             trendColor: "text-emerald-600",

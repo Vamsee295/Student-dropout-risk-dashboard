@@ -6,7 +6,7 @@ import { ScoreDistributionChart } from "@/components/profile/ScoreDistributionCh
 
 export default function ProfilePage() {
     return (
-        <div className="max-w-[1600px] mx-auto p-1 text-gray-900">
+        <div className="max-w-[1240px] mx-auto p-4 text-gray-900 bg-[#f8f9fa] min-h-[calc(100vh-64px)] rounded-xl mt-4">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 {/* Sidebar - Approx 30-35% width -> col-span-4 */}
                 <div className="lg:col-span-4">
@@ -18,7 +18,7 @@ export default function ProfilePage() {
                     <div className="h-[400px]">
                         <GlobalRankChart />
                     </div>
-                    <div className="h-[350px]">
+                    <div className="h-[300px]">
                         <ScoreDistributionChart />
                     </div>
                 </div>

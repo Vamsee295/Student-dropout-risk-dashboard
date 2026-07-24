@@ -65,8 +65,8 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.avg_risk_score - a.avg_risk_score)
         .map((d) => ({
             department: d.department,
-            avg_risk: parseFloat(d.avg_risk_score.toFixed(1)),
-            attendance: parseFloat(d.avg_attendance.toFixed(1)),
+            avg_risk: Math.round(d.avg_risk_score),
+            attendance: Math.round(d.avg_attendance),
             high_risk: d.high_risk_count,
         }));
 
@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
     // Top insights based on real data
     const topRiskDept = riskBarData[0];
     const topAttDept = [...deptData].sort((a, b) => a.avg_attendance - b.avg_attendance)[0];
-    const highRiskPct = totalStudents > 0 ? ((highRiskTotal / totalStudents) * 100).toFixed(1) : "0";
+    const highRiskPct = totalStudents > 0 ? Math.round((highRiskTotal / totalStudents) * 100) : 0;
 
     return (
         <div className="space-y-6">
@@ -106,10 +106,10 @@ export default function AnalyticsPage() {
                             <span className="text-xs font-medium text-gray-500 truncate">{dept.department}</span>
                         </div>
                         <p className={`text-xl font-bold ${dept.avg_risk_score >= 70 ? "text-red-600" :
-                                dept.avg_risk_score >= 55 ? "text-amber-600" :
-                                    dept.avg_risk_score >= 40 ? "text-indigo-600" : "text-emerald-600"
+                            dept.avg_risk_score >= 55 ? "text-amber-600" :
+                                dept.avg_risk_score >= 40 ? "text-indigo-600" : "text-emerald-600"
                             }`}>
-                            {dept.avg_risk_score.toFixed(1)}%
+                            {Math.round(dept.avg_risk_score)}%
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">Avg Risk · {dept.total_students} students</p>
                     </div>
@@ -212,7 +212,7 @@ export default function AnalyticsPage() {
                                             border: "none",
                                             boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                                         }}
-                                        formatter={(v) => [`${Number(v).toFixed(1)}%`, "Avg Risk"]}
+                                        formatter={(v) => [`${Math.round(Number(v))}%`, "Avg Risk"]}
                                     />
                                     <Legend iconType="circle" iconSize={8} />
                                     {trendDepts.map((dept, i) => (
@@ -295,7 +295,7 @@ export default function AnalyticsPage() {
                                 <AlertTriangle size={16} className="text-amber-300 mt-0.5 flex-shrink-0" />
                                 <span className="text-sm">
                                     <strong>{topAttDept.department}</strong> has the lowest average attendance at{" "}
-                                    <strong>{topAttDept.avg_attendance.toFixed(1)}%</strong>.
+                                    <strong>{Math.round(topAttDept.avg_attendance)}%</strong>.
                                 </span>
                             </li>
                         )}

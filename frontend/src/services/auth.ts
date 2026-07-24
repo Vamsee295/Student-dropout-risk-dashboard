@@ -1,50 +1,49 @@
-import axios from 'axios';
-import apiClient from '@/lib/api';
-
-const AUTH_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api') + '/auth';
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 export const authService = {
     login: async (email: string, password: string) => {
-        const params = new URLSearchParams();
-        params.append('username', email);
-        params.append('password', password);
+        await delay(1000);
 
-        try {
-            const response = await axios.post(`${AUTH_URL}/login`, params, {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                timeout: 10000,
-            });
-            return response.data;
-        } catch (error) {
-            console.error("Login API Error:", error);
-            throw error;
+        let role = "STUDENT";
+        let name = "John Doe";
+        let id = 1;
+
+        if (email.includes("dean")) {
+            role = "DEAN";
+            name = "Dr. Strategic Dean";
+            id = 999;
+        } else if (email.includes("faculty")) {
+            role = "FACULTY";
+            name = "Prof. Michael Chen";
+            id = 555;
+        } else if (email.includes("student")) {
+            role = "STUDENT";
+            name = "John Student";
+            id = 111;
         }
+
+        return {
+            access_token: "mock-token-12345",
+            token_type: "bearer",
+            user_id: id,
+            role: role,
+            name: name,
+            student_id: role === "STUDENT" ? "S1001" : null
+        };
     },
 
     getCurrentUser: async (token: string) => {
-        try {
-            const response = await apiClient.get('/auth/me', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                timeout: 5000,
-            });
-            return response.data;
-        } catch (error) {
-            console.error("Get Current User Error:", error);
-            throw error;
-        }
+        await delay(500);
+        return {
+            id: "1",
+            email: "user@example.com",
+            name: "John Doe",
+            role: "FACULTY"
+        };
     },
 
     forgotPassword: async (email: string) => {
-        try {
-            const response = await apiClient.post(`/auth/forgot-password?email=${encodeURIComponent(email)}`);
-            return response.data;
-        } catch (error) {
-            console.error("Forgot Password Error:", error);
-            throw error;
-        }
+        await delay(800);
+        return { message: "Reset link sent successfully." };
     },
 };

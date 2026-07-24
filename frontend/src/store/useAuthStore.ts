@@ -5,7 +5,7 @@ interface User {
     id: number;
     email: string;
     name: string;
-    role: 'STUDENT' | 'FACULTY' | 'ADMIN';
+    role: 'STUDENT' | 'FACULTY' | 'ADMIN' | 'DEAN';
     student_id?: string;
 }
 

@@ -76,6 +76,7 @@ class Role(str, enum.Enum):
     STUDENT = "STUDENT"
     FACULTY = "FACULTY"
     ADMIN = "ADMIN"
+    DEAN = "DEAN"
 
 
 

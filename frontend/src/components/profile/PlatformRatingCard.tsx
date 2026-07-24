@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 interface PlatformRatingCardProps {
     platformName: string;
@@ -8,7 +8,8 @@ interface PlatformRatingCardProps {
     highestRating: number;
     totalContests: number;
     ratingChange: number;
-    history: { rating: number }[];
+    history: { date?: string, rating: number }[];
+    showRatingChange?: boolean;
 }
 
 export function PlatformRatingCard({
@@ -18,50 +19,68 @@ export function PlatformRatingCard({
     totalContests,
     ratingChange,
     history,
+    showRatingChange = true,
 }: PlatformRatingCardProps) {
     return (
-        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-            <h4 className="mb-3 text-sm font-semibold text-gray-700">{platformName} Ratings</h4>
+        <div className="rounded-sm border border-gray-200 bg-white shadow-sm mt-4">
+            <h4 className="p-4 text-[13px] font-medium text-gray-800 pb-2">{platformName} Ratings</h4>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p className="text-xs text-gray-500">Current Rating</p>
-                    <p className="font-bold text-gray-900">{currentRating}</p>
+            <div className="px-4 grid grid-cols-2 gap-2 mb-6">
+                <div className="border border-gray-200 rounded-sm p-2 flex flex-col justify-between">
+                    <p className="text-[11px] text-gray-600">Current Rating</p>
+                    <p className="font-semibold text-[13px] text-gray-800">{currentRating}</p>
                 </div>
-                <div>
-                    <p className="text-xs text-gray-500">Highest Rating</p>
-                    <p className="font-bold text-gray-900">{highestRating}</p>
+                <div className="border border-gray-200 rounded-sm p-2 flex flex-col justify-between">
+                    <p className="text-[11px] text-gray-600">Highest Rating</p>
+                    <p className="font-semibold text-[13px] text-gray-800">{highestRating}</p>
                 </div>
-                <div>
-                    <p className="text-xs text-gray-500">Total Contests</p>
-                    <p className="font-bold text-gray-900">{totalContests}</p>
+                <div className="border border-gray-200 rounded-sm p-2 flex flex-col justify-between">
+                    <p className="text-[11px] text-gray-600">Total Contests</p>
+                    <p className="font-semibold text-[13px] text-gray-800">{totalContests}</p>
                 </div>
-                <div>
-                    <p className="text-xs text-gray-500">Rating Change</p>
-                    <div className="flex items-center gap-1 font-bold text-green-600">
-                        <span>↗ {ratingChange}</span>
+                {showRatingChange && (
+                    <div className="border border-gray-200 rounded-sm p-2 flex flex-col justify-between">
+                        <p className="text-[11px] text-gray-600">Rating Change</p>
+                        <div className="flex items-center gap-1 font-semibold text-[13px] text-green-600">
+                            <span className="text-sm leading-none">↗</span> {ratingChange}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
-            <div className="h-16 w-full">
+            <div className="h-32 w-full mt-2 relative">
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={history}>
-                        <Line
+                    <AreaChart data={history} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id={`gradient-${platformName}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#fca5a5" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="#ffedd5" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <XAxis
+                            dataKey="date"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 9, fill: "#6b7280" }}
+                            dy={5}
+                            interval="preserveStartEnd"
+                        />
+                        <Tooltip
+                            contentStyle={{ borderRadius: '4px', border: '1px solid #e5e7eb', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', fontSize: '12px', padding: '4px 8px' }}
+                            itemStyle={{ color: '#374151', fontSize: '12px' }}
+                        />
+                        <Area
                             type="monotone"
                             dataKey="rating"
-                            stroke="#fbbf24" // Amber/Yellowish
-                            strokeWidth={2}
-                            dot={false}
+                            stroke="#f97316"
+                            strokeWidth={1.5}
+                            fillOpacity={1}
+                            fill={`url(#gradient-${platformName})`}
                         />
-                    </LineChart>
+                    </AreaChart>
                 </ResponsiveContainer>
             </div>
-
-            <div className="mt-2 flex justify-between text-[10px] text-gray-400">
-                <span>Start</span>
-                <span>Current</span>
-            </div>
+            {/* The XAxis replaces the custom Start/Current absolute positioning */}
         </div>
     );
 }
