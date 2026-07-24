@@ -40,8 +40,12 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     if (user?.role !== "STUDENT") {
       if (user?.role === "FACULTY" || user?.role === "ADMIN") router.push("/faculty/dashboard");
       else if (user?.role === "DEAN") router.push("/dean/dashboard");
+      else {
+        logout();
+        router.push("/login");
+      }
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, logout]);
 
   if (!isAuthenticated || user?.role !== "STUDENT") {
     return null;

@@ -45,13 +45,24 @@ async def login_for_access_token(
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
     
-    # Auto-Registration Logic for Testing Phase
+    # Registration / Verification Logic for Authorized Accounts
     if not user:
+        username_lower = form_data.username.lower()
+        if "dean" in username_lower:
+            role = Role.DEAN
+        elif "faculty" in username_lower:
+            role = Role.FACULTY
+        elif "student" in username_lower:
+            role = Role.STUDENT
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Access Denied: Unrecognized account. Only authorized faculty@gmail.com, student@gmail.com, or dean@gmail.com accounts are permitted.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         try:
-            print(f"Attempting auto-signup for {form_data.username}")
-            
-            # Determine role: faculty1@, faculty.test@, etc. -> FACULTY, dean@ -> DEAN, else STUDENT
-            role = Role.DEAN if "dean" in form_data.username.lower() else (Role.FACULTY if "faculty" in form_data.username.lower() else Role.STUDENT)
+            print(f"Auto-provisioning authorized account for {form_data.username} as {role}")
             
             import random
             import string

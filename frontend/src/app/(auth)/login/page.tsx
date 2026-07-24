@@ -44,8 +44,8 @@ export default function LoginPage() {
             await authService.forgotPassword(formData.email);
             setSuccess("If an account exists, a reset link has been sent.");
             setTimeout(() => { setIsForgotMode(false); setSuccess(""); }, 3000);
-        } catch {
-            setError("Failed to process reset request.");
+        } catch (err: any) {
+            setError(err.message || "Failed to process reset request.");
         } finally {
             setIsLoading(false);
         }
@@ -58,6 +58,24 @@ export default function LoginPage() {
         setSuccess("");
         try {
             const data = await authService.login(formData.email, formData.password);
+
+            // Role Mismatch Check — Authorization
+            if (selectedRole === "FACULTY" && data.role !== "FACULTY" && data.role !== "ADMIN") {
+                setError(`Access Denied: This email (${formData.email}) belongs to a ${data.role} account, not Faculty.`);
+                setIsLoading(false);
+                return;
+            }
+            if (selectedRole === "STUDENT" && data.role !== "STUDENT") {
+                setError(`Access Denied: This email (${formData.email}) belongs to a ${data.role} account, not Student.`);
+                setIsLoading(false);
+                return;
+            }
+            if (selectedRole === "DEAN" && data.role !== "DEAN") {
+                setError(`Access Denied: This email (${formData.email}) belongs to a ${data.role} account, not Dean.`);
+                setIsLoading(false);
+                return;
+            }
+
             const user = {
                 id: data.user_id as number,
                 email: formData.email,
@@ -66,18 +84,26 @@ export default function LoginPage() {
                 student_id: data.student_id
             };
             login(user as any, data.access_token);
-            if (data.role === "STUDENT") {
-                router.push("/student/dashboard");
-            } else if (data.role === "DEAN") {
-                router.push("/dean/dashboard");
-            } else {
-                router.push("/faculty/dashboard");
+
+            // Explicit Dashboard Navigation based on Authorized Role
+            switch (data.role) {
+                case "STUDENT":
+                    router.push("/student/dashboard");
+                    break;
+                case "DEAN":
+                    router.push("/dean/dashboard");
+                    break;
+                case "FACULTY":
+                case "ADMIN":
+                    router.push("/faculty/dashboard");
+                    break;
+                default:
+                    setError("Access Denied: Account has no valid role assigned.");
+                    return;
             }
-        } catch (err: unknown) {
-            const detail = err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response
-                ? (err.response as { data?: { detail?: string } }).data?.detail
-                : undefined;
-            setError(detail || "Login failed. Check your credentials.");
+        } catch (err: any) {
+            const detail = err?.response?.data?.detail || err?.message;
+            setError(detail || "Access Denied: Login failed. Check your credentials.");
         } finally {
             setIsLoading(false);
         }
@@ -93,12 +119,12 @@ export default function LoginPage() {
                 <ChevronLeft size={16} /> Back
             </button>
             {error && (
-                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-lg text-sm flex items-center gap-2 border border-red-100">
-                    <AlertCircle size={16} /> {error}
+                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-lg text-sm flex items-center gap-2 border border-red-100 font-medium">
+                    <AlertCircle size={16} className="flex-shrink-0" /> {error}
                 </div>
             )}
             {success && (
-                <div className="mb-4 bg-gray-50 text-gray-800 p-3 rounded-lg text-sm border border-gray-200">{success}</div>
+                <div className="mb-4 bg-emerald-50 text-emerald-800 p-3 rounded-lg text-sm border border-emerald-200">{success}</div>
             )}
             {isForgotMode ? (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
@@ -109,7 +135,7 @@ export default function LoginPage() {
                             <input type="email" required value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                                placeholder="name@institution.edu" />
+                                placeholder={role === "FACULTY" ? "faculty@gmail.com" : role === "DEAN" ? "dean@gmail.com" : "student@gmail.com"} />
                         </div>
                     </div>
                     <button type="submit" disabled={isLoading}
@@ -127,7 +153,7 @@ export default function LoginPage() {
                             <input type="email" required value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                                placeholder="name@institution.edu" />
+                                placeholder={role === "FACULTY" ? "faculty@gmail.com" : role === "DEAN" ? "dean@gmail.com" : "student@gmail.com"} />
                         </div>
                     </div>
                     <div>
@@ -188,11 +214,8 @@ export default function LoginPage() {
                                         </p>
                                         <button type="button" onClick={() => handleRoleSelect("FACULTY")}
                                             className="w-full py-3 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-300">
-                                            Login
+                                            Login as Faculty
                                         </button>
-                                        <p className="text-sm text-gray-500 mt-6">
-                                            <Link href="/signup" className="font-semibold text-gray-700 hover:text-gray-900">Request access</Link>
-                                        </p>
                                     </>
                                 )
                             ) : (
@@ -217,17 +240,15 @@ export default function LoginPage() {
                                                 <GraduationCap className="w-8 h-8 text-gray-600" />
                                             </div>
                                         </div>
+                                        <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full mb-4">STUDENT</span>
                                         <h2 className="text-2xl font-bold text-gray-900 mb-3">For Students</h2>
                                         <p className="text-gray-600 text-sm leading-relaxed mb-6">
                                             View your personal dashboard and track your progress.
                                         </p>
                                         <button type="button" onClick={() => handleRoleSelect("STUDENT")}
                                             className="w-full py-3 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-300">
-                                            Login
+                                            Login as Student
                                         </button>
-                                        <p className="text-sm text-gray-500 mt-6">
-                                            <Link href="/signup" className="font-semibold text-gray-700 hover:text-gray-900">Sign up</Link>
-                                        </p>
                                     </>
                                 )
                             ) : (
@@ -275,11 +296,11 @@ export default function LoginPage() {
             </main>
 
             <footer className="relative z-10 py-4 text-center">
-                <p className="text-xs text-gray-500">
-                    Test: <span className="font-mono bg-gray-200/80 px-1.5 py-0.5 rounded">student1@gmail.com</span> /&nbsp;
-                    <span className="font-mono bg-gray-200/80 px-1.5 py-0.5 rounded">faculty1@gmail.com</span> /&nbsp;
-                    <span className="font-mono bg-gray-200/80 px-1.5 py-0.5 rounded">dean1@gmail.com</span>&nbsp;
-                    — password: <span className="font-mono bg-gray-200/80 px-1.5 py-0.5 rounded">EduRisk@2026</span>
+                <p className="text-xs text-gray-600 font-medium">
+                    Authorized Emails: <span className="font-mono bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">student@gmail.com</span> |&nbsp;
+                    <span className="font-mono bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">faculty@gmail.com</span> |&nbsp;
+                    <span className="font-mono bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">dean@gmail.com</span>&nbsp;
+                    — password: <span className="font-mono bg-gray-200 px-1.5 py-0.5 rounded text-gray-800 font-bold">passwords</span>
                 </p>
             </footer>
         </div>

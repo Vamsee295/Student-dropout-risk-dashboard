@@ -1,191 +1,132 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { facultyService, type StudentCodingStats } from "@/services/faculty";
-import {
-    Loader2,
-    Search,
-    Download,
-    Filter,
-    Trophy,
-    Code,
-    ExternalLink
-} from "lucide-react";
+import { FileBarChart, Download, FileText, Users, BarChart2, AlertTriangle, Calendar, Printer } from "lucide-react";
 import Link from "next/link";
 
-export default function CodingReportsPage() {
-    const [students, setStudents] = useState<StudentCodingStats[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [departmentFilter, setDepartmentFilter] = useState("");
+const reportTypes = [
+  { title: "Attendance Report", desc: "Daily, weekly, or monthly attendance for all students or a specific course", icon: <Calendar size={24} />, color: "blue", href: "#" },
+  { title: "Performance Report", desc: "Subject-wise and semester-wise marks analysis", icon: <BarChart2 size={24} />, color: "purple", href: "#" },
+  { title: "Assignment Report", desc: "Submission rates, late submissions, and grading status", icon: <FileText size={24} />, color: "amber", href: "#" },
+  { title: "Risk Report", desc: "AI-generated dropout risk report with factor breakdown", icon: <AlertTriangle size={24} />, color: "red", href: "#" },
+  { title: "Student Profile Report", desc: "Complete academic and risk profile for individual students", icon: <Users size={24} />, color: "emerald", href: "#" },
+  { title: "Department Report", desc: "Overall department performance summary for administration", icon: <FileBarChart size={24} />, color: "slate", href: "#" },
+];
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const data = await facultyService.getCodingReports();
-                // Sort by overall score by default
-                const sorted = data.sort((a, b) => (b.coding_profile?.overall_score || 0) - (a.coding_profile?.overall_score || 0));
-                setStudents(sorted);
-            } catch (error) {
-                console.error("Failed to fetch coding reports:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+const colorMap: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-600 border-blue-100",
+  purple: "bg-purple-50 text-purple-600 border-purple-100",
+  amber: "bg-amber-50 text-amber-600 border-amber-100",
+  red: "bg-red-50 text-red-600 border-red-100",
+  emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  slate: "bg-slate-100 text-slate-600 border-slate-200",
+};
 
-        fetchData();
-    }, []);
+const recentReports = [
+  { name: "Attendance Report – CS301 – Jan 2024", generated: "Jan 23, 2024", format: "PDF", size: "1.2 MB" },
+  { name: "Risk Report – All Students – Jan 2024", generated: "Jan 22, 2024", format: "Excel", size: "3.4 MB" },
+  { name: "Performance Report – Semester 5", generated: "Jan 20, 2024", format: "PDF", size: "2.1 MB" },
+];
 
-    const filteredStudents = students.filter(student => {
-        const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.id.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDept = departmentFilter ? student.department === departmentFilter : true;
-        return matchesSearch && matchesDept;
-    });
-
-    if (loading) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <Code className="text-indigo-600" />
-                        Coding Profiles Report
-                    </h1>
-                    <p className="text-gray-500">Comprehensive view of student performance across competitive programming platforms.</p>
-                </div>
-                <div className="flex gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50">
-                        <Download size={18} />
-                        Export CSV
-                    </button>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by Name or Roll Number..."
-                        className="w-full pl-12 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="w-full md:w-64">
-                    <select
-                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                        value={departmentFilter}
-                        onChange={(e) => setDepartmentFilter(e.target.value)}
-                    >
-                        <option value="">All Departments</option>
-                        <option value="Computer Science (CSE)">CSE</option>
-                        <option value="Electronics (ECE)">ECE</option>
-                        <option value="Mechanical">Mechanical</option>
-                        <option value="Civil">Civil</option>
-                        <option value="AI-DS">AI-DS</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Main Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold">
-                                <th className="px-6 py-4 sticky left-0 bg-gray-50 z-10">Rank</th>
-                                <th className="px-6 py-4 sticky left-[60px] bg-gray-50 z-10 w-64">Student</th>
-                                <th className="px-6 py-4">Branch</th>
-                                <th className="px-6 py-4 text-center border-l border-gray-100">
-                                    HackerRank<br /><span className="text-[10px] text-gray-400">Score / Solved</span>
-                                </th>
-                                <th className="px-6 py-4 text-center border-l border-gray-100">
-                                    LeetCode<br /><span className="text-[10px] text-gray-400">Rating / Solved</span>
-                                </th>
-                                <th className="px-6 py-4 text-center border-l border-gray-100">CodeChef<br /><span className="text-[10px] text-gray-400">Rating</span></th>
-                                <th className="px-6 py-4 text-center border-l border-gray-100">CodeForces<br /><span className="text-[10px] text-gray-400">Rating</span></th>
-                                <th className="px-6 py-4 text-center border-l border-gray-100 bg-indigo-50/50">Overall Score</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredStudents.length > 0 ? (
-                                filteredStudents.map((student, index) => (
-                                    <tr key={student.id} className="hover:bg-gray-50 transition-colors group">
-                                        <td className="px-6 py-4 sticky left-0 bg-white group-hover:bg-gray-50 font-medium text-gray-500">
-                                            #{index + 1}
-                                        </td>
-                                        <td className="px-6 py-4 sticky left-[60px] bg-white group-hover:bg-gray-50">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
-                                                    {student.avatar}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
-                                                        <Link href={`/students/${student.id}`}>{student.name}</Link>
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">{student.id}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
-                                                {student.department.split(' ')[0]}
-                                            </span>
-                                        </td>
-
-                                        {/* HackerRank */}
-                                        <td className="px-6 py-4 text-center border-l border-gray-100">
-                                            <div className="font-medium text-gray-900">
-                                                {student.coding_profile?.hackerrank_score !== undefined ? Math.round(student.coding_profile.hackerrank_score) : '-'}
-                                            </div>
-                                            <div className="text-xs text-gray-500">{student.coding_profile?.hackerrank_solved || 0} Solved</div>
-                                        </td>
-
-                                        {/* LeetCode */}
-                                        <td className="px-6 py-4 text-center border-l border-gray-100">
-                                            <div className="font-medium text-amber-600">
-                                                {student.coding_profile?.leetcode_rating !== undefined ? Math.round(student.coding_profile.leetcode_rating) : '-'}
-                                            </div>
-                                            <div className="text-xs text-gray-500">{student.coding_profile?.leetcode_solved || 0} Solved</div>
-                                        </td>
-
-                                        {/* CodeChef */}
-                                        <td className="px-6 py-4 text-center border-l border-gray-100 text-sm text-gray-700">
-                                            {student.coding_profile?.codechef_rating !== undefined ? Math.round(student.coding_profile.codechef_rating) : '-'}
-                                        </td>
-
-                                        {/* CodeForces */}
-                                        <td className="px-6 py-4 text-center border-l border-gray-100 text-sm text-gray-700">
-                                            {student.coding_profile?.codeforces_rating !== undefined ? Math.round(student.coding_profile.codeforces_rating) : '-'}
-                                        </td>
-
-                                        {/* Overall */}
-                                        <td className="px-6 py-4 text-center border-l border-gray-100 bg-indigo-50/30 group-hover:bg-indigo-50/60 font-bold text-indigo-700">
-                                            {student.coding_profile?.overall_score !== undefined ? Math.round(student.coding_profile.overall_score) : '-'}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
-                                        No students found matching your filters.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+export default function ReportsPage() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
+          <p className="text-sm text-slate-500 mt-1">Generate professional academic reports and export them</p>
         </div>
-    );
+      </div>
+
+      {/* Report Builder */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+        <h3 className="font-bold text-slate-900 mb-5 flex items-center gap-2">
+          <FileBarChart size={18} className="text-emerald-600" /> Custom Report Builder
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Report Type</label>
+            <select className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400">
+              <option>Attendance Report</option>
+              <option>Performance Report</option>
+              <option>Risk Report</option>
+              <option>Assignment Report</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Course / Group</label>
+            <select className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400">
+              <option>All Courses</option>
+              <option>CS301 – DBMS</option>
+              <option>CS302 – OS</option>
+              <option>CS303 – Networks</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Date Range</label>
+            <select className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400">
+              <option>This Month</option>
+              <option>Last Month</option>
+              <option>This Semester</option>
+              <option>Custom Range</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">
+            <FileBarChart size={14} /> Generate Report
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors">
+            <Download size={14} /> Export as PDF
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors">
+            <Download size={14} /> Export as Excel
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl transition-colors">
+            <Printer size={14} /> Print
+          </button>
+        </div>
+      </div>
+
+      {/* Report Types */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {reportTypes.map((rt, i) => (
+          <button key={i} className="text-left bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md hover:border-slate-200 transition-all group">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 border ${colorMap[rt.color]}`}>
+              {rt.icon}
+            </div>
+            <h4 className="font-bold text-slate-900 text-sm mb-1">{rt.title}</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">{rt.desc}</p>
+            <div className="flex items-center gap-1 mt-4 text-xs font-semibold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+              Generate <span>→</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Recent Reports */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100">
+          <h3 className="font-bold text-slate-900 text-sm">Recently Generated Reports</h3>
+        </div>
+        <div className="divide-y divide-slate-50">
+          {recentReports.map((r, i) => (
+            <div key={i} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${r.format === "PDF" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                  <FileText size={16} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{r.name}</p>
+                  <p className="text-xs text-slate-400">{r.generated} · {r.size}</p>
+                </div>
+              </div>
+              <button className="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 font-medium">
+                <Download size={12} /> Download
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

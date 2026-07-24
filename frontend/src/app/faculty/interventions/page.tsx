@@ -1,144 +1,174 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
-import { InterventionFilters } from "@/components/interventions/InterventionFilters";
-import { InterventionBoard } from "@/components/interventions/InterventionBoard";
-import { InterventionCardProps } from "@/components/interventions/InterventionCard";
-import { AssignFacultyModal } from "@/components/interventions/AssignFacultyModal";
-import { SuccessAnimation } from "@/components/interventions/SuccessAnimation";
-import { NewInterventionModal } from "@/components/interventions/NewInterventionModal";
-import apiClient from "@/lib/api";
+import { useState } from "react";
+import { HeartHandshake, Plus, CheckCircle2, Clock, AlertTriangle, MessageSquare, Users, Phone, BookOpen, UserCheck } from "lucide-react";
+
+type InterventionType = "Counselling" | "Phone Call" | "Email" | "Meeting" | "Parent Meeting" | "Academic Support" | "Warning";
+
+const interventions = [
+  {
+    id: 1, student: "Arjun Mehta", roll: "21CS001", type: "Meeting" as InterventionType,
+    date: "2024-01-15", outcome: "Positive", status: "Completed",
+    notes: "Student agreed to attend extra classes and reduce absences. Follow-up scheduled for Jan 22.",
+    followUp: "2024-01-22",
+  },
+  {
+    id: 2, student: "Priya Sharma", roll: "21CS047", type: "Counselling" as InterventionType,
+    date: "2024-01-18", outcome: "In Progress", status: "Active",
+    notes: "Student expressed stress about academic workload. Referred to student counselling center.",
+    followUp: "2024-01-25",
+  },
+  {
+    id: 3, student: "Rohit Kumar", roll: "21CS023", type: "Parent Meeting" as InterventionType,
+    date: "2024-01-12", outcome: "Positive", status: "Completed",
+    notes: "Parents were informed about low attendance. They agreed to support and monitor student schedule.",
+    followUp: "2024-01-28",
+  },
+  {
+    id: 4, student: "Kavya Reddy", roll: "21CS089", type: "Warning" as InterventionType,
+    date: "2024-01-20", outcome: "Pending", status: "Active",
+    notes: "Formal written warning issued. Student to maintain >75% attendance for next 3 weeks.",
+    followUp: "2024-02-10",
+  },
+];
+
+const iconForType = (type: InterventionType) => {
+  const map: Record<InterventionType, React.ReactNode> = {
+    "Counselling": <UserCheck size={16} />,
+    "Phone Call": <Phone size={16} />,
+    "Email": <MessageSquare size={16} />,
+    "Meeting": <Users size={16} />,
+    "Parent Meeting": <Users size={16} />,
+    "Academic Support": <BookOpen size={16} />,
+    "Warning": <AlertTriangle size={16} />,
+  };
+  return map[type];
+};
+
+const outcomeColor = (outcome: string) => {
+  if (outcome === "Positive") return "bg-emerald-100 text-emerald-700 border-emerald-200";
+  if (outcome === "In Progress") return "bg-blue-100 text-blue-700 border-blue-200";
+  return "bg-slate-100 text-slate-600 border-slate-200";
+};
+
+const typeBadge = (type: InterventionType) => {
+  if (type === "Warning") return "bg-red-50 text-red-700 border-red-200";
+  if (type === "Parent Meeting") return "bg-purple-50 text-purple-700 border-purple-200";
+  if (type === "Counselling") return "bg-blue-50 text-blue-700 border-blue-200";
+  return "bg-slate-50 text-slate-700 border-slate-200";
+};
 
 export default function InterventionsPage() {
-  const [pending, setPending] = useState<InterventionCardProps[]>([]);
-  const [inProgress, setInProgress] = useState<InterventionCardProps[]>([]);
-  const [completed, setCompleted] = useState<InterventionCardProps[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    apiClient.get('/analytics/interventions')
-      .then((res) => {
-        const data = res.data;
-        setPending(data.pending || []);
-        setInProgress(data.in_progress || []);
-        setCompleted(data.completed || []);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch interventions:', err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [isNewInterventionOpen, setIsNewInterventionOpen] = useState(false);
-  const [selectedInterventionId, setSelectedInterventionId] = useState<string | null>(null);
-  const [successData, setSuccessData] = useState<{ visible: boolean; teacher: string }>({ visible: false, teacher: "" });
-
-  // -- Handlers --
-
-  const handleCreateIntervention = (intervention: Partial<InterventionCardProps>) => {
-    const newCard: InterventionCardProps = {
-      id: `new-${Date.now()}`,
-      studentName: intervention.studentName || "Unknown",
-      studentInitial: intervention.studentInitial || "UK",
-      studentId: intervention.studentId || "#0000",
-      grade: intervention.grade || "Grade 11",
-      riskLevel: intervention.riskLevel || "High Risk",
-      alertTitle: intervention.alertTitle || "Manual Alert",
-      alertDescription: intervention.alertDescription || "",
-      suggestedAction: intervention.suggestedAction || "Review",
-      status: "Pending",
-    };
-    setPending([newCard, ...pending]);
-  };
-
-  const handleAssignClick = (id: string) => {
-    setSelectedInterventionId(id);
-    setIsAssignModalOpen(true);
-  };
-
-  const handleConfirmAssignment = (teacherName: string) => {
-    if (!selectedInterventionId) return;
-
-    const intervention = pending.find(i => i.id === selectedInterventionId);
-    if (intervention) {
-      setPending(prev => prev.filter(i => i.id !== selectedInterventionId));
-
-      const updatedIntervention: InterventionCardProps = {
-        ...intervention,
-        status: "In Progress",
-        assignedTo: teacherName,
-        actionPlan: "Initial Plan Created",
-        actionPlanDescription: "Faculty assigned for immediate follow-up.",
-        dueDate: "Pending Meeting"
-      };
-      setInProgress(prev => [updatedIntervention, ...prev]);
-      setSuccessData({ visible: true, teacher: teacherName });
-    }
-  };
+  const [showForm, setShowForm] = useState(false);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] space-y-4 relative">
-      {/* Modals & Overlays */}
-      {successData.visible && (
-        <SuccessAnimation
-          message="Intervention Assigned!"
-          subMessage={`Task successfully assigned to ${successData.teacher}`}
-          onComplete={() => setSuccessData({ visible: false, teacher: "" })}
-        />
-      )}
-
-      <AssignFacultyModal
-        isOpen={isAssignModalOpen}
-        onClose={() => setIsAssignModalOpen(false)}
-        onConfirm={handleConfirmAssignment}
-        studentName={pending.find(i => i.id === selectedInterventionId)?.studentName || "Student"}
-      />
-
-      <NewInterventionModal
-        isOpen={isNewInterventionOpen}
-        onClose={() => setIsNewInterventionOpen(false)}
-        onConfirm={handleCreateIntervention}
-      />
-
-      {/* Header */}
-      <section className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-gray-900">Intervention Board</h2>
-          <p className="text-sm font-medium text-gray-500">
-            Manage and track student support actions based on risk predictions.
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <HeartHandshake size={22} className="text-emerald-600" /> Interventions
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Log, track, and monitor all student support interventions</p>
         </div>
-        <button
-          onClick={() => setIsNewInterventionOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={16} />
-          New Intervention
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-colors">
+          <Plus size={14} /> Log Intervention
         </button>
-      </section>
+      </div>
 
-      {/* Filters */}
-      <section>
-        <InterventionFilters />
-      </section>
-
-      {/* Board */}
-      <section className="flex-1 min-h-0">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Total Interventions", value: 28, icon: <HeartHandshake size={18} />, color: "emerald" },
+          { label: "Active / Ongoing", value: 8, icon: <Clock size={18} />, color: "blue" },
+          { label: "Completed", value: 20, icon: <CheckCircle2 size={18} />, color: "green" },
+          { label: "Positive Outcomes", value: "71%", icon: <AlertTriangle size={18} />, color: "amber" },
+        ].map((s, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
+              s.color === "emerald" ? "bg-emerald-50 text-emerald-600" :
+              s.color === "blue" ? "bg-blue-50 text-blue-600" :
+              s.color === "green" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+            }`}>{s.icon}</div>
+            <p className="text-xs text-slate-500 font-medium">{s.label}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1">{s.value}</p>
           </div>
-        ) : (
-          <InterventionBoard
-            pending={pending}
-            inProgress={inProgress}
-            completed={completed}
-            onAssign={handleAssignClick}
-          />
-        )}
-      </section>
+        ))}
+      </div>
+
+      {/* Intervention Cards */}
+      <div className="space-y-4">
+        {interventions.map((item) => (
+          <div key={item.id} className={`bg-white rounded-2xl border border-slate-100 shadow-sm p-6 ${item.status === "Active" ? "border-l-4 border-l-blue-400" : "border-l-4 border-l-emerald-400"}`}>
+            <div className="flex flex-wrap items-start gap-3 mb-3">
+              <div className={`p-2 rounded-xl border ${typeBadge(item.type)}`}>
+                {iconForType(item.type)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">{item.student}</h3>
+                  <span className="text-xs font-mono text-slate-400">{item.roll}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${typeBadge(item.type)}`}>{item.type}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${outcomeColor(item.outcome)}`}>{item.outcome}</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Date: {item.date} · Follow-up: {item.followUp}</p>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${item.status === "Active" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
+                {item.status}
+              </span>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-sm text-slate-600">
+              <span className="text-xs font-semibold text-slate-400 uppercase mr-2">Notes:</span>
+              {item.notes}
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <button className="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-100">
+                Update Status
+              </button>
+              <button className="text-xs px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg font-medium hover:bg-emerald-100">
+                Add Follow-up
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Log Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-slate-900 mb-5">Log New Intervention</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Student</label>
+                  <input type="text" placeholder="Student name or roll no." className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Type</label>
+                  <select className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400">
+                    <option>Counselling</option><option>Phone Call</option><option>Meeting</option>
+                    <option>Parent Meeting</option><option>Academic Support</option><option>Warning</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Notes</label>
+                <textarea rows={4} placeholder="Describe the intervention, observations, and outcome..." className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400 resize-none" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Follow-up Date</label>
+                <input type="date" className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 outline-none focus:border-emerald-400" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors">Log Intervention</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -39,11 +39,15 @@ export default function DeanLayout({ children }: { children: React.ReactNode }) 
       router.push("/login");
       return;
     }
-    if (user?.role !== "DEAN") {
+    if (user?.role !== "DEAN" && user?.role !== "ADMIN") {
       if (user?.role === "STUDENT") router.push("/student/dashboard");
-      else if (user?.role === "FACULTY" || user?.role === "ADMIN") router.push("/faculty/dashboard");
+      else if (user?.role === "FACULTY") router.push("/faculty/dashboard");
+      else {
+        logout();
+        router.push("/login");
+      }
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, logout]);
 
   if (!isAuthenticated || user?.role !== "DEAN") {
     return null;

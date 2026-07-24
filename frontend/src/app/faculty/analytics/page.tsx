@@ -310,6 +310,80 @@ export default function AnalyticsPage() {
                 </div>
 
             </div>
+
+            {/* Leaderboards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Top Students */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+                        <TrendingUp size={16} className="text-emerald-600" /> Top Performers
+                    </h3>
+                    <div className="space-y-2">
+                        {[
+                            { name: "Aditi Singh", roll: "21CS002", score: 96 },
+                            { name: "Meera Nair", roll: "21CS004", score: 94 },
+                            { name: "Kiran Kumar", roll: "21CS015", score: 91 },
+                            { name: "Anjali Rao", roll: "21CS031", score: 89 },
+                        ].map((s, i) => (
+                            <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                                <span className="text-sm font-black text-emerald-600 w-5 text-center">#{i + 1}</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-slate-800 truncate">{s.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono">{s.roll}</p>
+                                </div>
+                                <span className="text-sm font-bold text-emerald-700">{s.score}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Most Improved */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+                        <TrendingUp size={16} className="text-blue-600" /> Most Improved
+                    </h3>
+                    <div className="space-y-2">
+                        {[
+                            { name: "Raj Patel", roll: "21CS005", improvement: "+18%" },
+                            { name: "Vikas Reddy", roll: "21CS003", improvement: "+14%" },
+                            { name: "Rohit Kumar", roll: "21CS023", improvement: "+9%" },
+                            { name: "Sanjay Patel", roll: "21CS012", improvement: "+7%" },
+                        ].map((s, i) => (
+                            <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+                                <span className="text-sm font-black text-blue-600 w-5 text-center">#{i + 1}</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-slate-800 truncate">{s.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono">{s.roll}</p>
+                                </div>
+                                <span className="text-sm font-bold text-blue-700">{s.improvement}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Needs Attention */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+                        <AlertTriangle size={16} className="text-red-500" /> Needs Attention
+                    </h3>
+                    <div className="space-y-2">
+                        {[
+                            { name: "Arjun Mehta", roll: "21CS001", issue: "51% Attendance" },
+                            { name: "Priya Sharma", roll: "21CS047", issue: "Declining Grades" },
+                            { name: "Rohit Kumar", roll: "21CS023", issue: "Failed CS303" },
+                            { name: "Kavya Reddy", roll: "21CS089", issue: "Low Engagement" },
+                        ].map((s, i) => (
+                            <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-red-50 border border-red-100">
+                                <span className="text-sm font-black text-red-500 w-5 text-center">!</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-slate-800 truncate">{s.name}</p>
+                                    <p className="text-[10px] text-red-500 font-medium">{s.issue}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
