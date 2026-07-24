@@ -4,6 +4,17 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { studentService, type RiskDetails } from "@/services/student";
 import { Loader2, AlertTriangle, TrendingUp, TrendingDown, Info, ShieldCheck, Clock } from "lucide-react";
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from "recharts";
+
+const historicalRiskData = [
+  { month: 'Sep', score: 15 },
+  { month: 'Oct', score: 25 },
+  { month: 'Nov', score: 20 },
+  { month: 'Dec', score: 35 },
+  { month: 'Jan', score: 45 },
+];
 
 export default function RiskStatusPage() {
     const { user } = useAuthStore();
@@ -95,6 +106,22 @@ export default function RiskStatusPage() {
                             <span>{data.risk_trend === 'up' ? 'Worsening' : data.risk_trend === 'down' ? 'Improving' : 'Stable'}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Historical Risk Trend */}
+            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[300px] flex flex-col">
+                <h3 className="font-semibold text-gray-900 mb-6">Historical Risk Trend</h3>
+                <div className="flex-1 w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={historicalRiskData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} domain={[0, 100]} dx={-10} />
+                            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                            <Line type="monotone" dataKey="score" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, fill: '#ef4444', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 

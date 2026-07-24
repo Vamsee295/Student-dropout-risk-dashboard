@@ -67,11 +67,11 @@ export default function LoginPage() {
             };
             login(user as any, data.access_token);
             if (data.role === "STUDENT") {
-                router.push("/student-dashboard");
+                router.push("/student/dashboard");
             } else if (data.role === "DEAN") {
                 router.push("/dean/dashboard");
             } else {
-                router.push("/dashboard");
+                router.push("/faculty/dashboard");
             }
         } catch (err: unknown) {
             const detail = err && typeof err === "object" && "response" in err && err.response && typeof err.response === "object" && "data" in err.response

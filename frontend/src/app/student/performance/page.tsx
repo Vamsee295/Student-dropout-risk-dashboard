@@ -11,7 +11,13 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer
+    ResponsiveContainer,
+    RadarChart,
+    PolarGrid,
+    PolarAngleAxis,
+    PolarRadiusAxis,
+    Radar,
+    Legend
 } from "recharts";
 
 interface SubjectPerformance {
@@ -82,6 +88,13 @@ export default function PerformancePage() {
         gpa: Number(sem.gpa.toFixed(2))
     })).reverse(); // Assuming API might return sorted desc, we want asc for a chron chart
 
+    // Prepare data for Radar Chart
+    const radarData = currentSemData?.subjects.map(subject => ({
+        subject: subject.course_name.substring(0, 15) + (subject.course_name.length > 15 ? '...' : ''),
+        marks: subject.total_marks,
+        fullMark: 100
+    })) || [];
+
     return (
         <div className="space-y-6 text-gray-900 max-w-[1240px] mx-auto pb-8">
             <div className="flex items-center justify-between">
@@ -142,6 +155,22 @@ export default function PerformancePage() {
                                     fill="url(#colorGpa)"
                                 />
                             </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Radar Chart: Subject Strengths */}
+                <div className="lg:col-span-1 rounded-sm border border-gray-200 bg-white p-6 shadow-sm flex flex-col h-[320px]">
+                    <h3 className="text-[13px] font-medium text-gray-800 mb-2">Subject Performance Analysis</h3>
+                    <div className="flex-1 w-full relative -mt-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
+                                <PolarGrid stroke="#e5e7eb" />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 10 }} />
+                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                <Radar name="Marks" dataKey="marks" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} />
+                                <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                            </RadarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>

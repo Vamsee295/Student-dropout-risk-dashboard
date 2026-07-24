@@ -11,7 +11,9 @@ import {
     CheckCircle,
     Clock,
     BookOpen,
-    Calendar
+    Calendar,
+    BrainCircuit,
+    Lightbulb
 } from "lucide-react";
 import {
     AreaChart,
@@ -124,8 +126,10 @@ export default function StudentDashboardOverview() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* Engagement Trend Chart */}
-                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                {/* Left Column (Spans 2/3) */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Engagement Trend Chart */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-semibold text-gray-900">Engagement Trend</h3>
                         <select className="text-sm border-gray-200 rounded-lg text-gray-500">
@@ -158,6 +162,72 @@ export default function StudentDashboardOverview() {
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
+                </div>
+
+                {/* AI Insights & Recommendations */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Risk Summary */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <BrainCircuit size={18} className="text-indigo-600" />
+                            AI Risk Summary
+                        </h3>
+                        <div className="flex-1 space-y-4">
+                            <div className="h-full p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                                <p className="text-sm text-indigo-900 font-medium mb-1">
+                                    Why is my risk {data.risk_level.toLowerCase()}?
+                                </p>
+                                <ul className="list-disc list-inside text-sm text-indigo-700 space-y-1 mt-2">
+                                    {data.attendance_rate < 75 && <li>Attendance has dropped below 75%</li>}
+                                    {data.avg_marks < 60 && <li>Average marks are concerning in core subjects</li>}
+                                    {data.engagement_score < 50 && <li>LMS activity has decreased this month</li>}
+                                    {data.upcoming_deadlines.length > 2 && <li>Multiple pending assignments stacking up</li>}
+                                    {data.attendance_rate >= 75 && data.avg_marks >= 60 && data.engagement_score >= 50 && <li>You are performing well across all metrics</li>}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Actionable Recommendations */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <Lightbulb size={18} className="text-amber-500" />
+                            Recommended Actions
+                        </h3>
+                        <div className="space-y-3">
+                            {data.attendance_rate < 75 && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                                    <div className="mt-0.5 h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+                                    <p className="text-sm text-gray-700">Attend at least 3 more classes this week to restore attendance threshold.</p>
+                                </div>
+                            )}
+                            {data.upcoming_deadlines.length > 0 && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                                    <div className="mt-0.5 h-2 w-2 rounded-full bg-amber-500 flex-shrink-0" />
+                                    <p className="text-sm text-gray-700">Complete &apos;{data.upcoming_deadlines[0]?.title}&apos; before the deadline.</p>
+                                </div>
+                            )}
+                            {data.engagement_score < 50 && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                                    <div className="mt-0.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                                    <p className="text-sm text-gray-700">Log into the LMS and participate in the recent discussion forum.</p>
+                                </div>
+                            )}
+                            {data.risk_level === 'High Risk' && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-100">
+                                    <div className="mt-0.5 h-2 w-2 rounded-full bg-red-500 flex-shrink-0" />
+                                    <p className="text-sm text-red-700 font-medium">Schedule a meeting with your Faculty Advisor immediately.</p>
+                                </div>
+                            )}
+                            {data.risk_level === 'Low Risk' && data.attendance_rate >= 75 && (
+                                <div className="flex items-start gap-3 p-3 rounded-lg bg-green-50 border border-green-100">
+                                    <div className="mt-0.5 h-2 w-2 rounded-full bg-green-500 flex-shrink-0" />
+                                    <p className="text-sm text-green-700 font-medium">Keep up the good work! You are on track for a great semester.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
                 </div>
 
                 {/* Right Column: Deadlines & Attendance */}

@@ -9,7 +9,7 @@ export default function AssignmentsPage() {
     const { user } = useAuthStore();
     const [data, setData] = useState<AssignmentProgress | null>(null);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+    const [filter, setFilter] = useState<'all' | 'upcoming' | 'overdue' | 'completed'>('all');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -47,7 +47,8 @@ export default function AssignmentsPage() {
 
     const filteredAssignments = data.assignments.filter(a => {
         if (filter === 'completed') return ['Submitted', 'Graded'].includes(a.status);
-        if (filter === 'pending') return ['Pending', 'Overdue'].includes(a.status);
+        if (filter === 'upcoming') return a.status === 'Pending';
+        if (filter === 'overdue') return a.status === 'Overdue';
         return true;
     });
 
@@ -66,10 +67,16 @@ export default function AssignmentsPage() {
                         All
                     </button>
                     <button
-                        onClick={() => setFilter('pending')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'pending' ? 'bg-amber-50 text-amber-700' : 'text-gray-500 hover:text-gray-900'}`}
+                        onClick={() => setFilter('upcoming')}
+                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'upcoming' ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:text-gray-900'}`}
                     >
-                        Pending
+                        Upcoming
+                    </button>
+                    <button
+                        onClick={() => setFilter('overdue')}
+                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'overdue' ? 'bg-red-50 text-red-700' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                        Overdue
                     </button>
                     <button
                         onClick={() => setFilter('completed')}

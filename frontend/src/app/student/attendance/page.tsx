@@ -66,6 +66,31 @@ export default function AttendancePage() {
         { week: 'Current', pct },
     ];
 
+    // Subject-wise grouping
+    const subjectStats = data.reduce((acc, record) => {
+        if (!acc[record.course_name]) {
+            acc[record.course_name] = { total: 0, attended: 0 };
+        }
+        acc[record.course_name].total += 1;
+        if (record.status === 'Present') {
+            acc[record.course_name].attended += 1;
+        }
+        return acc;
+    }, {} as Record<string, { total: number, attended: number }>);
+
+    const subjectBreakdown = Object.entries(subjectStats).map(([course, stats]) => {
+        const perc = (stats.attended / stats.total) * 100;
+        // Formula: X >= 3T - 4A for 75% threshold
+        const needed = Math.ceil((3 * stats.total) - (4 * stats.attended));
+        return {
+            course,
+            total: stats.total,
+            attended: stats.attended,
+            percentage: perc,
+            needed: needed > 0 ? needed : 0
+        };
+    });
+
     return (
         <div className="space-y-6">
             <div>
@@ -142,6 +167,50 @@ export default function AttendancePage() {
                             />
                         </AreaChart>
                     </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Subject-wise Breakdown */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                    <h3 className="font-semibold text-gray-900">Subject-wise Breakdown</h3>
+                    <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Target: 75%</span>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-gray-500 uppercase bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 font-medium">Subject</th>
+                                <th className="px-6 py-3 font-medium text-center">Attended / Total</th>
+                                <th className="px-6 py-3 font-medium text-center">Percentage</th>
+                                <th className="px-6 py-3 font-medium text-center">Classes Needed (to reach 75%)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {subjectBreakdown.map((sub, idx) => (
+                                <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-6 py-4 font-medium text-gray-900">{sub.course}</td>
+                                    <td className="px-6 py-4 text-center text-gray-600">{sub.attended} / {sub.total}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`font-semibold ${sub.percentage >= 75 ? 'text-green-600' : 'text-red-600'}`}>
+                                            {sub.percentage.toFixed(1)}%
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        {sub.needed > 0 ? (
+                                            <span className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded-full text-xs">
+                                                Attend next {sub.needed} classes
+                                            </span>
+                                        ) : (
+                                            <span className="text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full text-xs">
+                                                On track
+                                            </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
