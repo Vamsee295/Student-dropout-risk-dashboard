@@ -1,183 +1,183 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuthStore } from "@/store/useAuthStore";
-import { studentService, type AssignmentProgress } from "@/services/student";
-import { Loader2, CheckCircle, Clock, AlertCircle, FileText, Calendar } from "lucide-react";
+import { useState } from "react";
+import { ClipboardList, Clock, CheckCircle2, XCircle, AlertCircle, Upload, ChevronRight, Download } from "lucide-react";
+
+type FilterType = "all" | "upcoming" | "submitted" | "graded" | "late";
+
+const assignments = [
+  {
+    id: 1, title: "DBMS Database Design Project", course: "CS301", due: "Jan 24, 2024",
+    dueTime: "11:59 PM", status: "pending", marks: null, maxMarks: 50,
+    submittedOn: null, feedback: null, urgent: true,
+    description: "Design a normalized relational database for a university management system. Include ER diagram, schema, and sample queries.",
+  },
+  {
+    id: 2, title: "OS Shell Scripting Assignment", course: "CS302", due: "Jan 20, 2024",
+    dueTime: "11:59 PM", status: "submitted", marks: null, maxMarks: 30,
+    submittedOn: "Jan 19, 2024", feedback: null, urgent: false,
+    description: "Write shell scripts for process management, file operations, and system monitoring.",
+  },
+  {
+    id: 3, title: "ML Feature Engineering Report", course: "CS303", due: "Jan 18, 2024",
+    dueTime: "11:59 PM", status: "graded", marks: 38, maxMarks: 50,
+    submittedOn: "Jan 18, 2024", feedback: "Good analysis of features. Improve your SHAP visualization and add more interpretation.", urgent: false,
+    description: "Apply feature engineering techniques to the provided dataset and document your approach.",
+  },
+  {
+    id: 4, title: "Networks Protocol Analysis", course: "CS304", due: "Jan 15, 2024",
+    dueTime: "11:59 PM", status: "late", marks: 20, maxMarks: 40,
+    submittedOn: "Jan 17, 2024", feedback: "Submitted 2 days late. Deducted 5 marks. Good analysis otherwise.", urgent: false,
+    description: "Analyze TCP/IP protocol behavior using Wireshark captures.",
+  },
+  {
+    id: 5, title: "Math III Problem Set 3", course: "MA301", due: "Jan 28, 2024",
+    dueTime: "11:59 PM", status: "upcoming", marks: null, maxMarks: 20,
+    submittedOn: null, feedback: null, urgent: false,
+    description: "Solve complex analysis problems from Chapter 5-7.",
+  },
+];
+
+const statusConfig = {
+  pending: { label: "Pending", color: "bg-amber-100 text-amber-700 border-amber-200", icon: <AlertCircle size={14} />, border: "border-l-amber-500" },
+  submitted: { label: "Submitted", color: "bg-blue-100 text-blue-700 border-blue-200", icon: <CheckCircle2 size={14} />, border: "border-l-blue-500" },
+  graded: { label: "Graded", color: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: <CheckCircle2 size={14} />, border: "border-l-emerald-500" },
+  late: { label: "Late Submission", color: "bg-red-100 text-red-700 border-red-200", icon: <XCircle size={14} />, border: "border-l-red-500" },
+  upcoming: { label: "Upcoming", color: "bg-slate-100 text-slate-600 border-slate-200", icon: <Clock size={14} />, border: "border-l-slate-400" },
+};
 
 export default function AssignmentsPage() {
-    const { user } = useAuthStore();
-    const [data, setData] = useState<AssignmentProgress | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'all' | 'upcoming' | 'overdue' | 'completed'>('all');
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [submitting, setSubmitting] = useState<number | null>(null);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (user?.student_id) {
-                try {
-                    const assignmentsData = await studentService.getAssignments(user.student_id);
-                    setData(assignmentsData);
-                } catch (error) {
-                    console.error("Failed to fetch assignments data:", error);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
+  const filtered = filter === "all" ? assignments : assignments.filter((a) => a.status === filter);
 
-        fetchData();
-    }, [user]);
+  const stats = {
+    total: assignments.length,
+    pending: assignments.filter((a) => a.status === "pending").length,
+    submitted: assignments.filter((a) => a.status === "submitted").length,
+    graded: assignments.filter((a) => a.status === "graded").length,
+    late: assignments.filter((a) => a.status === "late").length,
+  };
 
-    if (loading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            </div>
-        );
-    }
+  const avgScore = assignments
+    .filter((a) => a.marks !== null)
+    .reduce((acc, a) => acc + (a.marks! / a.maxMarks) * 100, 0) /
+    assignments.filter((a) => a.marks !== null).length;
 
-    if (!data) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <AlertCircle size={48} className="mb-4 text-gray-400" />
-                <p className="text-lg font-medium">No assignment data found.</p>
-            </div>
-        );
-    }
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Assignments</h1>
+        <p className="text-sm text-slate-400 mt-0.5">Track all your assignments, submissions, and grades</p>
+      </div>
 
-    const filteredAssignments = data.assignments.filter(a => {
-        if (filter === 'completed') return ['Submitted', 'Graded'].includes(a.status);
-        if (filter === 'upcoming') return a.status === 'Pending';
-        if (filter === 'overdue') return a.status === 'Overdue';
-        return true;
-    });
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {[
+          { label: "Total", value: stats.total, color: "slate" },
+          { label: "Pending", value: stats.pending, color: "amber" },
+          { label: "Submitted", value: stats.submitted, color: "blue" },
+          { label: "Graded", value: stats.graded, color: "emerald" },
+          { label: "Avg Score", value: `${Math.round(avgScore)}%`, color: "purple" },
+        ].map((s, i) => (
+          <div key={i} className={`bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center`}>
+            <p className={`text-2xl font-black ${
+              s.color === "amber" ? "text-amber-600" : s.color === "blue" ? "text-blue-600" :
+              s.color === "emerald" ? "text-emerald-600" : s.color === "purple" ? "text-purple-600" : "text-slate-800"
+            }`}>{s.value}</p>
+            <p className="text-[10px] text-slate-400 font-medium mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+      {/* Filter Tabs */}
+      <div className="flex gap-2 bg-white rounded-xl border border-slate-200 p-1 w-fit flex-wrap">
+        {(["all", "upcoming", "pending", "submitted", "graded", "late"] as FilterType[]).map((tab) => (
+          <button key={tab} onClick={() => setFilter(tab)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all capitalize ${
+              filter === tab ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`}>
+            {tab === "all" ? "All" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Assignment Cards */}
+      <div className="space-y-4">
+        {filtered.map((a) => {
+          const conf = statusConfig[a.status as keyof typeof statusConfig];
+          return (
+            <div key={a.id} className={`bg-white rounded-2xl border border-l-4 border-slate-100 shadow-sm p-5 ${conf.border} ${a.urgent ? "ring-1 ring-red-200" : ""}`}>
+              {a.urgent && (
+                <div className="flex items-center gap-2 mb-3 text-xs font-bold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5 w-fit">
+                  <AlertCircle size={13} /> Due Tonight — Submit Now!
+                </div>
+              )}
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
-                    <p className="text-gray-500">Track pending tasks and submissions.</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-base font-bold text-slate-900">{a.title}</h3>
+                  </div>
+                  <p className="text-xs text-slate-400">{a.course} · Due: {a.due} {a.dueTime} · Max: {a.maxMarks} marks</p>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-1 flex">
-                    <button
-                        onClick={() => setFilter('all')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'all' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
-                    >
-                        All
-                    </button>
-                    <button
-                        onClick={() => setFilter('upcoming')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'upcoming' ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:text-gray-900'}`}
-                    >
-                        Upcoming
-                    </button>
-                    <button
-                        onClick={() => setFilter('overdue')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'overdue' ? 'bg-red-50 text-red-700' : 'text-gray-500 hover:text-gray-900'}`}
-                    >
-                        Overdue
-                    </button>
-                    <button
-                        onClick={() => setFilter('completed')}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'completed' ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:text-gray-900'}`}
-                    >
-                        Completed
-                    </button>
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1 ${conf.color}`}>
+                  {conf.icon} {conf.label}
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-500 mb-4 leading-relaxed">{a.description}</p>
+
+              {/* Marks & Feedback */}
+              {a.marks !== null && (
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-emerald-800">Score: {a.marks}/{a.maxMarks} ({Math.round((a.marks / a.maxMarks) * 100)}%)</p>
+                  </div>
+                  {a.feedback && <p className="text-xs text-emerald-700"><strong>Feedback:</strong> {a.feedback}</p>}
                 </div>
-            </div>
+              )}
 
-            {/* Progress Card */}
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900">Completion Progress</h3>
-                    <span className="text-2xl font-bold text-indigo-600">{data.completion_percentage.toFixed(0)}%</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-3 mb-4">
-                    <div
-                        className="bg-indigo-600 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${data.completion_percentage}%` }}
-                    />
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-center divide-x divide-gray-100">
-                    <div>
-                        <p className="text-xs text-gray-500 uppercase">Total</p>
-                        <p className="text-lg font-bold text-gray-900">{data.total}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500 uppercase">Completed</p>
-                        <p className="text-lg font-bold text-green-600">{data.completed}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-500 uppercase">Pending</p>
-                        <p className="text-lg font-bold text-amber-600">{data.pending}</p>
-                    </div>
-                </div>
-            </div>
+              {/* Submitted info */}
+              {a.submittedOn && (
+                <p className="text-xs text-slate-400 mb-3 flex items-center gap-1.5">
+                  <CheckCircle2 size={12} className="text-emerald-500" /> Submitted on {a.submittedOn}
+                </p>
+              )}
 
-            {/* Assignments List */}
-            <div className="grid gap-4">
-                {filteredAssignments.length > 0 ? (
-                    filteredAssignments.map((item, idx) => {
-                        const isLate = item.status === 'Overdue';
-                        const isCompleted = ['Submitted', 'Graded'].includes(item.status);
-
-                        return (
-                            <div
-                                key={idx}
-                                className={`bg-white p-5 rounded-xl border shadow-sm transition-all hover:shadow-md flex items-start gap-4 ${isLate ? 'border-l-4 border-l-red-500' : isCompleted ? 'border-l-4 border-l-green-500' : 'border-gray-100'}`}
-                            >
-                                <div className={`mt-1 h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-green-100 text-green-600' :
-                                        isLate ? 'bg-red-100 text-red-600' :
-                                            'bg-amber-100 text-amber-600'
-                                    }`}>
-                                    {isCompleted ? <CheckCircle size={20} /> :
-                                        isLate ? <AlertCircle size={20} /> :
-                                            <Clock size={20} />}
-                                </div>
-
-                                <div className="flex-1">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">{item.assessment.title}</h3>
-                                            <p className="text-sm text-gray-500">{item.assessment.course_name} • {item.assessment.type}</p>
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${isCompleted ? 'bg-green-50 text-green-700' :
-                                                isLate ? 'bg-red-50 text-red-700' :
-                                                    'bg-amber-50 text-amber-700'
-                                            }`}>
-                                            {item.status}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-                                        <div className="flex items-center gap-1.5">
-                                            <Calendar size={14} />
-                                            <span>Due: {new Date(item.assessment.due_date).toLocaleDateString()}</span>
-                                        </div>
-                                        {item.submission_date && (
-                                            <div className="flex items-center gap-1.5 text-green-600">
-                                                <CheckCircle size={14} />
-                                                <span>Submitted: {new Date(item.submission_date).toLocaleDateString()}</span>
-                                            </div>
-                                        )}
-                                        {item.assessment.total_marks > 0 && (
-                                            <div className="flex items-center gap-1.5 ml-auto font-medium text-gray-700">
-                                                <FileText size={14} />
-                                                <span>Score: {item.obtained_marks !== null ? item.obtained_marks : '-'}/{item.assessment.total_marks}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
-                ) : (
-                    <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                        <p className="text-gray-500">No {filter !== 'all' ? filter : ''} assignments found.</p>
-                    </div>
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2">
+                {(a.status === "pending" || a.status === "upcoming") && (
+                  <button
+                    onClick={() => setSubmitting(submitting === a.id ? null : a.id)}
+                    className="flex items-center gap-1.5 text-xs px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
+                    <Upload size={12} /> Submit Assignment
+                  </button>
                 )}
+                <button className="flex items-center gap-1.5 text-xs px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-100">
+                  <Download size={12} /> Resources
+                </button>
+              </div>
+
+              {/* Upload drawer */}
+              {submitting === a.id && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-xs font-bold text-blue-900 mb-3">Upload Submission</p>
+                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-6 text-center bg-white">
+                    <Upload size={24} className="text-blue-400 mx-auto mb-2" />
+                    <p className="text-xs text-blue-600 font-medium">Drop files here or click to browse</p>
+                    <p className="text-[10px] text-slate-400 mt-1">PDF, DOCX, ZIP — Max 50 MB</p>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={() => setSubmitting(null)} className="flex-1 py-2 text-xs font-medium border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50">Cancel</button>
+                    <button className="flex-1 py-2 text-xs font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700">Submit</button>
+                  </div>
+                </div>
+              )}
             </div>
-        </div>
-    );
+          );
+        })}
+      </div>
+    </div>
+  );
 }

@@ -1,257 +1,199 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuthStore } from "@/store/useAuthStore";
-import { studentService } from "@/services/student";
-import { Loader2, Calendar, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
-} from "recharts";
+import { useState } from "react";
+import { CalendarCheck, AlertTriangle, TrendingUp, CheckCircle2, Calculator } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-interface AttendanceRecord {
-    id: number;
-    course_id: string;
-    course_name: string;
-    date: string;
-    status: string;
+const subjectAttendance = [
+  { subject: "DBMS", code: "CS301", total: 28, present: 23, pct: 82, faculty: "Dr. Ramesh Kumar", color: "#3b82f6" },
+  { subject: "OS", code: "CS302", total: 26, present: 21, pct: 81, faculty: "Prof. Ananya Sharma", color: "#6366f1" },
+  { subject: "Machine Learning", code: "CS303", total: 25, present: 17, pct: 68, faculty: "Dr. Vikram Nair", color: "#ef4444", warning: true },
+  { subject: "Networks", code: "CS304", total: 27, present: 20, pct: 74, faculty: "Prof. Deepa Pillai", color: "#f59e0b", borderline: true },
+  { subject: "Math III", code: "MA301", total: 24, present: 19, pct: 79, faculty: "Dr. Srinivas Rao", color: "#10b981" },
+];
+
+const monthlyData = [
+  { month: "Aug", pct: 88 }, { month: "Sep", pct: 84 },
+  { month: "Oct", pct: 79 }, { month: "Nov", pct: 71 },
+  { month: "Dec", pct: 77 }, { month: "Jan", pct: 82 },
+];
+
+// 75% calculator for ML
+const mlTotal = 25;
+const mlPresent = 17;
+const mlTarget = 0.75;
+
+function classesNeeded(present: number, total: number, target: number): number {
+  let n = 0;
+  while ((present + n) / (total + n) < target) n++;
+  return n;
 }
 
+const mlNeeded = classesNeeded(mlPresent, mlTotal, mlTarget);
+
+const calendarWeeks = [
+  ["P", "P", "A", "P", "P"],
+  ["P", "A", "P", "P", "A"],
+  ["P", "P", "P", "A", "P"],
+  ["A", "P", "P", "P", "P"],
+  ["P", "P", "A", "P", "P"],
+];
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
 export default function AttendancePage() {
-    const { user } = useAuthStore();
-    const [data, setData] = useState<AttendanceRecord[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [calc, setCalc] = useState({ present: mlPresent, total: mlTotal, target: 75 });
+  const needed = classesNeeded(calc.present, calc.total, calc.target / 100);
+  const currentPct = calc.total > 0 ? Math.round((calc.present / calc.total) * 100) : 0;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (user?.student_id) {
-                try {
-                    const attendanceData = await studentService.getAttendance(user.student_id);
-                    setData(attendanceData);
-                } catch (error) {
-                    console.error("Failed to fetch attendance data:", error);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Attendance Tracker</h1>
+        <p className="text-sm text-slate-400 mt-0.5">Semester 5 · January 2024</p>
+      </div>
 
-        fetchData();
-    }, [user]);
+      {/* Overview Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Overall Attendance", value: "78%", icon: <CalendarCheck size={20} />, color: "blue" },
+          { label: "Classes Attended", value: "100/128", icon: <CheckCircle2 size={20} />, color: "emerald" },
+          { label: "Below 75% Subjects", value: "1", icon: <AlertTriangle size={20} />, color: "red" },
+          { label: "Borderline Subjects", value: "1", icon: <TrendingUp size={20} />, color: "amber" },
+        ].map((s, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
+              s.color === "blue" ? "bg-blue-50 text-blue-600" :
+              s.color === "emerald" ? "bg-emerald-50 text-emerald-600" :
+              s.color === "red" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"
+            }`}>{s.icon}</div>
+            <p className="text-xs text-slate-400 font-medium">{s.label}</p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">{s.value}</p>
+          </div>
+        ))}
+      </div>
 
-    if (loading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            </div>
-        );
-    }
-
-    // Calculate stats
-    const totalClasses = data.length;
-    const attended = data.filter(r => r.status === 'Present').length;
-    const percentage = totalClasses > 0 ? (attended / totalClasses) * 100 : 0;
-
-    const pct = Math.round(percentage);
-    const trendData = [
-        { week: 'Week 1', pct: Math.min(100, pct + 8) },
-        { week: 'Week 2', pct: Math.min(100, pct + 4) },
-        { week: 'Week 3', pct: Math.min(100, pct + 6) },
-        { week: 'Week 4', pct: Math.min(100, pct + 1) },
-        { week: 'Current', pct },
-    ];
-
-    // Subject-wise grouping
-    const subjectStats = data.reduce((acc, record) => {
-        if (!acc[record.course_name]) {
-            acc[record.course_name] = { total: 0, attended: 0 };
-        }
-        acc[record.course_name].total += 1;
-        if (record.status === 'Present') {
-            acc[record.course_name].attended += 1;
-        }
-        return acc;
-    }, {} as Record<string, { total: number, attended: number }>);
-
-    const subjectBreakdown = Object.entries(subjectStats).map(([course, stats]) => {
-        const perc = (stats.attended / stats.total) * 100;
-        // Formula: X >= 3T - 4A for 75% threshold
-        const needed = Math.ceil((3 * stats.total) - (4 * stats.attended));
-        return {
-            course,
-            total: stats.total,
-            attended: stats.attended,
-            percentage: perc,
-            needed: needed > 0 ? needed : 0
-        };
-    });
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Attendance Tracker</h1>
-                <p className="text-gray-500">Monitor your daily attendance and trends.</p>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Total Classes</p>
-                        <h3 className="text-3xl font-bold text-gray-900">{totalClasses}</h3>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded-full text-blue-600">
-                        <Calendar size={24} />
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Attended</p>
-                        <h3 className="text-3xl font-bold text-green-600">{attended}</h3>
-                    </div>
-                    <div className="bg-green-50 p-3 rounded-full text-green-600">
-                        <CheckCircle size={24} />
-                    </div>
-                </div>
-
-                <div className={`p-6 rounded-xl border shadow-sm flex items-center justify-between ${percentage < 75 ? 'bg-red-50 border-red-100' : 'bg-white border-gray-100'}`}>
-                    <div>
-                        <p className={`text-sm font-medium ${percentage < 75 ? 'text-red-600' : 'text-gray-500'}`}>Overall Percentage</p>
-                        <h3 className={`text-3xl font-bold ${percentage < 75 ? 'text-red-700' : 'text-indigo-600'}`}>
-                            {percentage.toFixed(1)}%
-                        </h3>
-                        {percentage < 75 && (
-                            <p className="text-xs text-red-600 flex items-center mt-1">
-                                <AlertTriangle size={12} className="mr-1" />
-                                Below 75% Requirement
-                            </p>
-                        )}
-                    </div>
-                    <div className={`p-3 rounded-full ${percentage < 75 ? 'bg-red-200 text-red-700' : 'bg-indigo-50 text-indigo-600'}`}>
-                        <Clock size={24} />
-                    </div>
-                </div>
-            </div>
-
-            {/* Trend Chart */}
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <h3 className="font-semibold text-gray-900 mb-6">Attendance Trend (Last 5 Weeks)</h3>
-                <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={trendData}>
-                            <defs>
-                                <linearGradient id="colorAtt" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
-                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                            <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} domain={[0, 100]} />
-                            <Tooltip
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="pct"
-                                stroke="#10B981"
-                                strokeWidth={2}
-                                fillOpacity={1}
-                                fill="url(#colorAtt)"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* Subject-wise Breakdown */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h3 className="font-semibold text-gray-900">Subject-wise Breakdown</h3>
-                    <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Target: 75%</span>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-500 uppercase bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 font-medium">Subject</th>
-                                <th className="px-6 py-3 font-medium text-center">Attended / Total</th>
-                                <th className="px-6 py-3 font-medium text-center">Percentage</th>
-                                <th className="px-6 py-3 font-medium text-center">Classes Needed (to reach 75%)</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {subjectBreakdown.map((sub, idx) => (
-                                <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{sub.course}</td>
-                                    <td className="px-6 py-4 text-center text-gray-600">{sub.attended} / {sub.total}</td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className={`font-semibold ${sub.percentage >= 75 ? 'text-green-600' : 'text-red-600'}`}>
-                                            {sub.percentage.toFixed(1)}%
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-center">
-                                        {sub.needed > 0 ? (
-                                            <span className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded-full text-xs">
-                                                Attend next {sub.needed} classes
-                                            </span>
-                                        ) : (
-                                            <span className="text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full text-xs">
-                                                On track
-                                            </span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Detailed Records */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 className="font-semibold text-gray-900">Attendance Records</h3>
-                </div>
-                <div className="divide-y divide-gray-100">
-                    {data.length > 0 ? (
-                        data.map((record) => (
-                            <div key={record.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${record.status === 'Present' ? 'bg-green-100 text-green-600' :
-                                            record.status === 'Late' ? 'bg-amber-100 text-amber-600' :
-                                                'bg-red-100 text-red-600'
-                                        }`}>
-                                        {record.status === 'Present' ? <CheckCircle size={20} /> :
-                                            record.status === 'Late' ? <Clock size={20} /> :
-                                                <XCircle size={20} />}
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">{record.course_name}</p>
-                                        <p className="text-xs text-gray-500">{new Date(record.date).toLocaleDateString()} • {new Date(record.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                    </div>
-                                </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${record.status === 'Present' ? 'bg-green-100 text-green-700' :
-                                        record.status === 'Late' ? 'bg-amber-100 text-amber-700' :
-                                            'bg-red-100 text-red-700'
-                                    }`}>
-                                    {record.status}
-                                </span>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="px-6 py-8 text-center text-gray-500">
-                            No attendance records found.
-                        </div>
-                    )}
-                </div>
-            </div>
+      {/* Warning Banner */}
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-4">
+        <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-bold text-red-900">Machine Learning Attendance — Critical ⚠</p>
+          <p className="text-xs text-red-600 mt-0.5">
+            Your current attendance is <strong>68%</strong> (17/25 classes). You need to attend the next <strong>{mlNeeded} consecutive classes</strong> to reach the required 75% threshold. Missing further classes may result in academic penalty.
+          </p>
         </div>
-    );
+      </div>
+
+      {/* Subject-wise Attendance */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100">
+          <h3 className="font-bold text-slate-900">Subject-wise Attendance</h3>
+        </div>
+        <div className="divide-y divide-slate-50">
+          {subjectAttendance.map((s, i) => (
+            <div key={i} className={`flex items-center gap-4 px-5 py-4 ${s.warning ? "bg-red-50/50" : s.borderline ? "bg-amber-50/30" : ""}`}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-bold text-slate-800">{s.subject}</p>
+                  <span className="text-[10px] font-mono text-slate-400">{s.code}</span>
+                  {s.warning && <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold">Below 75%</span>}
+                  {s.borderline && <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">Borderline</span>}
+                </div>
+                <p className="text-[10px] text-slate-400 mb-2">{s.faculty}</p>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${s.pct}%`, backgroundColor: s.color }} />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">{s.present}/{s.total} classes attended</p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className={`text-2xl font-black ${s.warning ? "text-red-600" : s.borderline ? "text-amber-600" : "text-emerald-600"}`}>{s.pct}%</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Monthly Trend + Calculator */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Monthly chart */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <h3 className="font-bold text-slate-900 mb-5">Monthly Attendance Trend</h3>
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyData} margin={{ top: 0, right: 5, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <YAxis domain={[60, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <Tooltip contentStyle={{ borderRadius: "10px", border: "none", fontSize: "11px" }} formatter={(v) => [`${v}%`, "Attendance"]} />
+                <Bar dataKey="pct" radius={[6, 6, 0, 0]} barSize={36}>
+                  {monthlyData.map((d, i) => (
+                    <Cell key={i} fill={d.pct < 75 ? "#ef4444" : d.pct < 80 ? "#f59e0b" : "#3b82f6"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 75% Calculator */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-5">
+          <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <Calculator size={16} className="text-blue-600" /> Attendance Calculator
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">Calculate how many classes you need to reach your target</p>
+          <div className="space-y-3">
+            {[
+              { label: "Classes Attended", key: "present", max: 150 },
+              { label: "Total Classes Held", key: "total", max: 200 },
+              { label: "Target %", key: "target", max: 100 },
+            ].map((f) => (
+              <div key={f.key}>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">{f.label}</label>
+                <input
+                  type="number"
+                  min={0} max={f.max}
+                  value={calc[f.key as keyof typeof calc]}
+                  onChange={(e) => setCalc((p) => ({ ...p, [f.key]: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 text-sm border border-blue-200 rounded-xl bg-white outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 p-3 bg-white rounded-xl border border-blue-100 text-center">
+            <p className="text-xs text-slate-500 mb-1">Current: <strong className={currentPct < 75 ? "text-red-600" : "text-emerald-600"}>{currentPct}%</strong></p>
+            {needed > 0 ? (
+              <>
+                <p className="text-2xl font-black text-blue-700">{needed}</p>
+                <p className="text-[10px] text-blue-500 font-medium">consecutive classes needed</p>
+              </>
+            ) : (
+              <p className="text-sm font-bold text-emerald-600">✅ Target Already Met!</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Attendance Calendar */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+        <h3 className="font-bold text-slate-900 mb-5">ML Attendance Calendar (Jan 2024)</h3>
+        <div className="grid grid-cols-6 gap-2 text-xs font-medium text-slate-400 mb-2">
+          <span>Week</span>
+          {days.map((d) => <span key={d} className="text-center">{d}</span>)}
+        </div>
+        {calendarWeeks.map((week, wi) => (
+          <div key={wi} className="grid grid-cols-6 gap-2 mb-1.5">
+            <span className="text-xs font-semibold text-slate-400 self-center">W{wi + 1}</span>
+            {week.map((day, di) => (
+              <div key={di} className={`h-9 rounded-lg flex items-center justify-center text-xs font-bold ${
+                day === "P" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+              }`}>{day}</div>
+            ))}
+          </div>
+        ))}
+        <div className="flex items-center gap-4 mt-3 text-xs text-slate-400">
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-100" /> Present</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-100" /> Absent</span>
+        </div>
+      </div>
+    </div>
+  );
 }
