@@ -4,27 +4,48 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  Building,
   Building2,
+  Users,
   GraduationCap,
-  TrendingUp,
-  Activity,
-  Target,
   BrainCircuit,
+  BarChart2,
+  TrendingUp,
+  ShieldCheck,
+  Wallet,
+  Megaphone,
   FileText,
-  Settings as SettingsIcon,
+  Settings,
+  User,
   LogOut,
+  Crown,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Logo } from "@/components/Logo";
 
-export type SidebarProps = {
-  activePath?: string;
-};
+export type SidebarProps = { activePath?: string };
+
+const navItems = [
+  { label: "Executive Dashboard", href: "/dean/dashboard", icon: LayoutDashboard },
+  { label: "Institution Overview", href: "/dean/overview", icon: Building },
+  { label: "Departments", href: "/dean/departments", icon: Building2 },
+  { label: "Faculty Management", href: "/dean/faculty", icon: GraduationCap },
+  { label: "Student Analytics", href: "/dean/student-analytics", icon: Users },
+  { label: "AI Intelligence Center", href: "/dean/ai-center", icon: BrainCircuit },
+  { label: "Institutional Analytics", href: "/dean/analytics", icon: BarChart2 },
+  { label: "Forecasting & Trends", href: "/dean/forecasting", icon: TrendingUp },
+  { label: "Accreditation", href: "/dean/compliance", icon: ShieldCheck },
+  { label: "Budget & Resources", href: "/dean/budget", icon: Wallet },
+  { label: "Announcements", href: "/dean/announcements", icon: Megaphone },
+  { label: "Reports Center", href: "/dean/reports", icon: FileText },
+  { label: "System Admin", href: "/dean/system-admin", icon: Settings },
+  { label: "Admin Profile", href: "/dean/profile", icon: User },
+];
 
 export function DeanSidebar({ activePath }: SidebarProps) {
   const pathname = usePathname();
   const currentPath = activePath ?? pathname;
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -32,60 +53,63 @@ export function DeanSidebar({ activePath }: SidebarProps) {
     router.push("/login");
   };
 
-  const deanItems = [
-    { label: "Dashboard", href: "/dean/dashboard", icon: <LayoutDashboard size={20} /> },
-    { label: "Dept Analytics", href: "/dean/department-analytics", icon: <Building2 size={20} /> },
-    { label: "Faculty Insights", href: "/dean/faculty-insights", icon: <GraduationCap size={20} /> },
-    { label: "Academic Trends", href: "/dean/academic-trends", icon: <TrendingUp size={20} /> },
-    { label: "Engagement", href: "/dean/engagement", icon: <Activity size={20} /> },
-    { label: "Interventions", href: "/dean/interventions", icon: <Target size={20} /> },
-    { label: "Predictive AI", href: "/dean/predictive-insights", icon: <BrainCircuit size={20} /> },
-    { label: "Reports", href: "/dean/reports", icon: <FileText size={20} /> },
-    { label: "Settings", href: "/settings", icon: <SettingsIcon size={20} /> },
-  ];
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "DA";
 
   return (
-    <aside className="hidden w-64 flex-col border-r bg-zinc-900 shadow-sm md:flex text-zinc-100">
-      <div className="flex h-16 items-center px-6 border-b border-zinc-800">
-        <Logo variant="dark" className="scale-90 origin-left" />
+    <aside className="hidden w-64 flex-col border-r border-slate-100 bg-white shadow-sm md:flex">
+      {/* Logo */}
+      <div className="flex h-16 items-center px-5 border-b border-slate-100">
+        <Logo variant="light" className="scale-90 origin-left" />
       </div>
 
-      <div className="mx-3 mt-4 rounded-lg bg-violet-900/50 border border-violet-800 px-3 py-2">
-        <p className="text-xs font-semibold text-violet-300 uppercase tracking-wider">Dean / HOD</p>
-        <p className="text-xs text-violet-400 mt-0.5">Strategic Dashboard</p>
+      {/* Executive Role Badge */}
+      <div className="px-4 py-3 border-b border-slate-50 bg-violet-50/60">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-violet-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-violet-900 truncate">{user?.name || "Dean / Admin"}</p>
+            <p className="text-[10px] text-violet-500 font-medium flex items-center gap-1">
+              <Crown size={9} /> Executive Command
+            </p>
+          </div>
+        </div>
       </div>
 
-      <nav className="mt-4 flex-1 space-y-1 px-3">
-        {deanItems.map((item) => {
-          const isActive = currentPath === item.href || (item.href !== "/dean/dashboard" && currentPath.startsWith(item.href + "/"));
-
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-0.5">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            currentPath === item.href ||
+            (item.href !== "/dean/dashboard" && currentPath.startsWith(item.href));
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`
-                flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
-                ${isActive
-                  ? "bg-violet-600 text-white shadow-sm ring-1 ring-violet-500"
-                  : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-                }
-              `}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150 ${
+                isActive
+                  ? "bg-violet-600 text-white shadow-sm shadow-violet-200"
+                  : "text-slate-600 hover:bg-violet-50 hover:text-violet-700"
+              }`}
             >
-              <span className={isActive ? "text-violet-200" : "text-zinc-500"}>
-                {item.icon}
-              </span>
+              <Icon size={16} className={isActive ? "text-white" : "text-slate-400"} />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-zinc-800 p-4">
+      {/* Logout */}
+      <div className="border-t border-slate-100 p-3">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
         >
-          <LogOut size={20} />
+          <LogOut size={16} />
           Logout
         </button>
       </div>

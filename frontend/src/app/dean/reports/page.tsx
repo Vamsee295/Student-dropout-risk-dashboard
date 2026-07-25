@@ -1,106 +1,130 @@
 "use client";
 
 import { useState } from "react";
-import { deanService } from "@/services/dean";
-import { Download, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { FileText, Download, Calendar, Mail, CheckCircle2 } from "lucide-react";
 
-export default function DeanReports() {
-    const [loading, setLoading] = useState(false);
-    const [successMsg, setSuccessMsg] = useState("");
+const reportTypes = [
+  { id: "institution", label: "Institution Performance Report", desc: "Complete institutional overview — KPIs, trends, forecasts", formats: ["PDF", "Excel", "PowerPoint"], icon: "🏛" },
+  { id: "department", label: "Department Analytics Report", desc: "Per-department breakdown — attendance, dropout, placement, CGPA", formats: ["PDF", "Excel"], icon: "🏢" },
+  { id: "faculty", label: "Faculty Performance Report", desc: "Faculty rankings, feedback scores, research, evaluations", formats: ["PDF", "Excel"], icon: "👨‍🏫" },
+  { id: "dropout", label: "Dropout Analysis Report", desc: "AI-powered dropout deep dive — SHAP factors, predictions", formats: ["PDF", "PowerPoint"], icon: "📉" },
+  { id: "attendance", label: "Attendance Compliance Report", desc: "Department-wise, semester-wise attendance summary", formats: ["PDF", "Excel", "CSV"], icon: "📅" },
+  { id: "placement", label: "Placement Analytics Report", desc: "Company-wise, department-wise, year-wise placement statistics", formats: ["PDF", "Excel", "PowerPoint"], icon: "💼" },
+  { id: "financial", label: "Financial / Budget Report", desc: "Department budget allocation, utilization, variance analysis", formats: ["PDF", "Excel", "CSV"], icon: "💰" },
+  { id: "naac", label: "NAAC Accreditation Report", desc: "Ready-to-submit evidence portfolio for NAAC audit", formats: ["PDF", "PowerPoint"], icon: "🏅" },
+  { id: "research", label: "Research & Innovation Report", desc: "Faculty publications, patents, grants, research impact", formats: ["PDF", "Excel"], icon: "🔬" },
+];
 
-    const convertToCSV = (data: any) => {
-        if (!data) return "";
-        const dataToConvert = Array.isArray(data) ? data : [data];
-        if (dataToConvert.length === 0) return "";
+const scheduleOptions = ["Daily", "Weekly", "Monthly", "Semester", "Annual"];
 
-        const headers = Object.keys(dataToConvert[0]);
-        const rows = dataToConvert.map(obj =>
-            headers.map(header => {
-                let val = obj[header];
-                if (typeof val === 'object' && val !== null) val = JSON.stringify(val).replace(/"/g, '""');
-                if (val === null || val === undefined) val = "";
-                const valStr = String(val);
-                return valStr.includes(',') || valStr.includes('"') || valStr.includes('\n')
-                    ? `"${valStr.replace(/"/g, '""')}"`
-                    : valStr;
-            }).join(',')
-        );
-        return [headers.join(','), ...rows].join('\n');
-    };
+export default function ReportsPage() {
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [generated, setGenerated] = useState<string[]>([]);
+  const [schedule, setSchedule] = useState("Monthly");
+  const [scheduledReport, setScheduledReport] = useState("institution");
+  const [scheduleSet, setScheduleSet] = useState(false);
 
-    const handleExport = async (type: string) => {
-        setLoading(true);
-        setSuccessMsg("");
-        try {
-            const data = await deanService.getReportsSummary();
-            const csvContent = convertToCSV(data);
-            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `dean_${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+  const generate = (id: string) => {
+    setGenerating(id);
+    setTimeout(() => {
+      setGenerating(null);
+      setGenerated((prev) => [...prev, id]);
+      setTimeout(() => setGenerated((prev) => prev.filter((g) => g !== id)), 3000);
+    }, 1800);
+  };
 
-            setSuccessMsg(`Successfully exported ${type} report as CSV.`);
-            setTimeout(() => setSuccessMsg(""), 3000);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-zinc-900">Reports Center</h1>
+        <p className="text-sm text-zinc-400 mt-0.5">Executive reporting — generate, schedule, and export institutional reports</p>
+      </div>
 
-    return (
-        <div className="space-y-6 max-w-4xl">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Reports & Exports</h1>
-                <p className="text-sm text-gray-500 mt-1">Download raw institutional data and aggregated summaries for compliance and review.</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Report Templates", value: "9", color: "violet" },
+          { label: "Scheduled Reports", value: "3", color: "blue" },
+          { label: "Generated This Month", value: "28", color: "emerald" },
+          { label: "Last Generated", value: "Today", color: "amber" },
+        ].map((s, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 text-center">
+            <p className={`text-3xl font-black ${
+              s.color === "violet" ? "text-violet-600" : s.color === "blue" ? "text-blue-600" :
+              s.color === "emerald" ? "text-emerald-600" : "text-amber-600"
+            }`}>{s.value}</p>
+            <p className="text-xs text-zinc-400 font-medium mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Report Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {reportTypes.map((r) => (
+          <div key={r.id} className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-2xl flex-shrink-0">{r.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-zinc-900">{r.label}</p>
+                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{r.desc}</p>
+              </div>
             </div>
-
-            {successMsg && (
-                <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium">
-                    <CheckCircle2 size={18} />
-                    {successMsg}
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Export Card 1 */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-violet-50 rounded-lg flex items-center justify-center mb-4">
-                        <FileText className="text-violet-600" size={24} />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 text-lg">Executive Summary</h3>
-                    <p className="text-sm text-gray-500 mt-2 mb-6 h-10">High-level aggregates including total enrollment, risk distributions, and institutional GPA averages.</p>
-                    <button
-                        onClick={() => handleExport("executive_summary")}
-                        disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-70"
-                    >
-                        {loading ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                        Download Report (CSV)
-                    </button>
-                </div>
-
-                {/* Export Card 2 */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-                        <FileText className="text-blue-600" size={24} />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 text-lg">Departmental Breakdown</h3>
-                    <p className="text-sm text-gray-500 mt-2 mb-6 h-10">Row-level data for all departments, faculty mapping, and specific risk matrices.</p>
-                    <button
-                        onClick={() => handleExport("department_data")}
-                        disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-70"
-                    >
-                        {loading ? <Loader2 size={18} className="animate-spin text-gray-500" /> : <Download size={18} className="text-gray-500" />}
-                        Download Report (CSV)
-                    </button>
-                </div>
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {r.formats.map((f, i) => (
+                <span key={i} className="text-[10px] font-semibold px-2 py-0.5 bg-violet-50 text-violet-600 border border-violet-200 rounded-full">{f}</span>
+              ))}
             </div>
+            <button onClick={() => generate(r.id)} disabled={!!generating}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                generated.includes(r.id) ? "bg-emerald-600 text-white" :
+                generating === r.id ? "bg-violet-100 text-violet-400 cursor-not-allowed" :
+                "bg-violet-600 text-white hover:bg-violet-700"
+              }`}>
+              {generated.includes(r.id) ? <><CheckCircle2 size={14} /> Generated!</> :
+               generating === r.id ? <><div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" /> Generating...</> :
+               <><Download size={13} /> Generate Report</>}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Scheduled Reports */}
+      <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5">
+        <div className="flex items-center gap-2 mb-5">
+          <Calendar size={16} className="text-violet-600" />
+          <h3 className="font-bold text-zinc-900">Schedule Automated Reports</h3>
         </div>
-    );
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <div>
+            <label className="text-xs font-semibold text-zinc-500 mb-1.5 block">Report Type</label>
+            <select value={scheduledReport} onChange={(e) => setScheduledReport(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-xl outline-none focus:border-violet-400">
+              {reportTypes.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-zinc-500 mb-1.5 block">Frequency</label>
+            <select value={schedule} onChange={(e) => setSchedule(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-xl outline-none focus:border-violet-400">
+              {scheduleOptions.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-zinc-500 mb-1.5 block">Delivery</label>
+            <select className="w-full px-3 py-2.5 text-sm border border-zinc-200 rounded-xl outline-none focus:border-violet-400">
+              <option>Email to Dean</option>
+              <option>Email to All HODs</option>
+              <option>Dashboard Only</option>
+            </select>
+          </div>
+        </div>
+        <button onClick={() => { setScheduleSet(true); setTimeout(() => setScheduleSet(false), 2500); }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            scheduleSet ? "bg-emerald-600 text-white" : "bg-violet-600 text-white hover:bg-violet-700"
+          }`}>
+          {scheduleSet ? <><CheckCircle2 size={15} /> Schedule Set!</> : <><Calendar size={14} /> Set Schedule</>}
+        </button>
+      </div>
+    </div>
+  );
 }
