@@ -10,13 +10,20 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Create SQLAlchemy engine
+engine_kwargs = {
+    "pool_pre_ping": True,
+    "echo": settings.log_level == "DEBUG"
+}
+
+if "sqlite" in settings.database_url:
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+
 engine = create_engine(
     settings.database_url,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    echo=settings.log_level == "DEBUG"
+    **engine_kwargs
 )
 
 # Create session factory

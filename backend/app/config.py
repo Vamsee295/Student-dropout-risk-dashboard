@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # Database
-    database_url: str = "mysql+pymysql://root:Sanjith_2005@localhost:3306/healthcare_db"
+    database_url: str = "sqlite:///./student_risk.db"
     
     # CORS - Allow all origins for development. In production, specify exact origins.
     cors_origins: List[str] = ["*"]
