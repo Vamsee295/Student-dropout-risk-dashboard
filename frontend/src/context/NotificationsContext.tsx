@@ -37,7 +37,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         }
 
         apiClient
-            .get('/analytics/notifications', { params: { role: user.role } })
+            .get('/notifications', { params: { role: user.role } })
             .then((res) => {
                 const items = (res.data?.notifications || []).map((n: any) => ({
                     ...n,

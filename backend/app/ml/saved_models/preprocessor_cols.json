@@ -1,0 +1,1 @@
+{"numerical_cols": ["attendance_percentage", "cgpa", "previous_semester_cgpa", "lms_login_frequency", "total_assignments", "assignments_completed", "attendance_trend", "assignment_completion_rate", "lms_engagement_score", "grade_trend", "study_consistency_score"], "categorical_cols": ["department"]}

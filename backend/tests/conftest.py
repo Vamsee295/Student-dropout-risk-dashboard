@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-from app.database import Base, get_db
+from app.database.session import Base, get_db
 from app.models import (
     Student, StudentMetric, RiskScore, RiskHistory,
     Intervention, ModelVersion, User,
@@ -20,9 +20,15 @@ from app.models import (
     InterventionType, InterventionStatus, Role,
 )
 
-SQLITE_URL = "sqlite:///./test.db"
+from sqlalchemy.pool import StaticPool
 
-engine = create_engine(SQLITE_URL, connect_args={"check_same_thread": False})
+SQLITE_URL = "sqlite://"
+
+engine = create_engine(
+    SQLITE_URL, 
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 
 @event.listens_for(engine, "connect")
 def _set_sqlite_pragma(dbapi_conn, _):
@@ -36,7 +42,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(autouse=True)
 def _patch_app_db(monkeypatch):
     """Patch the app-level engine and SessionLocal so FastAPI routes use test DB."""
-    import app.database as db_module
+    import app.database.session as db_module
     monkeypatch.setattr(db_module, "engine", engine)
     monkeypatch.setattr(db_module, "SessionLocal", TestingSessionLocal)
 
@@ -54,18 +60,27 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def client(db):
+def client(db, sample_user):
     """Provide a FastAPI TestClient wired to the test DB."""
     from fastapi.testclient import TestClient
     from app.main import app
+    from app.auth.security import get_current_user
+    from app.auth.roles import require_faculty, require_dean
 
     def _override_get_db():
         try:
             yield db
         finally:
             pass
+            
+    def _override_get_current_user():
+        return sample_user
 
     app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[get_current_user] = _override_get_current_user
+    app.dependency_overrides[require_faculty] = _override_get_current_user
+    app.dependency_overrides[require_dean] = _override_get_current_user
+    
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
     app.dependency_overrides.clear()
@@ -142,14 +157,14 @@ def sample_student(db, sample_model_version):
 @pytest.fixture
 def sample_user(db, sample_student):
     """Insert a test user linked to the sample student."""
-    from app.security import get_password_hash
+    from app.auth.security import get_password_hash
 
     user = User(
         email="alice@test.edu",
         password_hash=get_password_hash("testpass123"),
         name="Alice Johnson",
-        role=Role.STUDENT,
-        student_id="ST0001",
+        role=Role.DEAN,
+        student_id=None,
     )
     db.add(user)
     db.commit()
@@ -160,7 +175,7 @@ def sample_user(db, sample_student):
 @pytest.fixture
 def faculty_user(db):
     """Insert a faculty user."""
-    from app.security import get_password_hash
+    from app.auth.security import get_password_hash
 
     user = User(
         email="faculty@test.edu",

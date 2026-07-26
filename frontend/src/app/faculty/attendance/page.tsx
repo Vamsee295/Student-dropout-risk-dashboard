@@ -4,33 +4,12 @@ import { useState } from "react";
 import { CalendarCheck, AlertTriangle, CheckCircle2, XCircle, Upload, Download, Users, TrendingDown, Search } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const weeklyData = [
-  { day: "Mon", present: 52, absent: 10 },
-  { day: "Tue", present: 55, absent: 7 },
-  { day: "Wed", present: 48, absent: 14 },
-  { day: "Thu", present: 58, absent: 4 },
-  { day: "Fri", present: 50, absent: 12 },
-];
-
-const belowThreshold = [
-  { name: "Arjun Mehta", roll: "21CS001", attendance: 51, course: "CS301", lastAbsent: "2024-01-22" },
-  { name: "Priya Sharma", roll: "21CS047", attendance: 58, course: "CS302", lastAbsent: "2024-01-21" },
-  { name: "Rohit Kumar", roll: "21CS023", attendance: 63, course: "CS303", lastAbsent: "2024-01-22" },
-  { name: "Kavya Reddy", roll: "21CS089", attendance: 67, course: "CS301", lastAbsent: "2024-01-20" },
-  { name: "Sanjay Patel", roll: "21CS012", attendance: 69, course: "HS101", lastAbsent: "2024-01-19" },
-];
-
-const attendanceGrid = [
-  { roll: "21CS001", name: "Arjun Mehta", mon: "A", tue: "P", wed: "A", thu: "P", fri: "A" },
-  { roll: "21CS002", name: "Aditi Singh", mon: "P", tue: "P", wed: "P", thu: "P", fri: "P" },
-  { roll: "21CS003", name: "Vikas Reddy", mon: "P", tue: "A", wed: "P", thu: "P", fri: "P" },
-  { roll: "21CS004", name: "Meera Nair", mon: "P", tue: "P", wed: "P", thu: "A", fri: "P" },
-  { roll: "21CS005", name: "Raj Patel", mon: "A", tue: "A", wed: "P", thu: "P", fri: "A" },
-];
+import { useAttendance } from "@/hooks/useAttendance";
 
 type StatusType = "P" | "A" | "L";
 
 export default function AttendancePage() {
+  const { weeklyData, belowThreshold, attendanceGrid, isLoading } = useAttendance();
   const [selectedCourse, setSelectedCourse] = useState("CS301");
   const [attendance, setAttendance] = useState<Record<string, Record<string, StatusType>>>({});
 
@@ -51,6 +30,8 @@ export default function AttendancePage() {
     if (status === "A") return "bg-red-100 text-red-700 border-red-200";
     return "bg-amber-100 text-amber-700 border-amber-200";
   };
+
+  if (isLoading) return <div>Loading attendance data...</div>;
 
   return (
     <div className="space-y-6">

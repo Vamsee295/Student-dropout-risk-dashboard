@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, init_db
-from app.models import Student, StudentMetric, Department, Section, Course, Enrollment, Assessment, StudentAssessment, AttendanceRecord, AttendanceStatus, SubmissionStatus, AssessmentType
+from app.database.session import SessionLocal, engine
+from app.models import Base, Student, StudentMetric, Department, Section, Course, Enrollment, Assessment, StudentAssessment, AttendanceRecord, AttendanceStatus, SubmissionStatus, AssessmentType
 
 def seed_many_students(count=100):
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    init_db()
     
     names = [
         "Aarav Sharma", "Aditi Rao", "Ananya Singh", "Arjun Patel", "Bhavya Gupta", 

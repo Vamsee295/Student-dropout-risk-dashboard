@@ -1,54 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import {
-  GraduationCap, Users, Building2, BookOpen, TrendingDown, TrendingUp,
-  AlertTriangle, BrainCircuit, ArrowRight, CheckCircle2, Bell, Zap, Crown
+  GraduationCap, Users, BookOpen, TrendingDown, TrendingUp,
+  AlertTriangle, BrainCircuit, ArrowRight, CheckCircle2, Zap, Crown, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, Cell, LineChart, Line, Legend,
-  PieChart, Pie
+  ResponsiveContainer, BarChart, Bar, Cell, LineChart, Line,
+  PieChart, Pie,
 } from "recharts";
+import { useDean } from "@/hooks/useDean";
+import { DashboardPageSkeleton } from "@/components/common/LoadingSkeleton";
+import { ErrorState } from "@/components/common/ErrorState";
 
-const dropoutTrend = [
-  { month: "Aug", rate: 18.2 }, { month: "Sep", rate: 17.5 },
-  { month: "Oct", rate: 19.1 }, { month: "Nov", rate: 16.8 },
-  { month: "Dec", rate: 14.2 }, { month: "Jan", rate: 12.4 },
-];
-
-const deptComparison = [
-  { dept: "CSE", risk: 11, attendance: 84, cgpa: 8.1 },
-  { dept: "ECE", risk: 18, attendance: 78, cgpa: 7.6 },
-  { dept: "EEE", risk: 15, attendance: 80, cgpa: 7.4 },
-  { dept: "Civil", risk: 21, attendance: 71, cgpa: 6.8 },
-  { dept: "Mech", risk: 24, attendance: 67, cgpa: 6.9 },
-  { dept: "MBA", risk: 9, attendance: 88, cgpa: 8.3 },
-  { dept: "AI&DS", risk: 7, attendance: 91, cgpa: 8.6 },
-];
-
-const retentionTrend = [
-  { sem: "S1'23", retention: 84 }, { sem: "S2'23", retention: 86 },
-  { sem: "S3'23", retention: 85 }, { sem: "S4'23", retention: 87 },
-  { sem: "S5'23", retention: 88 }, { sem: "S6'24", retention: 91 },
-];
-
-const riskDist = [
-  { name: "Low Risk", value: 62, fill: "#10b981" },
-  { name: "Moderate", value: 26, fill: "#f59e0b" },
-  { name: "High Risk", value: 12, fill: "#ef4444" },
-];
-
-const activeAlerts = [
-  { severity: "critical", dept: "Mechanical Eng", issue: "Dropout risk surged to 24%", action: "Immediate intervention" },
-  { severity: "critical", dept: "Civil Eng", issue: "Attendance dropped to 71% (↓8%)", action: "Counselling program needed" },
-  { severity: "warning", dept: "ECE", issue: "18% of Sem-1 students at risk", action: "Peer mentoring recommended" },
-  { severity: "info", dept: "Institution", issue: "NAAC compliance audit in 14 days", action: "Prepare evidence portfolio" },
-];
-
-const quickActions = [
+const QUICK_ACTIONS = [
   { label: "Generate Executive Report", href: "/dean/reports", icon: "📄" },
   { label: "Review High-Risk Depts", href: "/dean/departments", icon: "🏫" },
   { label: "Approve Intervention Plans", href: "/dean/ai-center", icon: "✅" },
@@ -63,15 +30,24 @@ export default function DeanDashboardPage() {
   const { user } = useAuthStore();
   const firstName = user?.name?.split(" ")[0] || "Dean";
 
+  const {
+    overview, departments, dropoutTrend, retentionTrend,
+    riskDistribution, alerts,
+    isLoading, isRefreshing, error, refetch,
+  } = useDean();
+
+  if (isLoading) return <DashboardPageSkeleton />;
+  if (error) return <ErrorState title="Executive dashboard unavailable" message={error} onRetry={refetch} fullPage />;
+
   const kpis = [
-    { label: "Total Students", value: "2,847", sub: "Across 7 departments", icon: <Users size={20} />, color: "violet", trend: "+3.2% YoY" },
-    { label: "Total Faculty", value: "142", sub: "Full-time + visiting", icon: <GraduationCap size={20} />, color: "blue", trend: "3 vacancies" },
-    { label: "Dropout Rate", value: "12.4%", sub: "↓3% from last semester", icon: <TrendingDown size={20} />, color: "emerald", trend: "↓ Improving" },
-    { label: "Retention Rate", value: "87.6%", sub: "Above national avg", icon: <TrendingUp size={20} />, color: "teal", trend: "↑ 3.1%" },
-    { label: "Graduation Rate", value: "91%", sub: "Target: 90%", icon: <GraduationCap size={20} />, color: "indigo", trend: "✓ On Target" },
-    { label: "Placement Rate", value: "84%", sub: "Top 10 in state", icon: <BookOpen size={20} />, color: "purple", trend: "↑ 6% YoY" },
-    { label: "Avg Attendance", value: "79.6%", sub: "All departments", icon: <CheckCircle2 size={20} />, color: "sky", trend: "↑ 4%" },
-    { label: "AI Risk Alerts", value: "4", sub: "2 critical, 2 warning", icon: <AlertTriangle size={20} />, color: "red", trend: "Needs Action" },
+    { label: "Total Students", value: overview?.total_students.toLocaleString() ?? "–", sub: `Across ${overview?.total_departments ?? 0} departments`, icon: <Users size={20} />, color: "violet", trend: "+3.2% YoY" },
+    { label: "Total Faculty", value: String(overview?.total_faculty ?? "–"), sub: "Full-time + visiting", icon: <GraduationCap size={20} />, color: "blue", trend: "3 vacancies" },
+    { label: "Dropout Rate", value: `${overview?.dropout_rate ?? "–"}%`, sub: "↓3% from last semester", icon: <TrendingDown size={20} />, color: "emerald", trend: "↓ Improving" },
+    { label: "Retention Rate", value: `${overview?.retention_rate ?? "–"}%`, sub: "Above national avg", icon: <TrendingUp size={20} />, color: "teal", trend: "↑ 3.1%" },
+    { label: "Graduation Rate", value: `${overview?.graduation_rate ?? "–"}%`, sub: "Target: 90%", icon: <GraduationCap size={20} />, color: "indigo", trend: "✓ On Target" },
+    { label: "Placement Rate", value: `${overview?.placement_rate ?? "–"}%`, sub: "Top 10 in state", icon: <BookOpen size={20} />, color: "purple", trend: "↑ 6% YoY" },
+    { label: "Avg Attendance", value: `${overview?.avg_attendance ?? "–"}%`, sub: "All departments", icon: <CheckCircle2 size={20} />, color: "sky", trend: "↑ 4%" },
+    { label: "AI Risk Alerts", value: String((overview?.critical_alerts ?? 0) + (overview?.warning_alerts ?? 0)), sub: `${overview?.critical_alerts ?? 0} critical, ${overview?.warning_alerts ?? 0} warning`, icon: <AlertTriangle size={20} />, color: "red", trend: "Needs Action" },
   ];
 
   const colorMap: Record<string, string> = {
@@ -85,8 +61,22 @@ export default function DeanDashboardPage() {
     red: "bg-red-50 text-red-600 border-red-100",
   };
 
+  const deptChartData = (departments ?? []).map((d) => ({ dept: d.dept, risk: d.risk }));
+  const activeAlertsList = alerts ?? [];
+  const riskDist = riskDistribution ?? [];
+
+  const healthScore = Math.round(
+    ((overview?.retention_rate ?? 85) + (overview?.graduation_rate ?? 90) + (100 - (overview?.dropout_rate ?? 12))) / 3
+  );
+
   return (
     <div className="space-y-6">
+      {isRefreshing && (
+        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 px-3 py-1.5 bg-violet-700 text-white text-xs font-semibold rounded-full shadow-lg">
+          <RefreshCw size={12} className="animate-spin" /> Refreshing…
+        </div>
+      )}
+
       {/* AI Executive Summary Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-violet-900 via-violet-800 to-indigo-900 rounded-2xl p-6 text-white shadow-xl">
         <div className="absolute inset-0 opacity-10">
@@ -97,14 +87,15 @@ export default function DeanDashboardPage() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <BrainCircuit size={18} className="text-violet-300" />
-              <span className="text-xs font-semibold text-violet-300 uppercase tracking-wider">AI Executive Intelligence · {new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}</span>
+              <span className="text-xs font-semibold text-violet-300 uppercase tracking-wider">
+                AI Executive Intelligence · {new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}
+              </span>
             </div>
             <h2 className="text-2xl font-bold mb-2">Good morning, {firstName} 👑</h2>
             <p className="text-violet-100 text-sm leading-relaxed max-w-2xl">
               Institutional dropout probability decreased by <strong>3%</strong> since last semester — excellent progress.
-              However, <strong>Mechanical Engineering</strong> has reached a critical 24% dropout risk and requires immediate attention.
-              <strong> Civil Engineering</strong> attendance dropped to 71% — counselling program recommended.
-              AI predicts graduation rate of <strong>91%</strong> this year. NAAC compliance audit is in <strong>14 days</strong>.
+              However, <strong>{departments?.find(d => d.risk === Math.max(...(departments ?? []).map(d => d.risk)))?.department ?? "Mechanical Engineering"}</strong> has reached a critical dropout risk and requires immediate attention.
+              AI predicts graduation rate of <strong>{overview?.graduation_rate ?? 91}%</strong> this year.
             </p>
             <div className="flex flex-wrap gap-2 mt-4">
               {[
@@ -123,11 +114,11 @@ export default function DeanDashboardPage() {
           {/* Institution Health Score */}
           <div className="text-center bg-white/10 rounded-2xl p-5 border border-white/20 flex-shrink-0">
             <p className="text-xs text-violet-300 font-semibold mb-1">Institution Health Score</p>
-            <p className="text-5xl font-black text-white">87</p>
-            <p className="text-xs text-violet-300 mt-1">/100 · <span className="text-emerald-300 font-semibold">Good</span></p>
+            <p className="text-5xl font-black text-white">{healthScore}</p>
+            <p className="text-xs text-violet-300 mt-1">/100 · <span className="text-emerald-300 font-semibold">{healthScore >= 85 ? "Good" : healthScore >= 70 ? "Fair" : "Needs Attention"}</span></p>
             <div className="mt-3 flex gap-1 justify-center">
               {Array.from({ length: 10 }, (_, i) => (
-                <div key={i} className={`w-5 h-2 rounded-full ${i < 8 ? "bg-violet-400" : i < 9 ? "bg-zinc-600" : "bg-zinc-700"}`} />
+                <div key={i} className={`w-5 h-2 rounded-full ${i < Math.round(healthScore / 10) ? "bg-violet-400" : "bg-zinc-600"}`} />
               ))}
             </div>
           </div>
@@ -157,7 +148,7 @@ export default function DeanDashboardPage() {
           <Zap size={15} className="text-red-500" /> Active AI Alerts
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {activeAlerts.map((a, i) => (
+          {activeAlertsList.map((a, i) => (
             <div key={i} className={`flex items-start gap-3 p-3.5 rounded-xl border ${
               a.severity === "critical" ? "bg-red-50 border-red-200" :
               a.severity === "warning" ? "bg-amber-50 border-amber-200" : "bg-blue-50 border-blue-200"
@@ -184,11 +175,11 @@ export default function DeanDashboardPage() {
         <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-zinc-900">Dropout Rate Trend</h3>
-            <span className="text-xs text-emerald-600 font-semibold">↓ 5.8% since Aug</span>
+            <span className="text-xs text-emerald-600 font-semibold">↓ Improving</span>
           </div>
           <div className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dropoutTrend} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+              <AreaChart data={dropoutTrend ?? []} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
                 <defs>
                   <linearGradient id="dropGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.25} />
@@ -210,13 +201,13 @@ export default function DeanDashboardPage() {
           <h3 className="text-sm font-bold text-zinc-900 mb-4">Department Dropout Risk</h3>
           <div className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={deptComparison} margin={{ top: 0, right: 5, bottom: 0, left: -20 }}>
+              <BarChart data={deptChartData} margin={{ top: 0, right: 5, bottom: 0, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
                 <XAxis dataKey="dept" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#a1a1aa" }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#a1a1aa" }} />
                 <Tooltip contentStyle={{ borderRadius: "10px", border: "none", fontSize: "11px" }} formatter={(v) => [`${v}%`, "Risk"]} />
                 <Bar dataKey="risk" radius={[4, 4, 0, 0]} barSize={22}>
-                  {deptComparison.map((d, i) => (
+                  {deptChartData.map((d, i) => (
                     <Cell key={i} fill={d.risk > 20 ? "#ef4444" : d.risk > 15 ? "#f59e0b" : "#7c3aed"} />
                   ))}
                 </Bar>
@@ -253,11 +244,11 @@ export default function DeanDashboardPage() {
       <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-zinc-900">Institutional Retention Trend</h3>
-          <span className="text-xs text-emerald-600 font-semibold">↑ 7% across 6 semesters</span>
+          <span className="text-xs text-emerald-600 font-semibold">↑ Improving across semesters</span>
         </div>
         <div className="h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={retentionTrend} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>
+            <LineChart data={retentionTrend ?? []} margin={{ top: 5, right: 20, bottom: 0, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
               <XAxis dataKey="sem" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#a1a1aa" }} />
               <YAxis domain={[80, 95]} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#a1a1aa" }} />
@@ -272,7 +263,7 @@ export default function DeanDashboardPage() {
       <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5">
         <h3 className="text-sm font-bold text-zinc-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {quickActions.map((a, i) => (
+          {QUICK_ACTIONS.map((a, i) => (
             <Link key={i} href={a.href}
               className="flex flex-col items-center gap-2 p-3 rounded-xl border border-zinc-100 bg-zinc-50 hover:bg-violet-50 hover:border-violet-200 transition-all text-center group">
               <span className="text-xl">{a.icon}</span>

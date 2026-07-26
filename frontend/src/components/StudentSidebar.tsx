@@ -20,7 +20,7 @@ import {
   ChevronDown,
   GraduationCap,
 } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import { useState } from "react";
 
@@ -47,12 +47,11 @@ const navItems = [
 export function StudentSidebar({ activePath }: SidebarProps) {
   const pathname = usePathname();
   const currentPath = activePath ?? pathname;
-  const { logout, user } = useAuthStore();
+  const { logout, user } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    await logout();
   };
 
   const initials = user?.name

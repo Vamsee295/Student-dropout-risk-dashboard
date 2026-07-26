@@ -19,7 +19,7 @@ import {
     ComposedChart,
     Area,
 } from "recharts";
-import apiClient from "@/lib/api";
+import apiClient from "@/api/axios";
 
 interface DeptAnalytics {
     department: string;

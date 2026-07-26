@@ -1,0 +1,37 @@
+# Production overrides for docker-compose
+services:
+  mysql:
+    restart: always
+    env_file:
+      - .env.production
+    volumes:
+      - /var/backups/mysql:/var/backups/mysql # For backup scripts
+
+  backend:
+    restart: always
+    env_file:
+      - .env.production
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 --proxy-headers
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+  frontend:
+    restart: always
+    env_file:
+      - .env.production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  nginx:
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl:ro # Mount production certs here

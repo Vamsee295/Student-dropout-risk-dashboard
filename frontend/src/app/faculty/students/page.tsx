@@ -102,7 +102,7 @@ export default function StudentListPage() {
           </div>
         ) : filteredStudents.length > 0 ? (
           filteredStudents.map((student) => (
-            <Link href={`/students/${student.id}`} key={student.id} className="block group">
+            <Link href={`/faculty/students/${student.id}`} key={student.id} className="block group">
               <div className={`h-full bg-white rounded-2xl border transition-all duration-300 hover:shadow-xl hover:border-indigo-300 hover:-translate-y-1.5 p-6 flex flex-col ${student.risk_level === 'High Risk' ? 'border-red-100' :
                 student.risk_level === 'Moderate Risk' ? 'border-amber-100' :
                   'border-green-100'

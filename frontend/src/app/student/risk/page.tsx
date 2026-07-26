@@ -5,7 +5,7 @@ import { Brain, AlertTriangle, TrendingDown, TrendingUp, CheckCircle2, ArrowRigh
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Cell, RadarChart,
-  PolarGrid, PolarAngleAxis, Radar
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from "recharts";
 
 const riskHistory = [

@@ -9,8 +9,7 @@ export interface StudentOverview {
     risk_value: string;
     dropout_probability: number;
     upcoming_deadlines: any[];
-    student_id: string;
-    student_name: string;
+    recent_attendance: any[];
 }
 
 export interface Assignment {

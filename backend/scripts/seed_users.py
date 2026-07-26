@@ -4,7 +4,7 @@ import os
 # Add parent directory to path to allow importing app modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, init_db
+from app.database.session import SessionLocal
 from app.models import User, Role, Student
 from app.security import get_password_hash
 from loguru import logger

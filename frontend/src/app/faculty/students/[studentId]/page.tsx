@@ -1,696 +1,432 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { facultyService, type StudentSummary } from "@/services/faculty";
-import { studentService, type StudentOverview, type RiskDetails } from "@/services/student";
-import {
-    Loader2,
-    ArrowLeft,
-    AlertTriangle,
-    TrendingUp,
-    TrendingDown,
-    ShieldCheck,
-    Calendar,
-    BookOpen,
-    MessageSquare,
-    MoreHorizontal,
-    CheckCircle,
-    Bell,
-    Mail,
-    User,
-    Clock,
-    FileText,
-    ChevronRight,
-    ChevronDown,
-    ArrowRight,
-    X,
-    MessageCircle,
-    Check
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    AreaChart,
-    Area
+  ArrowLeft, User, AlertTriangle, ShieldCheck, TrendingUp, TrendingDown,
+  CalendarCheck, BookOpen, Star, Activity, ChevronRight,
+  MessageSquare, ClipboardList, Phone, Mail, Loader2,
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "recharts";
-import ChatWidget from "@/components/ChatWidget";
-import apiClient from "@/lib/api";
-import { GlobalRankChart } from "@/components/profile/GlobalRankChart";
-import { ScoreDistributionChart } from "@/components/profile/ScoreDistributionChart";
+import apiClient from "@/api/axios";
 
-export default function StudentDetailPage(props: { params: Promise<{ studentId: string }> }) {
-    const params = use(props.params);
-    const [overview, setOverview] = useState<StudentOverview | null>(null);
-    const [risk, setRisk] = useState<RiskDetails | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [isRiskExpanded, setIsRiskExpanded] = useState(true);
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface StudentOverview {
+  id: string;
+  name: string;
+  avatar: string;
+  course: string;
+  department: string;
+  section: string;
+  advisor: string;
+  riskStatus: string;
+  riskTrend: string;
+  riskValue: string;
+  attendance: number;
+  cgpa: number;
+  engagementScore: number;
+  lastInteraction: string;
+  primaryRiskDriver: string;
+}
 
-    // Interaction States
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [toastType, setToastType] = useState<'success' | 'error'>('success');
+interface AttendanceTrendPoint { week: string; attendance: number; }
+interface MarksTrendPoint { month: string; marks: number; }
+interface RiskData { risk_score: number; risk_level: string; risk_trend?: string; explanation?: string; risk_factors?: string[]; }
+interface Subject {
+  course_id: string;
+  course_name: string;
+  credits: number;
+  total_marks: number;
+  grade: string;
+  attendance_percentage: number;
+}
+interface SemesterPerf { semester: number; gpa: number; subjects: Subject[]; }
+interface AttendanceRecord { id: number; course_id: string; course_name: string; date: string; status: string; }
+interface AssignmentSummary {
+  total: number;
+  completed: number;
+  pending: number;
+  overdue: number;
+  completion_percentage: number;
+  overdue_count: number;
+}
 
-    const [isReviewed, setIsReviewed] = useState(false);
-    const [isEscalated, setIsEscalated] = useState(false);
+const riskColor = (level: string) => {
+  const l = level?.toLowerCase() ?? "";
+  if (l.includes("high")) return { badge: "bg-red-100 text-red-700 border-red-200", dot: "#ef4444" };
+  if (l.includes("moderate") || l.includes("medium")) return { badge: "bg-amber-100 text-amber-700 border-amber-200", dot: "#f59e0b" };
+  return { badge: "bg-emerald-100 text-emerald-700 border-emerald-200", dot: "#10b981" };
+};
 
-    // Modal States
-    const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
-    const [noteText, setNoteText] = useState("");
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function StudentProfilePage() {
+  const { studentId } = useParams<{ studentId: string }>();
+  const router = useRouter();
 
-    const [isCounselingModalOpen, setIsCounselingModalOpen] = useState(false);
-    const [counselingDate, setCounselingDate] = useState("");
-    const [counselingTime, setCounselingTime] = useState("");
-    const [counselingType, setCounselingType] = useState("Academic");
+  const [overview, setOverview] = useState<StudentOverview | null>(null);
+  const [marksTrend, setMarksTrend] = useState<MarksTrendPoint[]>([]);
+  const [risk, setRisk] = useState<RiskData | null>(null);
+  const [performance, setPerformance] = useState<SemesterPerf[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [assignmentSummary, setAssignmentSummary] = useState<AssignmentSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const [isMentorModalOpen, setIsMentorModalOpen] = useState(false);
-    const [selectedMentor, setSelectedMentor] = useState<string | null>(null);
-    const [hasPeerMentor, setHasPeerMentor] = useState(false);
+  useEffect(() => {
+    if (!studentId) return;
+    const id = studentId;
 
-    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-    const [emailSubject, setEmailSubject] = useState("");
-    const [emailBody, setEmailBody] = useState("");
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        const results = await Promise.allSettled([
+          apiClient.get(`/student/${id}/overview`),
+          apiClient.get(`/student/${id}/marks-trend`),
+          apiClient.get(`/student/${id}/risk`),
+          apiClient.get(`/student/${id}/performance`),
+          apiClient.get(`/student/${id}/attendance`),
+          apiClient.get(`/student/${id}/assignments`),
+        ]);
 
-    const [availableMentors, setAvailableMentors] = useState<{ id: string; name: string; role: string; dept: string }[]>([]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [overviewData, riskData] = await Promise.all([
-                    studentService.getOverview(params.studentId),
-                    studentService.getRisk(params.studentId)
-                ]);
-                setOverview(overviewData);
-                setRisk(riskData);
-
-                apiClient.get('/analytics/faculty')
-                    .then(res => {
-                        setAvailableMentors((res.data.faculty || []).map((f: { id: string; name: string; role: string; department: string }) => ({
-                            id: f.id, name: f.name, role: f.role, dept: f.department,
-                        })));
-                    })
-                    .catch(() => { });
-            } catch (error) {
-                console.error("Failed to fetch student details:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [params.studentId]);
-
-    // Toast Notification Helper
-    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-        setToastMessage(message);
-        setToastType(type);
-        setTimeout(() => setToastMessage(null), 3000);
+        const [ov, marks, rsk, perf, att, asgn] = results;
+        if (ov.status === "fulfilled") setOverview(ov.value.data);
+        else { setError("Failed to load student profile."); return; }
+        if (marks.status === "fulfilled") setMarksTrend(marks.value.data ?? []);
+        if (rsk.status === "fulfilled") setRisk(rsk.value.data ?? null);
+        if (perf.status === "fulfilled") setPerformance(perf.value.data ?? []);
+        if (att.status === "fulfilled") setAttendance(att.value.data ?? []);
+        if (asgn.status === "fulfilled") setAssignmentSummary(asgn.value.data ?? null);
+      } catch {
+        setError("Failed to load student profile.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // --- Action Handlers ---
+    fetchAll();
+  }, [studentId]);
 
-    const handleAddNote = () => {
-        if (!noteText.trim()) return;
-        showToast("Case note added successfully to student record.");
-        setNoteText("");
-        setIsNoteModalOpen(false);
-    };
-
-    const handleMarkReviewed = () => {
-        setIsReviewed(true);
-        showToast("Student profile marked as reviewed.");
-    };
-
-    const handleEscalate = () => {
-        setIsEscalated(true);
-        showToast("Case escalated to Dean of Students.", "error");
-    };
-
-    const handleScheduleCounselingSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        showToast(`Counseling scheduled for ${counselingDate} without ${counselingTime}.`);
-        setIsCounselingModalOpen(false);
-        setCounselingDate("");
-        setCounselingTime("");
-    };
-
-    const handleAssignMentorSubmit = () => {
-        if (!selectedMentor) return;
-        setHasPeerMentor(true);
-        const mentorName = availableMentors.find(m => m.id === selectedMentor)?.name;
-        showToast(`Mentor ${mentorName} assigned successfully.`);
-        setIsMentorModalOpen(false);
-    };
-
-    const handleEmailSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        showToast("Email sent to student successfully.");
-        setIsEmailModalOpen(false);
-        setEmailSubject("");
-        setEmailBody("");
-    };
-
-    if (loading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            </div>
-        );
-    }
-
-    if (!overview || !risk) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <p>Student not found or error loading data.</p>
-                <Link href="/students" className="mt-4 text-indigo-600 hover:underline">Return to list</Link>
-            </div>
-        )
-    }
-
-    const isHighRisk = risk.risk_level === "High Risk";
-    const riskScore = risk.risk_score;
-
-    const rate = overview.attendance_rate;
-    const classAvg = 90;
-    const attendanceHistory = Array.from({ length: 8 }, (_, i) => ({
-        week: `Week ${i + 1}`,
-        student: Math.round(Math.min(100, rate + (7 - i) * 3)),
-        classAvg: Math.round(classAvg + (7 - i) * 0.3),
-    }));
-
+  // ─── Loading / Error ────────────────────────────────────────────────────────
+  if (loading) {
     return (
-        <div className="space-y-6 relative">
-            {/* Toast Notification */}
-            {toastMessage && (
-                <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white font-medium flex items-center gap-2 animate-in slide-in-from-top-2 duration-300 ${toastType === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
-                    {toastType === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
-                    {toastMessage}
-                </div>
-            )}
-
-            {/* --- Modals --- */}
-
-            {/* Note Modal */}
-            {isNoteModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Add Case Note</h3>
-                            <button onClick={() => setIsNoteModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-                        </div>
-                        <textarea
-                            value={noteText}
-                            onChange={(e) => setNoteText(e.target.value)}
-                            placeholder="Enter notes about this student's risk factors or recent interactions..."
-                            className="w-full h-32 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none mb-4"
-                        />
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setIsNoteModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                            <button onClick={handleAddNote} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">Save Note</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Counseling Modal */}
-            {isCounselingModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Schedule Counseling</h3>
-                            <button onClick={() => setIsCounselingModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-                        </div>
-                        <form onSubmit={handleScheduleCounselingSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Session Type</label>
-                                <select
-                                    value={counselingType}
-                                    onChange={(e) => setCounselingType(e.target.value)}
-                                    className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option>Academic Performance</option>
-                                    <option>Personal Counseling</option>
-                                    <option>Career Guidance</option>
-                                    <option>Attendance Issues</option>
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={counselingDate}
-                                        onChange={(e) => setCounselingDate(e.target.value)}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                                    <input
-                                        type="time"
-                                        required
-                                        value={counselingTime}
-                                        onChange={(e) => setCounselingTime(e.target.value)}
-                                        className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-2 mt-6">
-                                <button type="button" onClick={() => setIsCounselingModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">Create Appointment</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Mentor Selection Modal */}
-            {isMentorModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Assign Mentor</h3>
-                            <button onClick={() => setIsMentorModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-                        </div>
-                        <p className="text-sm text-gray-500 mb-4">Select a mentor from the available list of faculty and senior students.</p>
-                        <div className="space-y-2 mb-6 max-h-[300px] overflow-y-auto">
-                            {availableMentors.map((mentor) => (
-                                <div
-                                    key={mentor.id}
-                                    onClick={() => setSelectedMentor(mentor.id)}
-                                    className={`p-3 rounded-lg border cursor-pointer flex items-center justify-between transition-all ${selectedMentor === mentor.id
-                                        ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500'
-                                        : 'border-gray-200 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    <div>
-                                        <p className="font-semibold text-gray-900 text-sm">{mentor.name}</p>
-                                        <p className="text-xs text-gray-500">{mentor.role} • {mentor.dept}</p>
-                                    </div>
-                                    {selectedMentor === mentor.id && <CheckCircle size={18} className="text-blue-600" />}
-                                </div>
-                            ))}
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => setIsMentorModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                            <button
-                                onClick={handleAssignMentorSubmit}
-                                disabled={!selectedMentor}
-                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Confirm Assignment
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Email Student Modal */}
-            {isEmailModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Send Email</h3>
-                            <button onClick={() => setIsEmailModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-                        </div>
-                        <form onSubmit={handleEmailSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-                                <input
-                                    type="text"
-                                    value={`student.${params.studentId}@university.edu`}
-                                    disabled
-                                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={emailSubject}
-                                    onChange={(e) => setEmailSubject(e.target.value)}
-                                    placeholder="e.g., Mandatory Counseling Session"
-                                    className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                                <textarea
-                                    required
-                                    value={emailBody}
-                                    onChange={(e) => setEmailBody(e.target.value)}
-                                    placeholder="Write your message here..."
-                                    className="w-full h-32 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
-                                />
-                            </div>
-                            <div className="flex justify-end gap-2 mt-2">
-                                <button type="button" onClick={() => setIsEmailModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Discard</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2">
-                                    <Mail size={16} /> Send Email
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-
-            {/* Advisor Chat Widget */}
-            <ChatWidget
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                advisorName={availableMentors.length > 0 ? availableMentors[0].name : "Faculty Advisor"}
-                advisorRole={availableMentors.length > 0 ? availableMentors[0].role : "Advisor"}
-                studentId={params.studentId}
-            />
-
-            {/* Header Action Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                <div className="flex flex-col">
-                    <h1 className="text-xl font-bold text-gray-900">Actionable Student Risk Profile</h1>
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                        <Link href="/dashboard" className="hover:text-indigo-600">Dashboard</Link>
-                        <ChevronRight size={14} />
-                        <Link href="/students" className="hover:text-indigo-600">Students</Link>
-                        <ChevronRight size={14} />
-                        <span className="text-gray-900 font-medium">Risk Profiles</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsNoteModalOpen(true)}
-                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors"
-                    >
-                        <FileText size={16} />
-                        Add Case Note
-                    </button>
-                    <button
-                        onClick={handleMarkReviewed}
-                        disabled={isReviewed}
-                        className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${isReviewed
-                            ? 'bg-green-50 border-green-200 text-green-700 cursor-default'
-                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        <CheckCircle size={16} className={isReviewed ? "text-green-600" : "text-gray-400"} />
-                        {isReviewed ? 'Reviewed' : 'Mark as Reviewed'}
-                    </button>
-                    <button
-                        onClick={handleEscalate}
-                        disabled={isEscalated}
-                        className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${isEscalated
-                            ? 'bg-red-100 border-red-200 text-red-800 cursor-default'
-                            : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100'
-                            }`}
-                    >
-                        <AlertTriangle size={16} />
-                        {isEscalated ? 'Escalated' : 'Escalate'}
-                    </button>
-                    <div className="h-8 w-px bg-gray-200 mx-1"></div>
-                    <div className="relative group">
-                        <Bell size={20} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" />
-                        <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Content Column */}
-                <div className="lg:col-span-2 space-y-6">
-
-                    {/* Student Profile & Risk Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="p-6">
-                            <div className="flex flex-col md:flex-row gap-8">
-                                {/* Left: Student Info */}
-                                <div className="flex-1">
-                                    <div className="flex items-start gap-4">
-                                        <div className="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center text-2xl font-bold text-indigo-600 border border-indigo-100 shadow-sm">
-                                            {(() => {
-                                                const initials = ((overview as StudentOverview & { student_name?: string }).student_name || "ST").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
-                                                return overview.risk_level === 'High Risk' ? (
-                                                    <div className="relative">
-                                                        <span className="absolute bottom-0 right-0 h-4 w-4 bg-red-500 border-2 border-white rounded-full"></span>
-                                                        {initials}
-                                                    </div>
-                                                ) : initials;
-                                            })()}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{(overview as StudentOverview & { student_name?: string }).student_name || `Student #${params.studentId}`}</h2>
-                                            </div>
-                                            <p className="text-sm text-gray-500 mt-1 font-medium">ID: #{params.studentId} • {risk.risk_level} • Attendance: {Math.round(overview.attendance_rate)}%</p>
-                                            <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                                                <a href="#" onClick={(e) => { e.preventDefault(); setIsEmailModalOpen(true); }} className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors">
-                                                    <Mail size={14} />
-                                                    {`student.${params.studentId}@university.edu`}
-                                                </a>
-                                                <div className="flex items-center gap-1.5">
-                                                    <User size={14} />
-                                                    ID: {params.studentId}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Risk Factors Section */}
-                                    <div className="mt-8">
-                                        <button
-                                            onClick={() => setIsRiskExpanded(!isRiskExpanded)}
-                                            className="flex items-center justify-between w-full group py-2"
-                                        >
-                                            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                                <AlertTriangle size={16} className="text-red-500" />
-                                                Why is this student high risk?
-                                            </h3>
-                                            <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isRiskExpanded ? 'rotate-180' : ''}`} />
-                                        </button>
-
-                                        {isRiskExpanded && (
-                                            <div className="mt-2 space-y-3 pl-0 animate-in slide-in-from-top-2 duration-300">
-                                                {risk.explanation?.top_factors.map((factor: any, idx: number) => (
-                                                    <div key={idx} className="flex items-center justify-between group p-2 hover:bg-gray-50 rounded-lg transition-colors border-b last:border-0 border-gray-50">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-2 h-2 rounded-full ${factor.direction === 'negative' ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
-                                                            <span className="text-sm text-gray-700 font-medium capitalize">{factor.feature.replace(/_/g, ' ')}</span>
-                                                        </div>
-                                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${factor.direction === 'negative'
-                                                            ? 'bg-red-50 text-red-700'
-                                                            : 'bg-green-50 text-green-700'
-                                                            }`}>
-                                                            {factor.direction === 'negative' ? 'Critical Impact' : 'Positive Factor'}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                                {(!risk.explanation || risk.explanation.top_factors.length === 0) && (
-                                                    <p className="text-sm text-gray-400 italic pl-6">No specific risk factors identified.</p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Right: Risk Gauge */}
-                                <div className="w-full md:w-[320px] bg-red-50/50 rounded-xl p-6 flex flex-col items-center justify-center border border-red-100 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
-                                        <AlertTriangle size={120} className="text-red-900" />
-                                    </div>
-                                    <div className="relative h-32 w-32 flex items-center justify-center">
-                                        {/* SVG Circular Progress */}
-                                        <svg className="transform -rotate-90 w-32 h-32">
-                                            <circle cx="64" cy="64" r="54" stroke="#fee2e2" strokeWidth="10" fill="transparent" />
-                                            <circle
-                                                cx="64" cy="64" r="54"
-                                                stroke="#dc2626"
-                                                strokeWidth="10"
-                                                fill="transparent"
-                                                strokeDasharray={`${2 * Math.PI * 54}`}
-                                                strokeDashoffset={`${2 * Math.PI * 54 * (1 - riskScore / 100)}`}
-                                                strokeLinecap="round"
-                                                className="transition-all duration-1000 ease-out"
-                                            />
-                                        </svg>
-                                        <span className="absolute text-3xl font-bold text-gray-900">{riskScore.toFixed(0)}%</span>
-                                    </div>
-                                    <h3 className="mt-4 text-red-700 font-bold text-sm uppercase tracking-wider">Critical Risk Level</h3>
-                                    <p className="text-xs text-red-600/80 text-center mt-1 px-4 leading-relaxed">Predicted dropout probability based on recent activity.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-gray-50/80 px-6 py-3 text-xs text-gray-500 border-t border-gray-100 flex justify-between items-center">
-                            <span>Projected Impact: <strong className="text-red-600 font-bold">High Risk</strong> → <strong className="text-amber-500 font-bold">Medium Risk</strong> via Intervention</span>
-                            <span>Last updated: 2 hours ago</span>
-                        </div>
-                    </div>
-
-                    {/* Metrics Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-amber-400 border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-3">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">LMS Activity</p>
-                                <div className="p-1 bg-amber-50 rounded">
-                                    <AlertTriangle size={14} className="text-amber-500" />
-                                </div>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">{overview.engagement_score > 50 ? "Active" : "Inactive"}</h3>
-                            <p className="text-xs text-gray-500 mt-2 font-medium">Engagement: {Math.round(overview.engagement_score)}%</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-red-500 border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-3">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Grade Trend</p>
-                                <div className="p-1 bg-red-50 rounded">
-                                    <TrendingDown size={14} className="text-red-500" />
-                                </div>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">{Math.round(overview.avg_marks || 0)} Avg</h3>
-                            <p className="text-xs text-gray-500 mt-2 font-medium">Academic performance</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-amber-400 border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-3">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Attendance</p>
-                                <div className="p-1 bg-amber-50 rounded">
-                                    <Calendar size={14} className="text-amber-500" />
-                                </div>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">{Math.round(overview.attendance_rate)}% Rate</h3>
-                            <p className="text-xs text-gray-500 mt-2 font-medium">{overview.attendance_rate < 75 ? "Below 75% threshold" : "Above threshold"}</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-blue-500 border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-3">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Risk Score</p>
-                                <div className="p-1 bg-blue-50 rounded">
-                                    <FileText size={14} className="text-blue-500" />
-                                </div>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-none">{riskScore.toFixed(0)}%</h3>
-                            <p className="text-xs text-gray-500 mt-2 font-medium">{risk.risk_level}</p>
-                        </div>
-                    </div>
-
-                    {/* Attendance History Chart */}
-                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                        <div className="flex items-center justify-between mb-8">
-                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                <TrendingUp size={18} className="text-indigo-600" />
-                                Attendance History
-                            </h3>
-                            <span className="text-xs font-medium bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">This Semester</span>
-                        </div>
-                        <div className="h-[250px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={attendanceHistory}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                    <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} domain={[0, 100]} dx={-10} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    />
-                                    <Line type="monotone" dataKey="classAvg" name="Class Avg" stroke="#cbd5e1" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                                    <Line type="monotone" dataKey="student" name="Student" stroke="#f87171" strokeWidth={3} dot={{ r: 4, fill: '#f87171', strokeWidth: 2, stroke: '#fff' }} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* Coding Profile Analysis */}
-                    <div>
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <BookOpen size={18} className="text-indigo-600" />
-                            Coding Profile Analysis
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="h-[350px]">
-                                <GlobalRankChart />
-                            </div>
-                            <div className="h-[350px]">
-                                <ScoreDistributionChart />
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* Sidebar Column */}
-                <div className="space-y-6">
-                    {/* Recommended Actions */}
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <TrendingUp size={20} className="text-blue-600" />
-                            Recommended Actions
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-6 font-medium leading-relaxed">Immediate intervention suggested due to critical risk status.</p>
-
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => setIsCounselingModalOpen(true)}
-                                className="w-full flex items-center justify-between p-3.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md shadow-blue-200 hover:shadow-lg active:scale-[0.98]"
-                            >
-                                <span className="flex items-center gap-2.5 font-medium text-sm">
-                                    <Calendar size={18} />
-                                    Schedule Counseling
-                                </span>
-                                <ArrowRight size={18} />
-                            </button>
-                            <button
-                                onClick={() => setIsMentorModalOpen(true)}
-                                className={`w-full flex items-center justify-between p-3.5 rounded-lg transition-all border active:scale-[0.98] ${hasPeerMentor
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : 'bg-blue-50 text-blue-700 border-blue-50 hover:bg-blue-100'
-                                    }`}
-                            >
-                                <span className="flex items-center gap-2.5 font-medium text-sm">
-                                    <User size={18} />
-                                    {hasPeerMentor ? 'Peer Mentor Assigned' : 'Assign Peer Mentor'}
-                                </span>
-                                {hasPeerMentor ? <CheckCircle size={18} /> : <MoreHorizontal size={18} />}
-                            </button>
-                            <button
-                                onClick={() => setIsEmailModalOpen(true)}
-                                className="w-full flex items-center justify-between p-3.5 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
-                            >
-                                <span className="flex items-center gap-2.5 font-medium text-sm">
-                                    <Mail size={18} />
-                                    Email Student
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Assigned Advisor */}
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5">
-                            <User size={80} />
-                        </div>
-                        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-5">Assigned Advisor</h3>
-                        <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-lg shadow-sm border-2 border-white">
-                                {availableMentors.length > 0 ? availableMentors[0].name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "FA"}
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900 text-sm">{availableMentors.length > 0 ? availableMentors[0].name : "Faculty Advisor"}</h4>
-                                <p className="text-xs text-gray-500 font-medium">{availableMentors.length > 0 ? availableMentors[0].role : "Advisor"}</p>
-                            </div>
-                        </div>
-                        <div className="mt-6 pt-5 border-t border-gray-50 flex gap-3">
-                            <button className="flex-1 text-xs font-semibold py-2.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200/50">View Profile</button>
-                            <button
-                                onClick={() => setIsChatOpen(true)}
-                                className="flex-1 text-xs font-semibold py-2.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors border border-indigo-100"
-                            >
-                                Message
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
+        <Loader2 className="animate-spin text-indigo-600" size={36} />
+        <p className="text-slate-500 text-sm">Loading student profile…</p>
+      </div>
     );
+  }
+
+  if (error || !overview) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <AlertTriangle size={48} className="text-red-400" />
+        <p className="text-slate-700 font-semibold text-lg">{error ?? "Student not found"}</p>
+        <Link href="/faculty/students" className="text-sm text-indigo-600 hover:underline flex items-center gap-1">
+          <ArrowLeft size={14} /> Back to Students
+        </Link>
+      </div>
+    );
+  }
+
+  const riskVal = risk?.risk_score ?? parseFloat(overview.riskValue ?? "0");
+  const riskLevel = risk?.risk_level ?? overview.riskStatus ?? "Safe";
+  const colors = riskColor(riskLevel);
+
+  // KPI cards
+  const kpis = [
+    {
+      label: "Risk Score", value: `${riskVal.toFixed(1)}%`,
+      sub: riskLevel,
+      icon: <AlertTriangle size={18} />,
+      colorClass: riskVal > 70 ? "bg-red-50 text-red-600 border-red-100"
+        : riskVal > 45 ? "bg-amber-50 text-amber-600 border-amber-100"
+        : "bg-emerald-50 text-emerald-600 border-emerald-100",
+    },
+    {
+      label: "Attendance", value: `${(overview.attendance ?? 0).toFixed(1)}%`,
+      sub: overview.attendance >= 75 ? "On track" : "Below 75%",
+      icon: <CalendarCheck size={18} />,
+      colorClass: overview.attendance >= 75
+        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+        : "bg-red-50 text-red-600 border-red-100",
+    },
+    {
+      label: "CGPA", value: (overview.cgpa ?? 0).toFixed(2),
+      sub: "Current semester",
+      icon: <Star size={18} />,
+      colorClass: "bg-blue-50 text-blue-600 border-blue-100",
+    },
+    {
+      label: "Engagement", value: `${(overview.engagementScore ?? 0).toFixed(0)}%`,
+      sub: "LMS activity score",
+      icon: <Activity size={18} />,
+      colorClass: "bg-purple-50 text-purple-600 border-purple-100",
+    },
+  ];
+
+  // Gauge data for risk donut
+  const gaugeData = [
+    { name: "Risk", value: riskVal, fill: colors.dot },
+    { name: "Safe", value: 100 - riskVal, fill: "#f1f5f9" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <nav className="text-xs text-slate-400 flex items-center gap-1 mb-0.5">
+            <Link href="/faculty/students" className="hover:text-indigo-600">Students</Link>
+            <ChevronRight size={12} />
+            <span className="text-slate-600 font-medium">{overview.name}</span>
+          </nav>
+          <h1 className="text-2xl font-bold text-slate-900">Student Profile</h1>
+        </div>
+      </div>
+
+      {/* ── Identity Card ── */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+        <div className="flex flex-wrap items-start gap-6">
+          {/* Avatar */}
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg flex-shrink-0">
+            {overview.name.charAt(0)}
+          </div>
+
+          {/* Name & Meta */}
+          <div className="flex-1 min-w-[180px]">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-xl font-bold text-slate-900">{overview.name}</h2>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${colors.badge}`}>
+                {riskLevel}
+              </span>
+            </div>
+            <p className="text-slate-500 text-sm mt-1">
+              {overview.id} · {overview.department} · {overview.section}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">Advisor: {overview.advisor ?? "Unassigned"} · Last active: {overview.lastInteraction}</p>
+            {overview.primaryRiskDriver && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 w-fit">
+                <AlertTriangle size={13} />
+                <span>Primary risk driver: <strong>{overview.primaryRiskDriver}</strong></span>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors">
+              <MessageSquare size={14} /> Message
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors">
+              <ClipboardList size={14} /> Intervene
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors shadow-sm">
+              <Phone size={14} /> Contact Parent
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── KPI Row ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpis.map((k, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 border ${k.colorClass}`}>
+              {k.icon}
+            </div>
+            <p className="text-xs text-slate-500 font-medium">{k.label}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-0.5">{k.value}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{k.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Charts Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Attendance */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <h3 className="font-bold text-slate-900 mb-5">Recent Attendance</h3>
+          {attendance.length > 0 ? (
+            <div className="space-y-2">
+              {attendance.slice(0, 6).map((rec, i) => (
+                <div key={i} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{rec.course_name}</p>
+                    <p className="text-xs text-slate-400">{new Date(rec.date).toLocaleDateString()}</p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    rec.status === 'Present' ? 'bg-emerald-50 text-emerald-700' :
+                    rec.status === 'Absent' ? 'bg-red-50 text-red-700' :
+                    'bg-amber-50 text-amber-700'
+                  }`}>
+                    {rec.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center">
+              <p className="text-slate-400 text-sm">No attendance records available.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Risk Gauge */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col items-center justify-center">
+          <h3 className="font-bold text-slate-900 mb-3 self-start">Dropout Risk</h3>
+          <div className="relative w-40 h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={gaugeData}
+                  startAngle={220} endAngle={-40}
+                  cx="50%" cy="55%"
+                  innerRadius={50} outerRadius={70}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {gaugeData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center mt-4">
+              <span className="text-2xl font-black" style={{ color: colors.dot }}>{riskVal.toFixed(1)}%</span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Risk Score</span>
+            </div>
+          </div>
+          <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${colors.badge}`}>
+            {riskLevel}
+          </div>
+          {risk?.risk_factors && risk.risk_factors.length > 0 && (
+            <div className="mt-4 w-full space-y-1.5">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Risk Factors</p>
+              {risk.risk_factors.slice(0, 3).map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-2.5 py-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                  {f}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Marks Trend ── */}
+      {marksTrend.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <h3 className="font-bold text-slate-900 mb-5">Marks Trend</h3>
+          <div className="h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={marksTrend} margin={{ top: 0, right: 10, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <Tooltip contentStyle={{ borderRadius: "10px", border: "none", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", fontSize: "12px" }} />
+                <Bar dataKey="marks" fill="#6366f1" radius={[6, 6, 0, 0]} barSize={32} name="Score %" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* ── Assignment Summary ── */}
+      {assignmentSummary && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <h3 className="font-bold text-slate-900 mb-5 flex items-center gap-2">
+            <BookOpen size={18} className="text-indigo-500" /> Assignment Summary
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "Total", value: assignmentSummary.total, color: "text-slate-800" },
+              { label: "Completed", value: assignmentSummary.completed, color: "text-emerald-600" },
+              { label: "Pending", value: assignmentSummary.pending, color: "text-amber-600" },
+              { label: "Overdue", value: assignmentSummary.overdue, color: "text-red-600" },
+            ].map((s, i) => (
+              <div key={i} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+              <span>Completion Rate</span>
+              <span className="font-semibold text-slate-700">{assignmentSummary.completion_percentage}%</span>
+            </div>
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-500 rounded-full transition-all"
+                style={{ width: `${assignmentSummary.completion_percentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Subject Performance ── */}
+      {performance.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <h3 className="font-bold text-slate-900 mb-5 flex items-center gap-2">
+            <Star size={18} className="text-amber-500" />
+            Subject Performance — Semester {performance[performance.length - 1].semester}
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  {["Course", "Credits", "Score", "Grade", "Attendance"].map((h) => (
+                    <th key={h} className="text-left py-2 pr-4 text-xs font-semibold text-slate-400 uppercase">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {performance[performance.length - 1].subjects.map((subj, i) => {
+                  const gradeColor = subj.grade.startsWith('A') ? 'bg-emerald-50 text-emerald-700'
+                    : subj.grade.startsWith('B') ? 'bg-blue-50 text-blue-700'
+                    : 'bg-amber-50 text-amber-700';
+                  return (
+                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 pr-4">
+                        <p className="font-semibold text-slate-800 text-sm">{subj.course_name}</p>
+                        <p className="text-xs text-slate-400">{subj.course_id}</p>
+                      </td>
+                      <td className="py-3 pr-4 text-slate-500 text-sm">{subj.credits}</td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${Math.min(subj.total_marks, 100)}%` }} />
+                          </div>
+                          <span className="text-xs text-slate-600 font-medium">{subj.total_marks.toFixed(1)}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${gradeColor}`}>{subj.grade}</span>
+                      </td>
+                      <td className="py-3">
+                        <span className={`text-sm font-semibold ${
+                          subj.attendance_percentage >= 75 ? 'text-emerald-600' : 'text-red-600'
+                        }`}>{subj.attendance_percentage.toFixed(1)}%</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

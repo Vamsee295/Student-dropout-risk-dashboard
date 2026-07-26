@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] - Phase 10
+
+### Added
+- Complete project documentation suite in `docs/` folder (SRS, SDD, Architecture, Database, API Reference).
+- Presentation and Viva preparation materials (`DEMO_SCRIPT.md`, `PRESENTATION_OUTLINE.md`, `INTERVIEW_QA.md`).
+- Project contribution guidelines (`CONTRIBUTING.md`).
+- Rewritten root `README.md` to serve as a professional portfolio landing page.
+
 All notable changes to the Student Dropout Risk Dashboard are documented here.
 
 ---

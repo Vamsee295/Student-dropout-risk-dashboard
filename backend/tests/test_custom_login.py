@@ -1,9 +1,9 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
-from app.database import get_db
+from app.database.session import get_db
 from app.models import User, Role
-from app.security import get_password_hash
+from app.auth.security import get_password_hash
 
 @pytest.mark.asyncio
 async def test_custom_user_login(db):
@@ -30,13 +30,14 @@ async def test_custom_user_login(db):
 
         # 2. Try to login via API
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            response = await ac.post("/api/auth/login", data={
+            response = await ac.post("/api/v1/auth/login", data={
                 "username": custom_email,
                 "password": custom_password
             })
         
         assert response.status_code == 200
-        data = response.json()
+        data_raw = response.json()
+        data = data_raw.get('data', data_raw) if isinstance(data_raw, dict) else data_raw
         assert "access_token" in data
         assert data["token_type"] == "bearer"
         assert data["role"] == "STUDENT"

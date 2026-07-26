@@ -11,7 +11,6 @@ from app.models import (
 )
 from app.schemas import (
     AnalyticsOverview,
-    StudentWithRisk,
     RiskExplanation,
     SHAPFactor,
     Token,
@@ -111,20 +110,20 @@ class TestRiskScoreModel:
 
 
 class TestInterventionModel:
-    def test_create_intervention(self, db, sample_student):
+    def test_create_intervention(self, db, sample_student, sample_user):
         intervention = Intervention(
             student_id="ST0001",
-            intervention_type=InterventionType.COUNSELING,
-            status=InterventionStatus.PENDING,
-            assigned_to="Dr. Smith",
+            type="counseling",
+            status="Assigned",
+            faculty_id=sample_user.id,
             notes="Auto-triggered by high risk score.",
         )
         db.add(intervention)
         db.commit()
         db.refresh(intervention)
 
-        assert intervention.intervention_type == InterventionType.COUNSELING
-        assert intervention.status == InterventionStatus.PENDING
+        assert intervention.type == "counseling"
+        assert intervention.status == "Assigned"
         assert intervention.student_id == "ST0001"
 
 

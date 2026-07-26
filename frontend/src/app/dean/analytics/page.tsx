@@ -6,46 +6,13 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell
 } from "recharts";
 
-const multiTrend = [
-  { month: "Aug'23", dropout: 18.2, retention: 81.8, attendance: 76, placement: 78 },
-  { month: "Sep'23", dropout: 17.5, retention: 82.5, attendance: 77, placement: 79 },
-  { month: "Oct'23", dropout: 19.1, retention: 80.9, attendance: 75, placement: 77 },
-  { month: "Nov'23", dropout: 16.8, retention: 83.2, attendance: 78, placement: 80 },
-  { month: "Dec'23", dropout: 14.2, retention: 85.8, attendance: 80, placement: 82 },
-  { month: "Jan'24", dropout: 12.4, retention: 87.6, attendance: 79.6, placement: 84 },
-];
-
-const yearlyGraduation = [
-  { year: "2019", rate: 82 }, { year: "2020", rate: 84 },
-  { year: "2021", rate: 85 }, { year: "2022", rate: 87 },
-  { year: "2023", rate: 89 }, { year: "2024", rate: 91 },
-];
-
-const researchGrowth = [
-  { year: "2020", papers: 180, grants: 12 }, { year: "2021", papers: 240, grants: 18 },
-  { year: "2022", papers: 310, grants: 24 }, { year: "2023", papers: 412, grants: 31 },
-];
-
-const leaderboards = {
-  departments: [
-    { rank: 1, name: "AI & Data Science", score: 93, metric: "Composite Score" },
-    { rank: 2, name: "MBA", score: 89, metric: "Composite Score" },
-    { rank: 3, name: "CSE", score: 86, metric: "Composite Score" },
-    { rank: 4, name: "EEE", score: 74, metric: "Composite Score" },
-    { rank: 5, name: "ECE", score: 71, metric: "Composite Score" },
-    { rank: 6, name: "Civil", score: 64, metric: "Composite Score" },
-    { rank: 7, name: "Mechanical", score: 58, metric: "Composite Score" },
-  ],
-  placement: [
-    { rank: 1, name: "AI & Data Science", pct: 95 },
-    { rank: 2, name: "CSE", pct: 92 },
-    { rank: 3, name: "MBA", pct: 88 },
-    { rank: 4, name: "ECE", pct: 78 },
-    { rank: 5, name: "EEE", pct: 74 },
-  ],
-};
+import { useDeanAnalytics } from "@/hooks/useDeanAnalytics";
 
 export default function AnalyticsPage() {
+  const { multiTrend, yearlyGraduation, researchGrowth, leaderboards, isLoading } = useDeanAnalytics();
+
+  if (isLoading) return <div>Loading analytics...</div>;
+
   return (
     <div className="space-y-6">
       <div>

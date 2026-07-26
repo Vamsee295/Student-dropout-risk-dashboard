@@ -24,7 +24,7 @@ import {
   AlertTriangle,
   UsersRound,
 } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 
 type NavItem = {
@@ -61,13 +61,12 @@ const navItems: NavItem[] = [
 
 export function FacultySidebar() {
   const pathname = usePathname();
-  const { logout } = useAuthStore();
+  const { logout } = useAuth();
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<string[]>(["Students"]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    await logout();
   };
 
   const toggleExpand = (label: string) => {
