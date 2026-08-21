@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/api/axios';
 
 export function useDeanAnalytics() {
-  const [multiTrend, setMultiTrend] = useState([]);
-  const [yearlyGraduation, setYearlyGraduation] = useState([]);
-  const [researchGrowth, setResearchGrowth] = useState([]);
-  const [leaderboards, setLeaderboards] = useState({ departments: [], placement: [] });
+  const [multiTrend, setMultiTrend] = useState<any[]>([]);
+  const [yearlyGraduation, setYearlyGraduation] = useState<any[]>([]);
+  const [researchGrowth, setResearchGrowth] = useState<any[]>([]);
+  const [leaderboards, setLeaderboards] = useState<{ departments: any[], placement: any[] }>({ departments: [], placement: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAnalytics = useCallback(async () => {

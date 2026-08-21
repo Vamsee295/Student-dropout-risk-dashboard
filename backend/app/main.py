@@ -12,6 +12,7 @@ from app.core.exceptions import (
 )
 from app.api import api_router
 from app.api.health import router as health_router
+from app.api.ws import router as ws_router
 
 from contextlib import asynccontextmanager
 from app.database.session import SessionLocal
@@ -77,6 +78,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 # Include API Router
 app.include_router(health_router)
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(ws_router)
 
 @app.get("/")
 def root():

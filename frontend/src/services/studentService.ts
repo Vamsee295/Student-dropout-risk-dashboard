@@ -23,6 +23,14 @@ export interface StudentOverview {
   lastInteraction: string;
   advisor: string | null;
   primaryRiskDriver: string | null;
+  cgpa?: number;
+  attendance_rate?: number;
+  dropout_probability?: number;
+  risk_level?: string;
+  risk_trend?: string;
+  study_streak_days?: number;
+  upcoming_deadlines?: any[];
+  avg_marks?: number;
 }
 
 export interface AssessmentInfo {

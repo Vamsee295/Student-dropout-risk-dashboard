@@ -310,7 +310,7 @@ export default function StudentDashboardPage() {
               <div key={i} className={`p-3 rounded-xl border ${task.status === "Overdue" ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100"}`}>
                 <p className={`text-xs font-semibold ${task.status === "Overdue" ? "text-red-800" : "text-slate-700"}`}>{task.assessment.title}</p>
                 <p className={`text-[10px] mt-0.5 font-medium ${task.status === "Overdue" ? "text-red-500" : "text-slate-400"}`}>
-                  {task.assessment.course_name} · Due: {new Date(task.assessment.due_date).toLocaleDateString()}
+                  {task.assessment.course_name} · Due: {task.assessment.due_date ? new Date(task.assessment.due_date).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             ))}

@@ -53,8 +53,6 @@ class AssessmentType(str, enum.Enum):
 class AttendanceStatus(str, enum.Enum):
     PRESENT = "Present"
     ABSENT = "Absent"
-    LATE = "Late"
-    EXCUSED = "Excused"
 
 class SubmissionStatus(str, enum.Enum):
     SUBMITTED = "Submitted"

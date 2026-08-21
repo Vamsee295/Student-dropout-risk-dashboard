@@ -17,6 +17,9 @@ from app.schemas.dashboard import (
     FacultyStudentProfile, AnalyticsOverview, DepartmentRiskBreakdown,
     StudentDashboardOverview
 )
+from app.schemas.calendar_schema import (
+    CalendarEventBase, CalendarEventCreate, CalendarEventUpdate, CalendarEventResponse
+)
 
 __all__ = [
     "UserBase", "UserCreate", "UserResponse", "Token",
@@ -31,5 +34,6 @@ __all__ = [
     "AttendanceRecordResponse", "StudentAssessmentResponse", "UploadSummary",
     "StudentFrontendResponse", "FacultyStudentListItem", "PaginatedStudentList",
     "FacultyStudentProfile", "AnalyticsOverview", "DepartmentRiskBreakdown",
-    "StudentDashboardOverview"
+    "StudentDashboardOverview",
+    "CalendarEventBase", "CalendarEventCreate", "CalendarEventUpdate", "CalendarEventResponse"
 ]

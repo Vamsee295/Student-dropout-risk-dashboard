@@ -14,6 +14,8 @@ from app.api.system import router as system_router
 from app.api.faculty import router as faculty_router
 from app.api.attendance import router as attendance_router
 from app.api.grades import router as grades_router
+from app.api.messages import router as messages_router
+from app.api.calendar import router as calendar_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -32,3 +34,5 @@ api_router.include_router(system_router)
 api_router.include_router(faculty_router, prefix="/faculty", tags=["Faculty"])
 api_router.include_router(attendance_router, prefix="/attendance", tags=["Attendance"])
 api_router.include_router(grades_router, prefix="/grades", tags=["Grades"])
+api_router.include_router(messages_router)
+api_router.include_router(calendar_router)

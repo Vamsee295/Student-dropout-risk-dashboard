@@ -15,6 +15,8 @@ from app.models.analytics import ModelVersion, RiskScore, RiskHistory
 from app.models.notification import Notification
 from app.models.intervention import Intervention
 from app.models.audit import AuditLog
+from app.models.conversation import Conversation, Message
+from app.models.calendar import CalendarEvent
 
 __all__ = [
     "Base",
@@ -27,5 +29,6 @@ __all__ = [
     "AttendanceRecord", "StudentAssessment",
     "StudentRawAttendance", "StudentRawMarks", "StudentRawAssignments",
     "ModelVersion", "RiskScore", "RiskHistory",
-    "Notification", "Intervention", "AuditLog"
+    "Notification", "Intervention", "AuditLog",
+    "Conversation", "Message", "CalendarEvent"
 ]

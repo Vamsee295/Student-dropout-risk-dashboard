@@ -59,3 +59,82 @@ async def websocket_dashboard(websocket: WebSocket):
             data = await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket, channel)
+
+@router.websocket("/calendar")
+async def websocket_calendar(websocket: WebSocket):
+    channel = "calendar"
+    await manager.connect(websocket, channel)
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, channel)
+
+
+
+@router.websocket("/messages/{conversation_id}")
+async def websocket_messages(websocket: WebSocket, conversation_id: int):
+    """
+    Real-time channel for a specific conversation.
+    Both Student and Faculty connect here after opening a conversation.
+    The backend broadcasts new messages to this channel when POST /messages/conversations/{id}/messages is called.
+
+    Auth: pass ?token=<jwt> as a query param since browser WebSocket API
+    does not support Authorization headers.
+    """
+    from app.auth.security import get_current_user as _get_user
+    from app.database.session import SessionLocal
+    from app.models.conversation import Conversation
+    from app.models.enums import Role
+
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4001)
+        return
+
+    db = SessionLocal()
+    try:
+        from jose import jwt, JWTError
+        from app.core.config import get_settings
+        from app.repositories.user_repo import user_repo
+        settings = get_settings()
+
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email = payload.get("sub")
+        if not email:
+            await websocket.close(code=4001)
+            return
+
+        user = user_repo.get_by_email(db, email=email)
+        if not user:
+            await websocket.close(code=4001)
+            return
+
+        # Verify user is a participant of this conversation
+        conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+        if not conv:
+            await websocket.close(code=4004)
+            return
+
+        authorized = False
+        if user.role == Role.STUDENT and user.student_id == conv.student_id:
+            authorized = True
+        elif user.role in (Role.FACULTY, Role.DEAN, Role.ADMIN) and user.id == conv.faculty_id:
+            authorized = True
+
+        if not authorized:
+            await websocket.close(code=4003)
+            return
+
+    finally:
+        db.close()
+
+    channel = f"conversation_{conversation_id}"
+    await manager.connect(websocket, channel)
+    try:
+        while True:
+            # Keep alive — client can send pings, we ignore them
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, channel)
+

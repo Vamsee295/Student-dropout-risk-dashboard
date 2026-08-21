@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Enum as SQLEnum, Index, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Enum as SQLEnum, Index, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database.session import Base
@@ -13,12 +13,18 @@ class AttendanceRecord(Base):
     course_id = Column(String(50), ForeignKey("courses.id"), nullable=False)
     date = Column(DateTime, nullable=False)
     status = Column(SQLEnum(AttendanceStatus), nullable=False)
+    marked_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # faculty user id
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     student = relationship("Student", back_populates="attendance_records")
     course = relationship("Course", back_populates="attendance_records")
+    marked_by_user = relationship("User", foreign_keys=[marked_by])
 
     __table_args__ = (
         Index('idx_attendance_student_course', 'student_id', 'course_id'),
+        Index('idx_attendance_date', 'date'),
+        UniqueConstraint('student_id', 'course_id', 'date', name='uq_student_course_date'),
     )
 
 
