@@ -41,6 +41,31 @@ export function useStudentAttendance() {
 
   useEffect(() => {
     fetchSummary();
+
+    // Set up WebSocket to listen for live attendance updates
+    const WS_BASE =
+      process.env.NEXT_PUBLIC_WS_URL ||
+      (typeof window !== "undefined"
+        ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host.replace("3000", "8000")}`
+        : "ws://localhost:8000");
+
+    const ws = new WebSocket(`${WS_BASE}/api/v1/ws/dashboard`);
+    
+    ws.onmessage = (evt) => {
+      try {
+        const event = JSON.parse(evt.data);
+        // When faculty posts attendance, we get this event
+        if (event.type === "attendance_posted") {
+          fetchSummary();
+        }
+      } catch (e) {
+        console.error("Failed to parse WS message", e);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
   }, [fetchSummary]);
 
   return { summary, loading, error, refetch: fetchSummary };

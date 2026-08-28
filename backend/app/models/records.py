@@ -14,12 +14,14 @@ class AttendanceRecord(Base):
     date = Column(DateTime, nullable=False)
     status = Column(SQLEnum(AttendanceStatus), nullable=False)
     marked_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # faculty user id
+    session_id = Column(Integer, ForeignKey("attendance_sessions.id", ondelete="SET NULL"), nullable=True)  # linked session
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     student = relationship("Student", back_populates="attendance_records")
     course = relationship("Course", back_populates="attendance_records")
     marked_by_user = relationship("User", foreign_keys=[marked_by])
+    session = relationship("AttendanceSession", back_populates="attendance_records", foreign_keys=[session_id])
 
     __table_args__ = (
         Index('idx_attendance_student_course', 'student_id', 'course_id'),

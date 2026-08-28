@@ -104,11 +104,52 @@ export interface CalendarWeek {
   cells: CalendarCell[];
 }
 
-/** Student attendance calendar for one course */
 export interface StudentCalendar {
   course_id: string;
   course_name: string;
   weeks: CalendarWeek[];
+}
+
+// ── Session Models ────────────────────────────────────────────────────────────
+
+export interface AttendanceSessionSummary {
+  id: number;
+  course_id: string;
+  course_name: string;
+  section: string;
+  session_type: string;
+  session_label: string;
+  session_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  status: string;
+  faculty_name: string | null;
+  total_students: number;
+  present_count: number;
+  absent_count: number;
+}
+
+export interface SessionRosterStudent {
+  student_id: string;
+  name: string;
+  roll: string;
+  section: string;
+  is_absent: boolean;
+}
+
+export interface SessionRosterResponse {
+  session_id: number;
+  course_id: string;
+  course_name: string;
+  section: string;
+  session_type: string;
+  session_label: string;
+  session_date: string;
+  status: string;
+  students: SessionRosterStudent[];
+  total_students: number;
+  present_count: number;
+  absent_count: number;
 }
 
 // ── Service ────────────────────────────────────────────────────────────────────
@@ -173,6 +214,27 @@ export const attendanceService = {
       date,
       status,
     });
+  },
+
+  // ── Session-Based Workflow ──────────────────────────────────────────────────
+
+  async getSessions(courseId?: string, section?: string): Promise<AttendanceSessionSummary[]> {
+    const { data } = await apiClient.get("/attendance/faculty/sessions", {
+      params: { course_id: courseId, section },
+    });
+    return data;
+  },
+
+  async getSessionRoster(sessionId: number): Promise<SessionRosterResponse> {
+    const { data } = await apiClient.get(`/attendance/faculty/sessions/${sessionId}/roster`);
+    return data;
+  },
+
+  async postSessionAttendance(sessionId: number, absentStudentIds: string[]): Promise<any> {
+    const { data } = await apiClient.post(`/attendance/faculty/sessions/${sessionId}/post`, {
+      absent_student_ids: absentStudentIds,
+    });
+    return data;
   },
 
   // ── Student ─────────────────────────────────────────────────────────────────

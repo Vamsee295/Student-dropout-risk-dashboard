@@ -578,4 +578,257 @@ class AttendanceService:
         }
 
 
+    # ── Session-based workflow ─────────────────────────────────────────────────
+
+    def get_attendance_sessions(
+        self, db: Session, current_user: User,
+        course_id: Optional[str] = None,
+        section: Optional[str] = None,
+    ) -> List:
+        """
+        Return attendance sessions for faculty. Optionally filter by course/section.
+        Enriches each session with live student counts from the same AttendanceRecord table.
+        """
+        from app.models.attendance_session import AttendanceSession
+
+        query = db.query(AttendanceSession)
+        if course_id:
+            query = query.filter(AttendanceSession.course_id == course_id)
+        if section:
+            query = query.filter(AttendanceSession.section == section)
+
+        sessions = query.order_by(AttendanceSession.session_date.asc(), AttendanceSession.id.asc()).all()
+
+        result = []
+        for sess in sessions:
+            course = db.query(Course).filter(Course.id == sess.course_id).first()
+            if not course:
+                continue
+
+            # Count enrolled students for this course (all sections — we'll use all for now)
+            enrollment_count = db.query(func.count(Enrollment.id)).filter(
+                Enrollment.course_id == sess.course_id
+            ).scalar() or 0
+
+            # Count present/absent for THIS session (records linked by session_id)
+            present_count = db.query(func.count(AttendanceRecord.id)).filter(
+                AttendanceRecord.session_id == sess.id,
+                AttendanceRecord.status == AttendanceStatus.PRESENT,
+            ).scalar() or 0
+            absent_count = db.query(func.count(AttendanceRecord.id)).filter(
+                AttendanceRecord.session_id == sess.id,
+                AttendanceRecord.status == AttendanceStatus.ABSENT,
+            ).scalar() or 0
+            total_posted = present_count + absent_count
+
+            # Faculty name
+            faculty_name = None
+            if sess.faculty_id:
+                fac_user = db.query(User).filter(User.id == sess.faculty_id).first()
+                if fac_user:
+                    faculty_name = fac_user.name
+
+            result.append({
+                "id": sess.id,
+                "course_id": sess.course_id,
+                "course_name": course.name,
+                "section": sess.section,
+                "session_type": sess.session_type,
+                "session_label": sess.session_label,
+                "session_date": sess.session_date.isoformat() if sess.session_date else None,
+                "start_time": sess.start_time.strftime("%H:%M") if sess.start_time else None,
+                "end_time": sess.end_time.strftime("%H:%M") if sess.end_time else None,
+                "status": sess.status,
+                "faculty_name": faculty_name,
+                "total_students": enrollment_count,
+                "present_count": present_count,
+                "absent_count": absent_count,
+            })
+
+        return result
+
+    def get_session_roster(
+        self, db: Session, session_id: int, current_user: User
+    ) -> dict:
+        """
+        Return student roster for a specific session with their current attendance state.
+        Students without a record for this session are shown as Present (unchecked).
+        """
+        from app.models.attendance_session import AttendanceSession
+
+        if current_user.role not in (Role.FACULTY, Role.DEAN, Role.ADMIN):
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        sess = db.query(AttendanceSession).filter(AttendanceSession.id == session_id).first()
+        if not sess:
+            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+        course = db.query(Course).filter(Course.id == sess.course_id).first()
+        if not course:
+            raise HTTPException(status_code=404, detail=f"Course {sess.course_id} not found")
+
+        # Get ALL enrolled students for the course
+        enrollments = db.query(Enrollment).filter(Enrollment.course_id == sess.course_id).all()
+
+        # Build a lookup of existing session attendance records
+        existing_records: Dict[str, AttendanceRecord] = {}
+        records = db.query(AttendanceRecord).filter(AttendanceRecord.session_id == session_id).all()
+        for rec in records:
+            existing_records[rec.student_id] = rec
+
+        students = []
+        present_count = 0
+        absent_count = 0
+        for enr in enrollments:
+            student = db.query(Student).filter(Student.id == enr.student_id).first()
+            if not student:
+                continue
+
+            rec = existing_records.get(student.id)
+            is_absent = (rec is not None and rec.status == AttendanceStatus.ABSENT)
+            if is_absent:
+                absent_count += 1
+            else:
+                present_count += 1
+
+            students.append({
+                "student_id": student.id,
+                "name": student.name,
+                "roll": student.id,
+                "section": student.section.value if hasattr(student.section, 'value') else str(student.section),
+                "is_absent": is_absent,
+            })
+
+        # Sort by name
+        students.sort(key=lambda s: s["name"])
+
+        return {
+            "session_id": sess.id,
+            "course_id": sess.course_id,
+            "course_name": course.name,
+            "section": sess.section,
+            "session_type": sess.session_type,
+            "session_label": sess.session_label,
+            "session_date": sess.session_date.isoformat() if sess.session_date else None,
+            "status": sess.status,
+            "students": students,
+            "total_students": len(students),
+            "present_count": present_count,
+            "absent_count": absent_count,
+        }
+
+    def post_session_attendance(
+        self,
+        db: Session,
+        session_id: int,
+        absent_student_ids: List[str],
+        current_user: User,
+    ) -> dict:
+        """
+        Post attendance for a session:
+        - ALL enrolled students get a record: ABSENT if in absent_student_ids, PRESENT otherwise.
+        - Upserts (no duplicates). Updates session status to COMPLETED.
+        - Triggers WebSocket broadcast to refresh student dashboards.
+        """
+        from app.models.attendance_session import AttendanceSession
+
+        if current_user.role not in (Role.FACULTY, Role.DEAN, Role.ADMIN):
+            raise HTTPException(status_code=403, detail="Only faculty can post attendance")
+
+        sess = db.query(AttendanceSession).filter(AttendanceSession.id == session_id).first()
+        if not sess:
+            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+        absent_set = set(absent_student_ids)
+
+        # Get all enrolled students
+        enrollments = db.query(Enrollment).filter(Enrollment.course_id == sess.course_id).all()
+
+        present_count = 0
+        absent_count = 0
+
+        # Normalize date to midnight datetime for the record
+        record_date = datetime.combine(sess.session_date, datetime.min.time())
+
+        for enr in enrollments:
+            status_enum = (
+                AttendanceStatus.ABSENT if enr.student_id in absent_set
+                else AttendanceStatus.PRESENT
+            )
+
+            # Try to find existing record for this session
+            record = db.query(AttendanceRecord).filter(
+                AttendanceRecord.session_id == session_id,
+                AttendanceRecord.student_id == enr.student_id,
+            ).first()
+
+            if record:
+                record.status = status_enum
+                record.marked_by = current_user.id
+                record.updated_at = datetime.now(timezone.utc)
+            else:
+                # Also check by student+course+date for backward compatibility (no duplicates on same date)
+                existing_date_record = db.query(AttendanceRecord).filter(
+                    AttendanceRecord.student_id == enr.student_id,
+                    AttendanceRecord.course_id == sess.course_id,
+                    func.date(AttendanceRecord.date) == sess.session_date,
+                    AttendanceRecord.session_id == None,
+                ).first()
+
+                if existing_date_record:
+                    # Link existing record to this session
+                    existing_date_record.status = status_enum
+                    existing_date_record.session_id = session_id
+                    existing_date_record.marked_by = current_user.id
+                    existing_date_record.updated_at = datetime.now(timezone.utc)
+                else:
+                    record = AttendanceRecord(
+                        student_id=enr.student_id,
+                        course_id=sess.course_id,
+                        date=record_date,
+                        status=status_enum,
+                        marked_by=current_user.id,
+                        session_id=session_id,
+                    )
+                    db.add(record)
+
+            if status_enum == AttendanceStatus.ABSENT:
+                absent_count += 1
+            else:
+                present_count += 1
+
+        # Mark session as COMPLETED
+        sess.status = "COMPLETED"
+        sess.updated_at = datetime.now(timezone.utc)
+
+        db.commit()
+
+        # Broadcast WebSocket event so student dashboards refresh
+        import asyncio
+        try:
+            from app.websocket.manager import manager
+            event = {
+                "type": "attendance_posted",
+                "session_id": session_id,
+                "course_id": sess.course_id,
+                "session_date": sess.session_date.isoformat(),
+                "present_count": present_count,
+                "absent_count": absent_count,
+            }
+            loop = asyncio.get_event_loop()
+            if not loop.is_closed():
+                loop.create_task(manager.broadcast("dashboard", event))
+                loop.create_task(manager.broadcast("notifications", event))
+        except Exception:
+            pass  # WebSocket broadcast is best-effort
+
+        return {
+            "session_id": session_id,
+            "status": "COMPLETED",
+            "total": present_count + absent_count,
+            "present_count": present_count,
+            "absent_count": absent_count,
+        }
+
+
 attendance_service = AttendanceService()

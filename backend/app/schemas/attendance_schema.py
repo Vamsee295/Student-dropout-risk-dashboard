@@ -113,3 +113,62 @@ class StudentCalendarResponse(BaseModel):
     course_id: str
     course_name: str
     weeks: List[CalendarWeek]
+
+
+# ── Attendance Session (new session-based workflow) ───────────────────────────
+
+class AttendanceSessionSummary(BaseModel):
+    """Compact session info for the session list/cards view."""
+    id: int
+    course_id: str
+    course_name: str
+    section: str
+    session_type: str              # "Lecture", "Practical", "Tutorial"
+    session_label: str             # "Lecture 1", "Practical", etc.
+    session_date: str              # ISO date "2026-08-21"
+    start_time: Optional[str]      # "09:00" or None
+    end_time: Optional[str]        # "10:00" or None
+    status: str                    # "PENDING" or "COMPLETED"
+    faculty_name: Optional[str]
+
+    # Completion stats (only meaningful when status == "COMPLETED")
+    total_students: int
+    present_count: int
+    absent_count: int
+
+    model_config = {"from_attributes": True}
+
+
+class SessionRosterStudent(BaseModel):
+    """A student's row in the attendance roster for a session."""
+    student_id: str
+    name: str
+    roll: str
+    section: str
+    is_absent: bool  # True = marked Absent in this session, False = Present
+
+
+class SessionRosterResponse(BaseModel):
+    """Full roster for a session: session header + student rows."""
+    session_id: int
+    course_id: str
+    course_name: str
+    section: str
+    session_type: str
+    session_label: str
+    session_date: str
+    status: str
+    students: List[SessionRosterStudent]
+    total_students: int
+    present_count: int
+    absent_count: int
+
+
+class PostAttendancePayload(BaseModel):
+    """Payload to post/update attendance for a session.
+    
+    absent_student_ids: list of student IDs who are ABSENT.
+    All other enrolled students in this session are saved as PRESENT.
+    """
+    absent_student_ids: List[str]
+

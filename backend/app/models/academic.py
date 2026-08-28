@@ -17,6 +17,7 @@ class Course(Base):
     enrollments = relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
     assessments = relationship("Assessment", back_populates="course", cascade="all, delete-orphan")
     attendance_records = relationship("AttendanceRecord", back_populates="course", cascade="all, delete-orphan")
+    attendance_sessions = relationship("AttendanceSession", back_populates="course", cascade="all, delete-orphan")
 
 
 class Enrollment(Base):

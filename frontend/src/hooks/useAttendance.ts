@@ -2,24 +2,40 @@
  * useAttendance.ts — Faculty Attendance Hook
  *
  * Manages:
- *  - Course selection
- *  - Faculty attendance grid (Mon-Fri per enrolled student)
- *  - Faculty stats (present today, absent today, below 75%, overall avg)
- *  - Toggle P ↔ A with immediate MySQL persistence
- *
- * LATE has been completely removed. Only P and A exist.
+ *  - Course & Section selection
+ *  - Fetching Attendance Sessions
+ *  - Fetching Student Roster for a specific session
+ *  - Posting attendance
+ *  - Faculty stats
  */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { attendanceService, GridRow, FacultyStats, CourseItem, BelowThresholdResponse } from "@/services/attendanceService";
+import {
+  attendanceService,
+  CourseItem,
+  AttendanceSessionSummary,
+  SessionRosterResponse,
+  FacultyStats,
+  BelowThresholdResponse,
+} from "@/services/attendanceService";
 import apiClient from "@/api/axios";
 
 export function useAttendance() {
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [grid, setGrid] = useState<GridRow[]>([]);
+  const [selectedSection, setSelectedSection] = useState<string>("");
+
+  // Sessions list
+  const [sessions, setSessions] = useState<AttendanceSessionSummary[]>([]);
+  const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+
+  // Active session roster
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+  const [roster, setRoster] = useState<SessionRosterResponse | null>(null);
+  const [isRosterLoading, setIsRosterLoading] = useState(false);
+
+  // Stats
   const [stats, setStats] = useState<FacultyStats>({
     present_today: 0,
     absent_today: 0,
@@ -27,140 +43,131 @@ export function useAttendance() {
     below_75_count: 0,
     overall_avg: 0,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isToggling, setIsToggling] = useState(false);
-
   const [belowThresholdData, setBelowThresholdData] = useState<BelowThresholdResponse>({
     threshold: 75,
     count: 0,
-    students: []
+    students: [],
   });
+  
+  // Legacy fields (for compatibility until full rewrite of page if needed)
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
-  const [attendanceGrid, setAttendanceGrid] = useState<any[]>([]);
 
-  // ── Load courses on mount ────────────────────────────────────────────────────
+  // ── 1. Load Initial Data ──────────────────────────────────────────────────
   useEffect(() => {
     attendanceService.getCourses().then((c) => {
       setCourses(c);
       if (c.length > 0) setSelectedCourseId(c[0].id);
     });
 
-    // Also fetch legacy weekly data and the new below-threshold data
-    Promise.all([
-      apiClient.get("/attendance/weekly"),
-      attendanceService.getBelowThresholdStudents(),
-    ])
-      .then(([weekly, below]) => {
-        setWeeklyData(weekly.data);
-        setBelowThresholdData(below);
-      })
+    apiClient.get("/attendance/weekly")
+      .then((res) => setWeeklyData(res.data))
+      .catch(console.error);
+
+    attendanceService.getBelowThresholdStudents()
+      .then(setBelowThresholdData)
       .catch(console.error);
   }, []);
 
-  // ── Fetch grid + stats when course changes ───────────────────────────────────
-  const fetchCourseData = useCallback(async () => {
+  // ── 2. Fetch Sessions when Course/Section changes ─────────────────────────
+  const fetchSessions = useCallback(async () => {
     if (!selectedCourseId) return;
-    setIsLoading(true);
+    setIsSessionsLoading(true);
     try {
-      const [gridData, statsData] = await Promise.all([
-        attendanceService.getFacultyGrid(selectedCourseId, weekOffset),
-        attendanceService.getFacultyStats(selectedCourseId),
-      ]);
-      setGrid(gridData);
-      setStats(statsData);
-      // Convert to legacy attendanceGrid format for compatibility
-      setAttendanceGrid(
-        gridData.map((row) => ({
-          id: row.student_id,
-          name: row.student_name,
-          roll: row.roll,
-          ...Object.fromEntries(row.cells.map((c) => [c.day_label.toLowerCase(), c.status])),
-        }))
+      const data = await attendanceService.getSessions(
+        selectedCourseId,
+        selectedSection || undefined
       );
+      setSessions(data);
+
+      // Also refresh stats
+      const newStats = await attendanceService.getFacultyStats(selectedCourseId);
+      setStats(newStats);
     } catch (err) {
-      console.error("Failed to fetch attendance data:", err);
+      console.error("Failed to fetch sessions", err);
     } finally {
-      setIsLoading(false);
+      setIsSessionsLoading(false);
     }
-  }, [selectedCourseId, weekOffset]);
+  }, [selectedCourseId, selectedSection]);
 
   useEffect(() => {
-    fetchCourseData();
-  }, [fetchCourseData]);
+    fetchSessions();
+    // Clear active session when course changes
+    setActiveSessionId(null);
+    setRoster(null);
+  }, [fetchSessions]);
 
-  // ── Toggle P ↔ A ─────────────────────────────────────────────────────────────
-  const toggleCell = useCallback(
-    async (studentId: string, date: string) => {
-      if (!selectedCourseId || isToggling) return;
-      setIsToggling(true);
+  // ── 3. Fetch Roster when Active Session changes ───────────────────────────
+  const fetchRoster = useCallback(async (sessionId: number) => {
+    setIsRosterLoading(true);
+    try {
+      const data = await attendanceService.getSessionRoster(sessionId);
+      setRoster(data);
+      setActiveSessionId(sessionId);
+    } catch (err) {
+      console.error("Failed to fetch roster", err);
+    } finally {
+      setIsRosterLoading(false);
+    }
+  }, []);
 
-      // Optimistic update
-      setGrid((prev) =>
-        prev.map((row) => {
-          if (row.student_id !== studentId) return row;
-          return {
-            ...row,
-            cells: row.cells.map((cell) => {
-              if (cell.date !== date) return cell;
-              const next = cell.status === "P" ? "A" : "P";
-              return { ...cell, status: next };
-            }),
-          };
-        })
-      );
+  // ── 4. Toggle Student Absent/Present locally ──────────────────────────────
+  const toggleStudentRoster = useCallback((studentId: string) => {
+    setRoster((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        students: prev.students.map((s) =>
+          s.student_id === studentId ? { ...s, is_absent: !s.is_absent } : s
+        ),
+      };
+    });
+  }, []);
 
-      try {
-        const result = await attendanceService.toggleAttendance(studentId, selectedCourseId, date);
-        // Reconcile with server result
-        setGrid((prev) =>
-          prev.map((row) => {
-            if (row.student_id !== studentId) return row;
-            return {
-              ...row,
-              cells: row.cells.map((cell) => {
-                if (cell.date !== date) return cell;
-                return { ...cell, status: result.status };
-              }),
-            };
-          })
-        );
-        // Refresh stats and below threshold data
-        const [updatedStats, updatedBelowData] = await Promise.all([
-          attendanceService.getFacultyStats(selectedCourseId),
-          attendanceService.getBelowThresholdStudents()
-        ]);
-        setStats(updatedStats);
-        setBelowThresholdData(updatedBelowData);
-      } catch (err) {
-        console.error("Toggle failed:", err);
-        // Revert optimistic update
-        fetchCourseData();
-      } finally {
-        setIsToggling(false);
-      }
-    },
-    [selectedCourseId, isToggling, fetchCourseData]
-  );
+  // ── 5. Post Attendance ────────────────────────────────────────────────────
+  const [isPosting, setIsPosting] = useState(false);
+
+  const postAttendance = useCallback(async () => {
+    if (!roster || !activeSessionId) return;
+    setIsPosting(true);
+    try {
+      const absentIds = roster.students.filter((s) => s.is_absent).map((s) => s.student_id);
+      await attendanceService.postSessionAttendance(activeSessionId, absentIds);
+      
+      // Refresh everything
+      await fetchSessions();
+      await fetchRoster(activeSessionId);
+      
+      const newBelow = await attendanceService.getBelowThresholdStudents();
+      setBelowThresholdData(newBelow);
+    } catch (err) {
+      console.error("Failed to post attendance", err);
+    } finally {
+      setIsPosting(false);
+    }
+  }, [roster, activeSessionId, fetchSessions, fetchRoster]);
 
   return {
-    // New API
     courses,
     selectedCourseId,
     setSelectedCourseId,
-    weekOffset,
-    setWeekOffset,
-    grid,
+    selectedSection,
+    setSelectedSection,
+    
+    sessions,
+    isSessionsLoading,
+    fetchSessions,
+
+    activeSessionId,
+    roster,
+    isRosterLoading,
+    fetchRoster,
+    toggleStudentRoster,
+
+    postAttendance,
+    isPosting,
+
     stats,
-    isToggling,
-    toggleCell,
-    refetch: fetchCourseData,
-
-    // New structured below threshold data
     belowThresholdData,
-
-    // Legacy API (backward compat)
-    weeklyData,
-    attendanceGrid,
-    isLoading,
+    weeklyData, // legacy
   };
 }
