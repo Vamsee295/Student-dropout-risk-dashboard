@@ -10,10 +10,50 @@ from app.models.enums import Role, RiskLevel, AttendanceStatus
 from app.models.student import Student, StudentMetric
 from app.models.analytics import RiskScore
 from app.models.records import AttendanceRecord
+from app.models.academic import Course, Enrollment
 
 from app.services.realtime_prediction import compute_all_risk_scores
 
 router = APIRouter()
+
+
+@router.get("/my-courses")
+def get_faculty_courses(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return all courses available. Faculty see all courses they can manage."""
+    if current_user.role not in (Role.FACULTY, Role.DEAN, Role.ADMIN):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    courses = db.query(Course).all()
+    result = []
+    for course in courses:
+        total_students = db.query(func.count(Enrollment.id)).filter(
+            Enrollment.course_id == course.id
+        ).scalar() or 0
+
+        present_total = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.course_id == course.id,
+            AttendanceRecord.status == AttendanceStatus.PRESENT,
+        ).scalar() or 0
+        all_total = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.course_id == course.id,
+        ).scalar() or 0
+        avg_attendance = round(present_total / all_total * 100, 1) if all_total else 0
+
+        result.append({
+            "code": course.id,
+            "name": course.name,
+            "semester": course.semester,
+            "credits": course.credits,
+            "students": total_students,
+            "attendance": avg_attendance,
+            "avgMarks": 0,       # Could be computed from student_assessments
+            "completion": 0,      # Placeholder
+            "color": "blue",
+        })
+    return result
 
 @router.post("/risk/recalculate")
 def recalculate_risk(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -82,7 +122,7 @@ def get_students(
     if riskLevel:
         query = query.filter(RiskScore.risk_level == riskLevel)
         
-    results = query.limit(50).all()
+    results = query.limit(150).all()
     
     return [
         {
@@ -140,17 +180,40 @@ def _dept_analytics_data(db: Session):
         .group_by(Student.department)
         .all()
     )
-    return [
-        {
-            "department": row.department.value,
+    
+    results = []
+    from datetime import datetime, timedelta, timezone
+    from app.models.analytics import RiskHistory
+    today = datetime.now(timezone.utc).date()
+    
+    for row in rows:
+        dept = row.department
+        
+        trend_7d = []
+        for i in range(6, -1, -1):
+            target_date = today - timedelta(days=i)
+            avg_risk = db.query(func.avg(RiskHistory.risk_score)).join(
+                Student, RiskHistory.student_id == Student.id
+            ).filter(
+                Student.department == dept,
+                func.date(RiskHistory.recorded_at) == target_date
+            ).scalar()
+            
+            trend_7d.append({
+                "date": target_date.strftime("%Y-%m-%d"),
+                "avg_risk": round(float(avg_risk), 1) if avg_risk is not None else 0
+            })
+            
+        results.append({
+            "department": dept.value,
             "total_students": row.total_students,
             "avg_risk_score": round(float(row.avg_risk_score or 0), 1),
             "avg_attendance": round(float(row.avg_attendance or 0), 1),
             "high_risk_count": int(row.high_risk_count or 0),
-            "trend_7d": [],
-        }
-        for row in rows
-    ]
+            "trend_7d": trend_7d,
+        })
+        
+    return results
 
 @router.get("/analytics/departments")
 def get_dept_analytics(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

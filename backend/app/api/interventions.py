@@ -9,26 +9,30 @@ from app.core.responses import create_success_response
 
 router = APIRouter(prefix="/interventions", tags=["Interventions"])
 
-@router.post("/", response_model=dict)
+@router.post("/")
 def assign_intervention(request: InterventionCreate, db: Session = Depends(get_db), current_user = Depends(require_faculty)):
     interv = intervention_service.create_intervention(db, request, current_user.id)
     return create_success_response("Intervention assigned successfully", {"id": interv.id, "status": interv.status})
 
-@router.get("/", response_model=dict)
+@router.get("/")
 def get_my_interventions(db: Session = Depends(get_db), current_user = Depends(require_faculty)):
     intervs = intervention_service.get_faculty_interventions(db, current_user.id)
     return create_success_response("Interventions retrieved", [
         {
             "id": i.id,
-            "student_id": i.student_id,
+            "studentId": i.student_id,
+            "studentName": i.student.name if i.student else "Unknown",
             "type": i.type,
             "priority": i.priority,
             "status": i.status,
-            "due_date": i.due_date.isoformat() if i.due_date else None
+            "notes": i.notes,
+            "date": i.created_at.isoformat() if i.created_at else None,
+            "dueDate": i.due_date.isoformat() if i.due_date else None,
+            "expectedOutcome": i.outcome_notes,
         } for i in intervs
     ])
 
-@router.put("/{intervention_id}/status", response_model=dict)
+@router.put("/{intervention_id}/status")
 def update_intervention_status(intervention_id: int, request: InterventionUpdateStatus, db: Session = Depends(get_db), current_user = Depends(require_faculty)):
     interv = intervention_service.update_status(db, intervention_id, current_user.id, request)
     return create_success_response("Intervention updated", {

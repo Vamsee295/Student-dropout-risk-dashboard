@@ -49,6 +49,8 @@ class AssessmentType(str, enum.Enum):
     EXTERNAL = "External"
     ASSIGNMENT = "Assignment"
     PROJECT = "Project"
+    LAB = "Lab"
+    PRACTICAL = "Practical"
 
 class AttendanceStatus(str, enum.Enum):
     PRESENT = "Present"

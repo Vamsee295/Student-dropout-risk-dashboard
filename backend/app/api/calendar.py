@@ -24,7 +24,7 @@ def get_events(
     if current_user.role == Role.FACULTY:
         return service.get_faculty_events(current_user.id)
     elif current_user.role == Role.STUDENT:
-        return service.get_student_events(current_user.id)
+        return service.get_student_events(current_user.student_id)
     else:
         # Defaults to empty for now
         return []

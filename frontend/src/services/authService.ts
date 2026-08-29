@@ -17,6 +17,8 @@ export interface AuthUser {
   role: UserRole;
   avatar?: string;
   department?: string;
+  permissions?: string[];
+  student_id?: string;
 }
 
 export interface LoginResponse {

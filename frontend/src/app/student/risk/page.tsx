@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Brain, AlertTriangle, TrendingDown, TrendingUp, CheckCircle2, ArrowRight, Cpu, ShieldAlert, Calendar } from "lucide-react";
+import apiClient from "@/api/axios";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar, Cell, RadarChart,
@@ -47,10 +49,21 @@ const radarFactors = [
 
 export default function RiskPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "factors" | "plan">("overview");
+  const { user } = useAuthStore();
+  const [riskData, setRiskData] = useState<any>(null);
 
-  const risk = 14;
-  const riskLabel = risk < 20 ? "Low Risk" : risk < 40 ? "Moderate Risk" : "High Risk";
-  const riskColor = risk < 20 ? "#10b981" : risk < 40 ? "#f59e0b" : "#ef4444";
+  useEffect(() => {
+    if (user?.id) {
+      apiClient.get(`/risk/${user.id}`).then(res => setRiskData(res.data?.data)).catch(console.error);
+    }
+  }, [user?.id]);
+
+  const risk = riskData?.risk_score ?? 14;
+  const riskLabel = riskData?.risk_level ?? (risk < 40 ? "Safe" : risk < 55 ? "Stable" : risk < 70 ? "Moderate Risk" : "High Risk");
+  const riskColor = risk < 40 ? "#10b981" : risk < 55 ? "#3b82f6" : risk < 70 ? "#f59e0b" : "#ef4444";
+  
+  const history = riskData?.history?.length ? riskData.history : riskHistory;
+
 
   return (
     <div className="space-y-6">
@@ -100,15 +113,23 @@ export default function RiskPage() {
                   <h3 className="text-base font-bold text-slate-900">AI Risk Assessment</h3>
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                  Your current dropout risk is <strong style={{ color: riskColor }}>14% (Low)</strong>. 
-                  This is calculated using your attendance, marks, engagement, and assignment completion. 
-                  The primary driver is <strong>ML attendance at 68%</strong> — below the required 75% threshold. 
-                  Take action now to prevent your risk from escalating.
+                  Your current dropout risk is <strong style={{ color: riskColor }}>{risk}% ({riskLabel})</strong>. 
+                  {riskData?.shap_explanation?.top_factors?.length > 0 
+                    ? ` This is largely driven by your ${riskData.shap_explanation.top_factors[0].feature.replace('_', ' ')}.` 
+                    : " This is calculated using your attendance, marks, engagement, and assignment completion."}
+                  Take action now to improve your academic standing.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold">⚠ ML Attendance Critical</span>
-                  <span className="text-xs px-3 py-1 bg-amber-100 text-amber-700 rounded-full font-semibold">⚡ LMS Engagement Low</span>
-                  <span className="text-xs px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-semibold">✅ Assignments Good</span>
+                  {riskData?.shap_explanation?.top_factors?.slice(0,2).map((f: any, i: number) => (
+                    <span key={i} className={`text-xs px-3 py-1 rounded-full font-semibold ${f.impact > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {f.impact > 0 ? '⚠' : '✅'} {f.feature.replace(/_/g, ' ').toUpperCase()} {f.impact > 0 ? 'Critical' : 'Good'}
+                    </span>
+                  )) || (
+                    <>
+                      <span className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold">⚠ ML Attendance Critical</span>
+                      <span className="text-xs px-3 py-1 bg-amber-100 text-amber-700 rounded-full font-semibold">⚡ LMS Engagement Low</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -120,23 +141,26 @@ export default function RiskPage() {
               <h3 className="font-bold text-slate-900">Risk Score Trend (Semester 5)</h3>
               <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1"><TrendingDown size={13} /> -8% since Oct</span>
             </div>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={riskHistory} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                  <defs>
-                    <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                  <YAxis domain={[0, 30]} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                  <Tooltip contentStyle={{ borderRadius: "10px", border: "none", fontSize: "11px" }} formatter={(v) => [`${v}%`, "Risk"]} />
-                  <Area type="monotone" dataKey="risk" stroke="#ef4444" strokeWidth={2.5} fill="url(#riskGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            <div className="h-64 mt-4 bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={history}>
+                    <defs>
+                      <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={riskColor} stopOpacity={0.2} />
+                        <stop offset="95%" stopColor={riskColor} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      itemStyle={{ color: '#0f172a', fontWeight: 600, fontSize: '12px' }}
+                    />
+                    <Area type="monotone" dataKey="risk" stroke={riskColor} strokeWidth={3} fillOpacity={1} fill="url(#colorRisk)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
           </div>
 
           {/* Milestones */}

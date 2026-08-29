@@ -125,7 +125,9 @@ async def websocket_messages(websocket: WebSocket, conversation_id: int):
         if not authorized:
             await websocket.close(code=4003)
             return
-
+    except Exception:
+        await websocket.close(code=4001)
+        return
     finally:
         db.close()
 
@@ -134,6 +136,48 @@ async def websocket_messages(websocket: WebSocket, conversation_id: int):
     try:
         while True:
             # Keep alive — client can send pings, we ignore them
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, channel)
+
+@router.websocket("/messages/stream/me")
+async def websocket_messages_me(websocket: WebSocket):
+    from app.database.session import SessionLocal
+    
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4001)
+        return
+
+    db = SessionLocal()
+    try:
+        from jose import jwt
+        from app.core.config import get_settings
+        from app.repositories.user_repo import user_repo
+        settings = get_settings()
+
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email = payload.get("sub")
+        if not email:
+            await websocket.close(code=4001)
+            return
+
+        user = user_repo.get_by_email(db, email=email)
+        if not user:
+            await websocket.close(code=4001)
+            return
+            
+        user_id = user.id
+    except Exception:
+        await websocket.close(code=4001)
+        return
+    finally:
+        db.close()
+
+    channel = f"user_messages_{user_id}"
+    await manager.connect(websocket, channel)
+    try:
+        while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket, channel)

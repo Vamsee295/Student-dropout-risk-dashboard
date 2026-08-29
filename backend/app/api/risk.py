@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import desc, func
 from app.database.session import get_db
 from app.core.rate_limit import limiter
 from app.auth.security import get_current_user
@@ -9,6 +10,8 @@ from app.ml.predict import predict_risk, bulk_predict_risk
 from app.ml.train import train_models
 from app.ml.model_loader import model_loader
 from app.schemas.analytics import RiskScoreResponse
+from app.models.analytics import RiskScore, RiskHistory
+from app.models.student import Student
 from pydantic import BaseModel
 from typing import List, Dict, Any
 
@@ -27,45 +30,70 @@ class PredictionRequest(BaseModel):
 class BulkPredictionRequest(BaseModel):
     students: List[PredictionRequest]
 
-@router.post("/predict")
-@limiter.limit("100/minute")
-def predict_student_risk(request: Request, pred_request: PredictionRequest, current_user = Depends(require_faculty)):
-    try:
-        prediction = predict_risk(pred_request.model_dump())
-        return create_success_response("Prediction generated successfully", prediction)
-    except ValueError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
-
-@router.post("/bulk-predict")
-@limiter.limit("100/minute")
-def bulk_predict_students_risk(request: Request, bulk_request: BulkPredictionRequest, current_user = Depends(require_faculty)):
-    try:
-        predictions = bulk_predict_risk([s.model_dump() for s in bulk_request.students])
-        return create_success_response("Bulk predictions generated successfully", predictions)
-    except ValueError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Bulk prediction failed: {str(e)}")
-
-@router.post("/retrain")
-def retrain_model(current_user = Depends(require_dean)):
-    try:
-        # In a real system, this might be triggered asynchronously using Celery/BackgroundTasks
-        # and pull data from the MySQL DB instead of synthetic data.
-        train_models()
-        model_loader.reload()
-        return create_success_response("Model retrained successfully with synthetic data")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Model retraining failed: {str(e)}")
+@router.get("/faculty/summary")
+def get_faculty_risk_summary(db: Session = Depends(get_db), current_user = Depends(require_faculty)):
+    distribution = db.query(RiskScore.risk_level, func.count(RiskScore.id)).group_by(RiskScore.risk_level).all()
+    dist_dict = {
+        "High Risk": 0,
+        "Moderate Risk": 0,
+        "Stable": 0,
+        "Safe": 0
+    }
+    for k, v in distribution:
+        dist_dict[k.value] = v
+    
+    top_risk = db.query(RiskScore, Student).join(Student, RiskScore.student_id == Student.id).order_by(desc(RiskScore.risk_score)).limit(10).all()
+    
+    predicted_dropouts = []
+    for rs, st in top_risk:
+        if rs.risk_level.value in ["High Risk", "Moderate Risk"]:
+            reasons = []
+            if rs.shap_explanation and isinstance(rs.shap_explanation, dict):
+                reasons = [f.get("feature", "").replace("_", " ").title() for f in rs.shap_explanation.get("top_factors", [])[:3]]
+                
+            predicted_dropouts.append({
+                "student_id": st.id,
+                "name": st.name,
+                "roll": st.id,
+                "probability": float(rs.risk_score),
+                "expectedDate": "End of Semester",
+                "confidence": "High" if rs.risk_score > 70 else "Medium",
+                "reasons": reasons
+            })
+            
+    return create_success_response("Faculty summary fetched", {
+        "distribution": dist_dict,
+        "predictedDropouts": predicted_dropouts,
+        "total_analyzed": sum(dist_dict.values())
+    })
 
 @router.get("/{student_id}")
-def get_student_risk(student_id: str, db: Session = Depends(get_db), current_user = Depends(require_faculty)):
-    # This would normally pull from the database's cached risk score
-    # For now, we return a placeholder or trigger a live prediction if data exists
-    # Assuming the dashboard will use POST /predict if it wants a live one
-    return create_success_response("Risk score fetched (placeholder)", {"studentId": student_id, "riskLevel": "Unknown"})
+def get_student_risk(student_id: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # Fetch from database
+    risk_score = db.query(RiskScore).filter(RiskScore.student_id == student_id).first()
+    if not risk_score:
+        # Fallback to safe
+        return create_success_response("Risk score fetched (placeholder)", {
+            "student_id": student_id,
+            "risk_score": 14,
+            "risk_level": "Safe",
+            "risk_trend": "Stable",
+            "shap_explanation": {"top_factors": []},
+            "history": []
+        })
+
+    # Fetch history
+    history = db.query(RiskHistory).filter(RiskHistory.student_id == student_id).order_by(desc(RiskHistory.assessed_at)).limit(6).all()
+    history_data = [{"month": h.assessed_at.strftime("%b"), "risk": h.risk_score} for h in reversed(history)]
+
+    return create_success_response("Risk score fetched", {
+        "student_id": risk_score.student_id,
+        "risk_score": float(risk_score.risk_score),
+        "risk_level": risk_score.risk_level.value,
+        "risk_trend": risk_score.risk_trend.value,
+        "shap_explanation": risk_score.shap_explanation,
+        "history": history_data
+    })
 
 @router.get("/model/status")
 def get_model_status(current_user = Depends(require_faculty)):

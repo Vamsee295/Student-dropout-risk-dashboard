@@ -13,6 +13,7 @@ from typing import List
 from app.database.session import get_db
 from app.auth.security import get_current_user
 from app.models.user import User
+from app.models.conversation import Conversation
 from app.schemas.conversation_schema import (
     MessageCreate, MessageResponse, ConversationListItem,
     ConversationDetail, CreateConversationRequest
@@ -93,9 +94,23 @@ async def send_message(
     # Broadcast to all WebSocket connections in this conversation's channel
     event = {
         "type": "new_message",
-        "data": jsonable_encoder(msg)
+        "data": jsonable_encoder(msg),
+        "conversation_id": conversation_id
     }
     await manager.broadcast(f"conversation_{conversation_id}", event)
+    
+    # Broadcast to both participants' global channels
+    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if conv:
+        from app.models.user import User
+        # Send to faculty
+        await manager.broadcast(f"user_messages_{conv.faculty_id}", event)
+        
+        # Send to student
+        student_user = db.query(User).filter(User.student_id == conv.student_id).first()
+        if student_user:
+            await manager.broadcast(f"user_messages_{student_user.id}", event)
+            
     return msg
 
 

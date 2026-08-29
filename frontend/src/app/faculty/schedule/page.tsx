@@ -24,33 +24,36 @@ export default function SchedulePage() {
   const { removeEvent } = useFacultySchedule();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Helper to format Date to YYYY-MM-DD
-  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+  // Helper to format Date to YYYY-MM-DD (local timezone safe)
+  const formatDate = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   // Get current week's Mon-Fri dates
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday...
   const diffToMonday = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
-  const monday = new Date(today.setDate(diffToMonday));
+  const monday = new Date(today.getFullYear(), today.getMonth(), diffToMonday);
   
   const weekDates: Record<string, string> = {};
   days.forEach((day, index) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + index);
+    const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index);
     weekDates[day] = formatDate(d);
   });
 
   // Map events to the timetable grid
-  // Note: Only mapping events that fall exactly on the hour slot for simplicity, 
-  // or matching the hour part.
   const getEventForSlot = (day: string, hourStr: string) => {
     const dateStr = weekDates[day];
-    const hourPrefix = hourStr.split(":")[0]; // "09"
-    return events.find(e => 
-      e.date === dateStr && 
-      e.start_time?.startsWith(hourPrefix) &&
-      ['class', 'meeting'].includes(e.event_type) // Primarily show classes and meetings on timetable
-    );
+    const hourNum = parseInt(hourStr.split(":")[0], 10);
+    return events.find(e => {
+      if (e.date !== dateStr) return false;
+      if (!e.start_time) return false;
+      const eventHour = parseInt(e.start_time.split(":")[0], 10);
+      return eventHour === hourNum;
+    });
   };
 
   // Get upcoming meetings specifically

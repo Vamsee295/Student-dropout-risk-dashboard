@@ -5,9 +5,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { StudentAIAssistant } from "@/components/student/StudentAIAssistant";
-import { User, LogOut, Bell, Search, X, Settings } from "lucide-react";
+import { User, LogOut, Bell, Search, X, Settings, CheckCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleGuard } from "@/auth/RoleGuard";
+import { useNotifications } from "@/hooks/useNotifications";
 
 function getPageTitle(pathname: string): string {
   const map: Record<string, string> = {
@@ -36,6 +37,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const [searchQuery, setSearchQuery] = useState("");
   
   const { user, logout } = useAuth();
+  const { notifs, unreadCount, markRead, markAllRead } = useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -107,10 +110,63 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 </div>
 
                 {/* Notifications */}
-                <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">
-                  <Bell size={16} />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">3</span>
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setNotifOpen((v) => !v)}
+                    className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                  >
+                    <Bell size={16} />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notification Panel */}
+                  {notifOpen && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                        <p className="text-sm font-bold text-slate-900">Notifications</p>
+                        <div className="flex items-center gap-2">
+                          {unreadCount > 0 && (
+                            <button onClick={markAllRead} className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                              <CheckCheck size={12} /> Mark all read
+                            </button>
+                          )}
+                          <button onClick={() => setNotifOpen(false)}>
+                            <X size={14} className="text-slate-400 hover:text-slate-700" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+                        {notifs.length === 0 ? (
+                          <div className="px-4 py-6 text-center">
+                            <Bell size={24} className="text-slate-200 mx-auto mb-2" />
+                            <p className="text-xs text-slate-400">No notifications yet</p>
+                          </div>
+                        ) : notifs.map((n) => (
+                          <button
+                            key={n.id}
+                            onClick={() => { markRead(n.id); }}
+                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors ${!n.is_read ? "bg-blue-50/40" : ""}`}
+                          >
+                            <div className="flex items-start gap-2">
+                              {!n.is_read && <span className="mt-1.5 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />}
+                              <div className={!n.is_read ? "" : "pl-4"}>
+                                <p className="text-xs font-semibold text-slate-800 leading-tight">{n.title}</p>
+                                <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{n.message}</p>
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                  {new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Profile */}
                 <div className="relative">

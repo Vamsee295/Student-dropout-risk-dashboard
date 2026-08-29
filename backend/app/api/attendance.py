@@ -74,7 +74,7 @@ def get_session_roster(
 
 
 @router.post("/faculty/sessions/{session_id}/post")
-def post_session_attendance(
+async def post_session_attendance(
     session_id: int,
     payload: PostAttendancePayload,
     db: Session = Depends(get_db),
@@ -86,9 +86,23 @@ def post_session_attendance(
     Absent list comes from payload.absent_student_ids.
     Updates session status to COMPLETED.
     """
-    return attendance_service.post_session_attendance(
+    result = attendance_service.post_session_attendance(
         db, session_id, payload.absent_student_ids, current_user
     )
+    # Broadcast WebSocket update directly on the async event loop
+    try:
+        from app.websocket.manager import manager
+        event = {
+            "type": "attendance_posted",
+            "session_id": session_id,
+            "present_count": result.get("present_count", 0),
+            "absent_count": result.get("absent_count", 0),
+        }
+        await manager.broadcast("dashboard", event)
+        await manager.broadcast("notifications", event)
+    except Exception as e:
+        print(f"WS Broadcast error: {e}")
+    return result
 
 
 

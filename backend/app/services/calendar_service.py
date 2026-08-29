@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from typing import List, Optional
 from datetime import date, datetime
 from fastapi import HTTPException
@@ -21,7 +21,7 @@ class CalendarService:
             )
         ).all()
 
-    def get_student_events(self, student_id: int) -> List[CalendarEvent]:
+    def get_student_events(self, student_id: str) -> List[CalendarEvent]:
         """Get events for courses the student is enrolled in, plus global events."""
         # Get course IDs the student is enrolled in
         enrolled_course_ids = [
@@ -32,8 +32,12 @@ class CalendarService:
         return self.db.query(CalendarEvent).filter(
             or_(
                 CalendarEvent.course_id.in_(enrolled_course_ids) if enrolled_course_ids else False,
-                CalendarEvent.event_type.in_(['holiday', 'career_event'])
-            )
+                and_(
+                    CalendarEvent.course_id.is_(None),
+                    CalendarEvent.event_type.in_(['holiday', 'career_event', 'exam', 'other'])
+                )
+            ),
+            CalendarEvent.event_type != 'meeting'
         ).all()
 
     def get_event(self, event_id: int) -> CalendarEvent:

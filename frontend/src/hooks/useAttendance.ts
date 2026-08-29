@@ -125,22 +125,34 @@ export function useAttendance() {
 
   // ── 5. Post Attendance ────────────────────────────────────────────────────
   const [isPosting, setIsPosting] = useState(false);
+  const [postSuccess, setPostSuccess] = useState<string | null>(null);
+  const [postError, setPostError] = useState<string | null>(null);
 
   const postAttendance = useCallback(async () => {
     if (!roster || !activeSessionId) return;
     setIsPosting(true);
+    setPostSuccess(null);
+    setPostError(null);
     try {
       const absentIds = roster.students.filter((s) => s.is_absent).map((s) => s.student_id);
-      await attendanceService.postSessionAttendance(activeSessionId, absentIds);
+      const result = await attendanceService.postSessionAttendance(activeSessionId, absentIds);
       
-      // Refresh everything
+      // Refresh everything after confirmed backend success
       await fetchSessions();
       await fetchRoster(activeSessionId);
-      
       const newBelow = await attendanceService.getBelowThresholdStudents();
       setBelowThresholdData(newBelow);
-    } catch (err) {
+
+      const present = result?.present_count ?? roster.students.filter((s) => !s.is_absent).length;
+      const absent  = result?.absent_count  ?? roster.students.filter((s) => s.is_absent).length;
+      setPostSuccess(`Attendance posted — ${present} present, ${absent} absent.`);
+      // Auto-clear after 4 s
+      setTimeout(() => setPostSuccess(null), 4000);
+    } catch (err: any) {
       console.error("Failed to post attendance", err);
+      const msg = err?.response?.data?.detail ?? "Failed to post attendance. Please try again.";
+      setPostError(msg);
+      setTimeout(() => setPostError(null), 5000);
     } finally {
       setIsPosting(false);
     }
@@ -165,6 +177,8 @@ export function useAttendance() {
 
     postAttendance,
     isPosting,
+    postSuccess,
+    postError,
 
     stats,
     belowThresholdData,

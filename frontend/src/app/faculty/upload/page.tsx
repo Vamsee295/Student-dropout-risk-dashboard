@@ -15,19 +15,7 @@ const DATA_TYPES: { id: DataType; label: string; icon: React.ReactNode; descript
         label: "Attendance",
         icon: <Users size={22} />,
         description: "student_id, date, status (Present/Absent)",
-    },
-    {
-        id: "marks",
-        label: "Marks",
-        icon: <BookOpen size={22} />,
-        description: "student_id, marks_obtained, max_marks",
-    },
-    {
-        id: "assignments",
-        label: "Assignments",
-        icon: <ClipboardList size={22} />,
-        description: "student_id, submitted (True/False)",
-    },
+    }
 ];
 
 export default function UploadDataPage() {

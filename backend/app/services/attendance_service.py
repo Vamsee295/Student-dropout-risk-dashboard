@@ -225,6 +225,35 @@ class AttendanceService:
             db.add(record)
 
         db.commit()
+
+        # Update student metric
+        from app.models.student import StudentMetric
+        tot = db.query(func.count(AttendanceRecord.id)).filter(AttendanceRecord.student_id == payload.student_id).scalar() or 0
+        prs = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.student_id == payload.student_id,
+            AttendanceRecord.status == AttendanceStatus.PRESENT
+        ).scalar() or 0
+        rate = round(prs / tot * 100, 1) if tot > 0 else 0.0
+        
+        metric = db.query(StudentMetric).filter(StudentMetric.student_id == payload.student_id).first()
+        if metric:
+            metric.attendance_rate = rate
+            metric.updated_at = datetime.now(timezone.utc)
+        else:
+            db.add(StudentMetric(
+                student_id=payload.student_id,
+                attendance_rate=rate,
+                engagement_score=80.0,
+                academic_performance_index=0.0,
+                login_gap_days=0,
+                failure_ratio=0.0,
+                financial_risk_flag=False,
+                commute_risk_score=1,
+                semester_performance_trend=0.0,
+                last_interaction=datetime.now(timezone.utc)
+            ))
+        db.commit()
+
         db.refresh(record)
         return record
 
@@ -800,6 +829,35 @@ class AttendanceService:
         # Mark session as COMPLETED
         sess.status = "COMPLETED"
         sess.updated_at = datetime.now(timezone.utc)
+
+        # Update student metrics
+        from app.models.student import StudentMetric
+        for enr in enrollments:
+            st_id = enr.student_id
+            tot = db.query(func.count(AttendanceRecord.id)).filter(AttendanceRecord.student_id == st_id).scalar() or 0
+            prs = db.query(func.count(AttendanceRecord.id)).filter(
+                AttendanceRecord.student_id == st_id,
+                AttendanceRecord.status == AttendanceStatus.PRESENT
+            ).scalar() or 0
+            rate = round(prs / tot * 100, 1) if tot > 0 else 0.0
+            
+            metric = db.query(StudentMetric).filter(StudentMetric.student_id == st_id).first()
+            if metric:
+                metric.attendance_rate = rate
+                metric.updated_at = datetime.now(timezone.utc)
+            else:
+                db.add(StudentMetric(
+                    student_id=st_id,
+                    attendance_rate=rate,
+                    engagement_score=80.0,
+                    academic_performance_index=0.0,
+                    login_gap_days=0,
+                    failure_ratio=0.0,
+                    financial_risk_flag=False,
+                    commute_risk_score=1,
+                    semester_performance_trend=0.0,
+                    last_interaction=datetime.now(timezone.utc)
+                ))
 
         db.commit()
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Brain, AlertTriangle, TrendingUp, ShieldAlert, Activity, ArrowUpRight, Info } from "lucide-react";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -7,20 +8,7 @@ import {
   Cell, PieChart, Pie, Legend,
 } from "recharts";
 import Link from "next/link";
-
-const riskCategories = [
-  { label: "Critical", count: 6, color: "#dc2626", bg: "bg-red-50 border-red-200", text: "text-red-700" },
-  { label: "High Risk", count: 16, color: "#f59e0b", bg: "bg-amber-50 border-amber-200", text: "text-amber-700" },
-  { label: "Moderate", count: 51, color: "#6366f1", bg: "bg-indigo-50 border-indigo-200", text: "text-indigo-700" },
-  { label: "Low Risk", count: 175, color: "#10b981", bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700" },
-];
-
-const predictedDropouts = [
-  { name: "Arjun Mehta", roll: "21CS001", probability: 92, expectedDate: "Feb 2024", confidence: "High", reasons: ["51% Attendance", "3 Missed Exams", "No LMS Login 12 days"] },
-  { name: "Priya Sharma", roll: "21CS047", probability: 88, expectedDate: "Mar 2024", confidence: "High", reasons: ["58% Attendance", "Declining Grades", "Low Engagement"] },
-  { name: "Rohit Kumar", roll: "21CS023", probability: 84, expectedDate: "Mar 2024", confidence: "Medium", reasons: ["63% Attendance", "Failed CS303 Internal"] },
-  { name: "Sanjay Patel", roll: "21CS012", probability: 81, expectedDate: "Apr 2024", confidence: "Medium", reasons: ["Financial Difficulty", "69% Attendance"] },
-];
+import apiClient from "@/api/axios";
 
 const featureImportance = [
   { feature: "Attendance Rate", importance: 85 },
@@ -39,14 +27,27 @@ const radarData = [
   { subject: "Behavior", A: 60, fullMark: 100 },
 ];
 
-const pieData = [
-  { name: "Critical", value: 6, color: "#dc2626" },
-  { name: "High Risk", value: 16, color: "#f59e0b" },
-  { name: "Moderate", value: 51, color: "#6366f1" },
-  { name: "Low Risk", value: 175, color: "#10b981" },
-];
-
 export default function AIRiskCenterPage() {
+  const [summary, setSummary] = useState<any>(null);
+
+  useEffect(() => {
+    apiClient.get("/risk/faculty/summary").then(res => setSummary(res.data?.data)).catch(console.error);
+  }, []);
+
+  const distribution = summary?.distribution || {};
+  const predictedDropouts = summary?.predictedDropouts || [];
+  
+  const riskCategories = [
+    { label: "High Risk", count: distribution["High Risk"] || 0, color: "#dc2626", bg: "bg-red-50 border-red-200", text: "text-red-700" },
+    { label: "Moderate Risk", count: distribution["Moderate Risk"] || 0, color: "#f59e0b", bg: "bg-amber-50 border-amber-200", text: "text-amber-700" },
+    { label: "Stable", count: distribution["Stable"] || 0, color: "#6366f1", bg: "bg-indigo-50 border-indigo-200", text: "text-indigo-700" },
+    { label: "Safe", count: distribution["Safe"] || 0, color: "#10b981", bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700" },
+  ];
+
+  const pieData = riskCategories.filter(r => r.count > 0).map(r => ({
+    name: r.label, value: r.count, color: r.color
+  }));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -145,38 +146,25 @@ export default function AIRiskCenterPage() {
             <Link href="/faculty/students/at-risk" className="text-xs text-emerald-600 font-medium hover:underline">View All →</Link>
           </div>
           <div className="space-y-3">
-            {predictedDropouts.map((s, i) => (
-              <div key={i} className="p-4 rounded-xl bg-red-50 border border-red-100 hover:border-red-200 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-slate-900">{s.name}</p>
-                      <span className="text-[10px] text-slate-400 font-mono">{s.roll}</span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                      <span>Expected: {s.expectedDate}</span>
-                      <span className={`font-semibold ${s.confidence === "High" ? "text-red-600" : "text-amber-600"}`}>
-                        {s.confidence} Confidence
-                      </span>
-                    </div>
+            {predictedDropouts.length === 0 && (
+              <div className="p-4 text-center text-slate-500">No high risk students found.</div>
+            )}
+            {predictedDropouts.map((student: any, i: number) => (
+              <div key={i} className="flex flex-col sm:flex-row gap-4 p-4 hover:bg-slate-50 transition-colors border border-slate-100 rounded-xl mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-slate-900">{student.name}</h4>
+                    <span className="text-xs text-slate-500 font-mono bg-slate-100 px-2 py-0.5 rounded-md">{student.roll}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full">{student.probability}% Risk</span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-2xl font-bold text-red-600">{s.probability}%</span>
-                    <p className="text-[10px] text-red-400 font-medium">dropout risk</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {student.reasons.map((reason: string, idx: number) => (
+                      <span key={idx} className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-md">{reason}</span>
+                    ))}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {s.reasons.map((r, j) => (
-                    <span key={j} className="text-[10px] bg-white border border-red-200 text-red-700 px-2 py-0.5 rounded-full font-medium">{r}</span>
-                  ))}
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <Link href="/faculty/interventions" className="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors">
-                    Intervene Now
-                  </Link>
-                  <Link href={`/faculty/students/${s.roll.toLowerCase()}`} className="text-xs px-3 py-1.5 bg-white border border-red-200 text-red-700 rounded-lg font-medium hover:bg-red-50 transition-colors">
-                    View Profile
-                  </Link>
+                <div className="flex items-center sm:flex-col sm:items-end justify-between gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                  <Link href={`/faculty/students/${student.student_id}`} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700">View Profile</Link>
                 </div>
               </div>
             ))}

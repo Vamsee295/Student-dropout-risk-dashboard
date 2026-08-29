@@ -100,6 +100,36 @@ export function useStudent(): UseStudentState {
 
   useEffect(() => {
     fetchAll();
+
+    // ── Subscribe to attendance_posted broadcasts from Faculty portal ─────────
+    // When faculty posts attendance, the backend broadcasts on /ws/dashboard.
+    // We catch that event and refetch just the overview (attendance_rate) to
+    // keep the Student Dashboard live without a full page reload.
+    const WS_BASE =
+      process.env.NEXT_PUBLIC_WS_URL ||
+      (typeof window !== 'undefined'
+        ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host.replace('3000', '8000')}`
+        : 'ws://localhost:8000');
+
+    const ws = new WebSocket(`${WS_BASE}/api/v1/ws/dashboard`);
+
+    ws.onmessage = (evt) => {
+      try {
+        const event = JSON.parse(evt.data);
+        if (event.type === 'attendance_posted') {
+          // Soft-refresh: just re-fetch (isRefreshing = true, no spinner full-page)
+          fetchAll(true);
+        }
+      } catch {
+        // Ignore non-JSON pings
+      }
+    };
+
+    ws.onerror = () => ws.close();
+
+    return () => {
+      ws.close();
+    };
   }, [fetchAll]);
 
   return {

@@ -39,11 +39,19 @@ class StudentAssessment(Base):
     assessment_id = Column(Integer, ForeignKey("assessments.id"), nullable=False)
     
     obtained_marks = Column(Float, nullable=True)
+    writing_marks = Column(Float, nullable=True)
+    understanding_marks = Column(Float, nullable=True)
+    learning_marks = Column(Float, nullable=True)
+    application_marks = Column(Float, nullable=True)
+    knowledge_marks = Column(Float, nullable=True)
+    graded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    graded_at = Column(DateTime, nullable=True)
     status = Column(SQLEnum(SubmissionStatus), nullable=False, default=SubmissionStatus.PENDING)
     submission_date = Column(DateTime, nullable=True)
 
     student = relationship("Student", back_populates="student_assessments")
     assessment = relationship("Assessment", back_populates="student_assessments")
+    grader = relationship("User", foreign_keys=[graded_by])
 
     __table_args__ = (
         UniqueConstraint('student_id', 'assessment_id', name='idx_unique_student_assessment'),

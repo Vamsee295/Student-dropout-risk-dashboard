@@ -11,7 +11,7 @@ from sqlalchemy import func
 from app.database.session import get_db
 from app.auth.security import get_current_user
 from app.models.user import User
-from app.models.enums import RiskLevel, AttendanceStatus
+from app.models.enums import RiskLevel, AttendanceStatus, SubmissionStatus
 from app.models.student import Student, StudentMetric
 from app.models.analytics import RiskScore
 from app.models import AttendanceRecord, Enrollment, Course, StudentAssessment, Assessment
@@ -32,11 +32,82 @@ def _get_student_or_404(student_id: str, db: Session) -> Student:
     return student
 
 
+def _get_courses_data(student_id: str, db: Session) -> list:
+    enrollments = (
+        db.query(Enrollment, Course)
+        .join(Course, Enrollment.course_id == Course.id)
+        .filter(Enrollment.student_id == student_id)
+        .all()
+    )
+
+    colors = ["blue", "indigo", "amber", "purple", "rose", "emerald"]
+    result = []
+    for idx, (enr, course) in enumerate(enrollments):
+        # Real attendance % for this course
+        total_att = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.student_id == student_id,
+            AttendanceRecord.course_id == course.id,
+        ).scalar() or 0
+        present_att = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.student_id == student_id,
+            AttendanceRecord.course_id == course.id,
+            AttendanceRecord.status == AttendanceStatus.PRESENT,
+        ).scalar() or 0
+        att_pct = round(present_att / total_att * 100, 1) if total_att else 0
+
+        # Pending assignments for this course
+        pending_count = db.query(func.count(StudentAssessment.id)).filter(
+            StudentAssessment.student_id == student_id,
+            StudentAssessment.status == SubmissionStatus.PENDING,
+        ).join(Assessment, StudentAssessment.assessment_id == Assessment.id).filter(
+            Assessment.course_id == course.id,
+        ).scalar() or 0
+
+        result.append({
+            "code": course.id,
+            "name": course.name,
+            "credits": course.credits,
+            "attendance": att_pct,
+            "avgMarks": 0,   # computed from assessments in performance endpoint
+            "progress": 0,
+            "color": colors[idx % len(colors)],
+            "topics": "",
+            "nextClass": "",
+            "pending": pending_count,
+            "warning": "Attendance below 75%!" if att_pct < 75 and total_att > 0 else None,
+            "faculty": "",
+        })
+
+    return result
+
+
+
+@router.get("/{student_id}/courses")
+def get_student_courses(student_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Return all courses the student is enrolled in, with real attendance % and pending assignment count."""
+    student = _get_student_or_404(student_id, db)
+    return _get_courses_data(student.id, db)
+
+
+
 @router.get("/{student_id}/overview")
 def get_student_overview(student_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     student = _get_student_or_404(student_id, db)
-    metrics = db.query(StudentMetric).filter(StudentMetric.student_id == student_id).first()
-    risk = db.query(RiskScore).filter(RiskScore.student_id == student_id).first()
+    metrics = db.query(StudentMetric).filter(StudentMetric.student_id == student.id).first()
+    risk = db.query(RiskScore).filter(RiskScore.student_id == student.id).first()
+
+    # ── Attendance: use student_metrics if available, else compute live from records ──
+    if metrics:
+        attendance_rate = round(metrics.attendance_rate, 1)
+    else:
+        total_att = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.student_id == student.id
+        ).scalar() or 0
+        present_att = db.query(func.count(AttendanceRecord.id)).filter(
+            AttendanceRecord.student_id == student.id,
+            AttendanceRecord.status == AttendanceStatus.PRESENT,
+        ).scalar() or 0
+        attendance_rate = round(present_att / total_att * 100, 1) if total_att else 0
 
     return {
         "id": student.id,
@@ -49,11 +120,16 @@ def get_student_overview(student_id: str, db: Session = Depends(get_db), current
         "riskStatus": risk.risk_level.value if risk else "Unknown",
         "riskTrend": risk.risk_trend.value if risk else "stable",
         "riskValue": f"{round(risk.risk_score)}%" if risk else "0%",
-        "attendance": round(metrics.attendance_rate, 1) if metrics else 0,
+        "attendance": attendance_rate,
         "cgpa": round(metrics.academic_performance_index / 10, 2) if metrics else 0.0,
         "engagementScore": round(metrics.engagement_score, 1) if metrics else 0,
         "lastInteraction": metrics.last_interaction.isoformat() if metrics and metrics.last_interaction else None,
-        "primaryRiskDriver": "Low Attendance" if metrics and metrics.attendance_rate < 75 else None,
+        "primaryRiskDriver": "Low Attendance" if attendance_rate < 75 and attendance_rate > 0 else None,
+        # Exact KPI fields requested by checklist
+        "attendance_rate": attendance_rate,
+        "dropout_probability": round(risk.risk_score) if risk else 0,
+        "risk_level": risk.risk_level.value if risk else "Unknown",
+        "risk_trend": risk.risk_trend.value if risk else "stable",
     }
 
 

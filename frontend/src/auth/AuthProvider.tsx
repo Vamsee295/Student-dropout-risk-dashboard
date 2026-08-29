@@ -22,6 +22,8 @@ import {
   type LoginResponse,
 } from '@/services/authService';
 
+import { useAuthStore } from '@/store/useAuthStore';
+
 // ─── Context Type ─────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
@@ -59,10 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const restoredUser = await authService.restoreSession();
         if (restoredUser) {
           setUser(restoredUser);
+          useAuthStore.getState().login(restoredUser as any, tokenStorage.getAccess() || '');
         }
       } catch {
         // No valid session
         tokenStorage.clearAll();
+        useAuthStore.getState().logout();
       } finally {
         setIsLoading(false);
       }
@@ -76,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string, rememberMe = false): Promise<LoginResponse> => {
       const response = await authService.login(email, password, rememberMe);
       setUser(response.user);
+      useAuthStore.getState().login(response.user as any, response.access_token);
       return response;
     },
     []
@@ -86,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (redirect = true) => {
       await authService.logout();
       setUser(null);
+      useAuthStore.getState().logout();
       if (redirect) {
         router.push('/login');
       }
@@ -107,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = useCallback(
     (permission: string): boolean => {
       if (!user) return false;
-      return user.permissions.includes(permission);
+      return user.permissions?.includes(permission) ?? false;
     },
     [user]
   );

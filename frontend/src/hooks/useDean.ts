@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   deanService,
   type DeanOverview,
-  type DepartmentStat,
+  type DepartmentRow,
   type FacultyPerformance,
   type AcademicTrends,
   type EngagementData,
@@ -25,7 +25,7 @@ import {
 
 interface UseDeanState {
   overview: DeanOverview | null;
-  departments: DepartmentStat[] | null;
+  departments: DepartmentRow[] | null;
   facultyPerformance: FacultyPerformance[] | null;
   academicTrends: AcademicTrends | null;
   engagement: EngagementData | null;
@@ -43,7 +43,7 @@ interface UseDeanState {
 
 export function useDean(): UseDeanState {
   const [overview, setOverview] = useState<DeanOverview | null>(null);
-  const [departments, setDepartments] = useState<DepartmentStat[] | null>(null);
+  const [departments, setDepartments] = useState<DepartmentRow[] | null>(null);
   const [facultyPerformance, setFacultyPerformance] = useState<FacultyPerformance[] | null>(null);
   const [academicTrends, setAcademicTrends] = useState<AcademicTrends | null>(null);
   const [engagement, setEngagement] = useState<EngagementData | null>(null);
