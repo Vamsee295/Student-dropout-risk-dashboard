@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { calendarService, CalendarEvent } from "@/services/calendarService";
+import { getWsBaseUrl } from "@/config/apiConfig";
 
-const WS_BASE =
-  process.env.NEXT_PUBLIC_WS_URL ||
-  (typeof window !== "undefined"
-    ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host.replace("3000", "8000")}`
-    : "ws://localhost:8000");
+const WS_BASE = getWsBaseUrl();
 
 export function useCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);

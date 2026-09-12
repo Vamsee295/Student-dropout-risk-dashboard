@@ -15,9 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Student Dropout Risk Dashboard",
+  title: "EduRisk AI — Student Dropout Risk Dashboard",
   description:
     "Professional analytics console to monitor student engagement, attendance, and dropout risk using big data and machine learning.",
+  icons: {
+    icon: "/logo-icon.svg",
+    shortcut: "/logo-icon.svg",
+    apple: "/logo-icon.svg",
+  },
 };
 
 import CinematicBackground from "@/components/CinematicBackground";

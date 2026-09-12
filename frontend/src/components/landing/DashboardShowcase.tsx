@@ -110,14 +110,14 @@ export function DashboardShowcase() {
   const activeTab = d.color === "blue" ? "bg-blue-600" : d.color === "emerald" ? "bg-emerald-600" : "bg-violet-600";
 
   return (
-    <section id="dashboards" className="py-24 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-5">
+    <section id="dashboards" className="py-16 sm:py-24 bg-slate-50 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5">
         <FadeIn>
           <div className="text-center mb-14">
             <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
               Dashboard Showcase
             </span>
-            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
               Three Dashboards. One Platform.
             </h2>
             <p className="text-slate-500 max-w-xl mx-auto text-base">
@@ -128,13 +128,13 @@ export function DashboardShowcase() {
 
         <FadeIn delay={0.1}>
           {/* Tab selector */}
-          <div className="flex justify-center mb-10">
-            <div className="flex gap-2 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm">
+          <div className="flex justify-center mb-8 sm:mb-10 px-2">
+            <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1.5 sm:gap-2 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm max-w-full">
               {dashboards.map((d) => (
                 <button
                   key={d.id}
                   onClick={() => setActive(d.id)}
-                  className={`px-5 py-2.5 text-sm font-bold rounded-xl transition-all ${
+                  className={`px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all whitespace-nowrap ${
                     active === d.id
                       ? `${activeTab} text-white shadow-sm`
                       : "text-slate-500 hover:text-slate-800"

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" fill="none">
+  <!-- Group: Logo Emblem Icon (White Lines for Dark Backgrounds) -->
+  <g transform="translate(10, 5)">
+    <!-- Book Outer Cover -->
+    <path d="M12 24 C12 24, 28 16, 50 21 C72 16, 88 24, 88 24 L88 74 C88 74, 70 66, 50 71 C30 66, 12 74, 12 74 Z" 
+          stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    
+    <!-- Book Spine Center Line -->
+    <line x1="50" y1="21" x2="50" y2="71" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    
+    <!-- Left Page Fold Detail -->
+    <path d="M18 30 C26 23, 38 24, 47 27 L47 66 C38 63, 26 62, 18 68 Z" 
+          stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round" fill="none"/>
+          
+    <!-- Right Page Fold Detail -->
+    <path d="M82 30 C74 23, 62 24, 53 27 L53 66 C62 63, 74 62, 82 68 Z" 
+          stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round" fill="none"/>
+
+    <!-- Left Side: Neural Network Graph Lines -->
+    <line x1="33" y1="38" x2="43" y2="44" stroke="#FFFFFF" stroke-width="2.5"/>
+    <line x1="33" y1="38" x2="35" y2="54" stroke="#FFFFFF" stroke-width="2.5"/>
+    <line x1="35" y1="54" x2="44" y2="61" stroke="#FFFFFF" stroke-width="2.5"/>
+    <line x1="43" y1="44" x2="35" y2="54" stroke="#FFFFFF" stroke-width="2.5"/>
+    <line x1="43" y1="44" x2="50" y2="50" stroke="#FFFFFF" stroke-width="2.5"/>
+    <line x1="44" y1="61" x2="50" y2="50" stroke="#FFFFFF" stroke-width="2.5"/>
+
+    <!-- Left Side: Neural Network Nodes (Cyan) -->
+    <circle cx="33" cy="38" r="3.5" fill="#38BDF8" stroke="#FFFFFF" stroke-width="1.5"/>
+    <circle cx="35" cy="54" r="3.5" fill="#38BDF8" stroke="#FFFFFF" stroke-width="1.5"/>
+    <circle cx="43" cy="44" r="2" fill="#FFFFFF"/>
+    <circle cx="44" cy="61" r="2" fill="#FFFFFF"/>
+
+    <!-- Right Side: Upward Growth Arrow -->
+    <line x1="46" y1="64" x2="70" y2="36" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Arrow Head -->
+    <polygon points="73,32 60,35 67,42" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Typography: EduRisk AI -->
+  <text x="125" y="65" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">EduRisk <tspan font-weight="700" fill="#38BDF8">AI</tspan></text>
+</svg>

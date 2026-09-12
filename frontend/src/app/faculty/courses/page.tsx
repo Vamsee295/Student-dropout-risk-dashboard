@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BookOpen, Users, BarChart2, TrendingUp, Star, Plus, Loader2 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { BookOpen, Users, BarChart2, TrendingUp, Star, Plus, Loader2, Upload, Video } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/api/axios";
+import AddMaterialModal from "@/components/faculty/courses/AddMaterialModal";
+import AddRecordingModal from "@/components/faculty/courses/AddRecordingModal";
+import AddCourseModal from "@/components/faculty/courses/AddCourseModal";
 
 interface CourseItem {
   code: string;
@@ -37,23 +40,29 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await apiClient.get("/faculty/my-courses");
-        // Assign color cycling if not provided
-        const colored = data.map((c: CourseItem, i: number) => ({
-          ...c,
-          color: COLORS[i % COLORS.length],
-        }));
-        setCourses(colored);
-      } catch (e: any) {
-        setError(e?.response?.data?.detail ?? "Failed to load courses");
-      } finally {
-        setLoading(false);
-      }
-    })();
+  // Modals state
+  const [activeModal, setActiveModal] = useState<{ type: string; courseId?: string; courseName?: string } | null>(null);
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await apiClient.get("/faculty/my-courses");
+      const colored = data.map((c: CourseItem, i: number) => ({
+        ...c,
+        color: COLORS[i % COLORS.length],
+      }));
+      setCourses(colored);
+      setError(null);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? "Failed to load courses");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const totalStudents = courses.reduce((a, c) => a + c.students, 0);
   const avgAttendance = courses.length > 0
@@ -64,14 +73,18 @@ export default function CoursesPage() {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 relative">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">My Courses</h1>
           <p className="text-sm text-slate-500 mt-1">Manage your assigned courses, materials, and student progress</p>
         </div>
-        <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-          <Plus size={16} /> Add Resource
+        <button
+          onClick={() => setActiveModal({ type: 'add_course' })}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200 hover:shadow-md cursor-pointer self-start sm:self-auto"
+        >
+          <Plus size={18} />
+          <span>Add Course</span>
         </button>
       </div>
 
@@ -105,53 +118,106 @@ export default function CoursesPage() {
       {!loading && !error && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {courses.map((course) => (
-            <div key={course.code} className={`bg-white rounded-2xl border border-slate-100 border-l-4 shadow-sm p-6 hover:shadow-md transition-shadow ${borderMap[course.color] ?? "border-l-slate-300"}`}>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-lg border mb-2 ${colorMap[course.color] ?? "bg-slate-50 text-slate-700 border-slate-200"}`}>{course.code}</div>
-                  <h3 className="text-base font-bold text-slate-900">{course.name}</h3>
-                  <p className="text-xs text-slate-400 mt-1">Semester {course.semester} · {course.credits} Credits · {course.students} Students</p>
+            <div key={course.code} className={`bg-white rounded-2xl border border-slate-100 border-l-4 shadow-sm p-6 hover:shadow-md transition-shadow flex flex-col justify-between ${borderMap[course.color] ?? "border-l-slate-300"}`}>
+              <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-lg border mb-2 ${colorMap[course.color] ?? "bg-slate-50 text-slate-700 border-slate-200"}`}>{course.code}</div>
+                    <h3 className="text-base font-bold text-slate-900">{course.name}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Semester {course.semester} · {course.credits} Credits · {course.students} Students</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-400">
+                    <Star size={14} fill="currentColor" />
+                    <span className="text-xs font-semibold text-slate-600">{course.avgMarks > 0 ? (course.avgMarks / 10).toFixed(1) : "—"}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-amber-400">
-                  <Star size={14} fill="currentColor" />
-                  <span className="text-xs font-semibold text-slate-600">{course.avgMarks > 0 ? (course.avgMarks / 10).toFixed(1) : "—"}</span>
-                </div>
-              </div>
 
-              {/* Progress Bars */}
-              <div className="space-y-3 mb-4">
-                <div>
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Attendance</span>
-                    <span className={`font-semibold ${course.attendance > 0 && course.attendance < 75 ? "text-red-600" : "text-emerald-600"}`}>{course.attendance}%</span>
+                {/* Progress Bars */}
+                <div className="space-y-3 mb-4">
+                  <div>
+                    <div className="flex justify-between text-xs text-slate-500 mb-1">
+                      <span>Attendance</span>
+                      <span className={`font-semibold ${course.attendance > 0 && course.attendance < 75 ? "text-red-600" : "text-emerald-600"}`}>{course.attendance}%</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${course.attendance > 0 && course.attendance < 75 ? "bg-red-400" : "bg-emerald-400"}`} style={{ width: `${course.attendance}%` }} />
+                    </div>
                   </div>
-                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${course.attendance > 0 && course.attendance < 75 ? "bg-red-400" : "bg-emerald-400"}`} style={{ width: `${course.attendance}%` }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Assignment Completion</span>
-                    <span className="font-semibold text-slate-700">{course.completion}%</span>
-                  </div>
-                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-blue-400" style={{ width: `${course.completion}%` }} />
+                  <div>
+                    <div className="flex justify-between text-xs text-slate-500 mb-1">
+                      <span>Assignment Completion</span>
+                      <span className="font-semibold text-slate-700">{course.completion}%</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-blue-400" style={{ width: `${course.completion}%` }} />
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-4 border-t border-slate-50">
-                <Link href="/faculty/attendance" className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors">Attendance</Link>
-                <Link href="/faculty/assessments" className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors">Marks</Link>
-                <Link href="/faculty/assignments" className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors">Assignments</Link>
-                <Link href="/faculty/analytics" className="flex items-center gap-1 text-xs font-semibold py-2 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors">
-                  <BarChart2 size={12} /> Analytics
-                </Link>
+              <div className="space-y-2 mt-4">
+                {/* LMS Actions */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-50">
+                  <button 
+                    onClick={() => setActiveModal({ type: 'upload_notes', courseId: course.code, courseName: course.name })}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 font-medium transition-colors"
+                  >
+                    <Upload size={12} /> Upload Notes
+                  </button>
+                  <button 
+                    onClick={() => setActiveModal({ type: 'upload_recording', courseId: course.code, courseName: course.name })}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 font-medium transition-colors"
+                  >
+                    <Video size={12} /> Upload Recording
+                  </button>
+                </div>
+                {/* Navigation Actions */}
+                <div className="flex gap-2">
+                  <Link href="/faculty/attendance" className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors">Attendance</Link>
+                  <Link href="/faculty/assessments" className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors">Marks</Link>
+                  <Link href="/faculty/assignments" className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors">Assignments</Link>
+                  <Link href="/faculty/analytics" className="flex items-center justify-center gap-1 text-xs font-semibold py-2 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors">
+                    <BarChart2 size={12} /> Analytics
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modals Container */}
+      {activeModal?.type === 'add_course' && (
+        <AddCourseModal 
+          onClose={() => setActiveModal(null)}
+          onSuccess={() => {
+            setActiveModal(null);
+            fetchCourses();
+          }}
+        />
+      )}
+      {activeModal?.type === 'upload_notes' && (
+        <AddMaterialModal 
+          courseId={activeModal.courseId!} 
+          courseName={activeModal.courseName!} 
+          onClose={() => setActiveModal(null)}
+          onSuccess={() => {
+            setActiveModal(null);
+            fetchCourses();
+          }}
+        />
+      )}
+      {activeModal?.type === 'upload_recording' && (
+        <AddRecordingModal 
+          courseId={activeModal.courseId!} 
+          courseName={activeModal.courseName!} 
+          onClose={() => setActiveModal(null)}
+          onSuccess={() => {
+            setActiveModal(null);
+            fetchCourses();
+          }}
+        />
       )}
     </div>
   );

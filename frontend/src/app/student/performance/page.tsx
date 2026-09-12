@@ -8,6 +8,8 @@ import {
   ResponsiveContainer, LineChart, Line
 } from "recharts";
 import apiClient from "@/api/axios";
+import { getWsBaseUrl } from "@/config/apiConfig";
+import { tokenStorage } from "@/services/authService";
 
 interface PerformanceData {
   overall_percentage: number;
@@ -85,17 +87,14 @@ export default function PerformancePage() {
     // WebSocket for realtime updates
     let ws: WebSocket | null = null;
     const connectWs = () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || tokenStorage.getAccess();
       if (!token) return;
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = window.location.hostname;
-      const port = window.location.port ? `:${window.location.port}` : (host === "localhost" ? ":8000" : "");
+      const wsBase = getWsBaseUrl();
       
-      const userStr = localStorage.getItem("user");
-      if (!userStr) return;
+      const user = tokenStorage.getUser();
+      if (!user || !user.student_id) return;
       try {
-        const user = JSON.parse(userStr);
-        ws = new WebSocket(`${protocol}//${host}${port}/api/v1/ws/student_${user.student_id}?token=${token}`);
+        ws = new WebSocket(`${wsBase}/api/v1/ws/student_${user.student_id}?token=${token}`);
         
         ws.onmessage = (event) => {
           try {

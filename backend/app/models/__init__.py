@@ -18,6 +18,10 @@ from app.models.audit import AuditLog
 from app.models.conversation import Conversation, Message
 from app.models.calendar import CalendarEvent
 from app.models.attendance_session import AttendanceSession
+from app.models.lms import (
+    CourseMaterial, RecordedClass, VideoProgress, 
+    CourseDiscussion, CourseDiscussionReply
+)
 
 __all__ = [
     "Base",
@@ -32,5 +36,7 @@ __all__ = [
     "ModelVersion", "RiskScore", "RiskHistory",
     "Notification", "Intervention", "AuditLog",
     "Conversation", "Message", "CalendarEvent",
-    "AttendanceSession"
+    "AttendanceSession",
+    "CourseMaterial", "RecordedClass", "VideoProgress", 
+    "CourseDiscussion", "CourseDiscussionReply"
 ]

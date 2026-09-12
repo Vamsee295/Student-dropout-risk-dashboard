@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { DeanSidebar } from "@/components/DeanSidebar";
 import { DeanAIAssistant } from "@/components/dean/DeanAIAssistant";
-import { LogOut, Bell, Search, X, Settings, Crown, AlertTriangle, User } from "lucide-react";
+import { LogOut, Bell, Search, X, Settings, Crown, AlertTriangle, User, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleGuard } from "@/auth/RoleGuard";
 
@@ -43,6 +43,7 @@ export default function DeanLayout({ children }: { children: React.ReactNode }) 
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
   const { user, logout } = useAuth();
 
@@ -67,14 +68,27 @@ export default function DeanLayout({ children }: { children: React.ReactNode }) 
     <RoleGuard allowedRoles={["DEAN", "ADMIN"]}>
       <div className="min-h-screen bg-zinc-50 text-zinc-900">
         <div className="flex min-h-screen">
-          <DeanSidebar activePath={pathname} />
+          <DeanSidebar
+            activePath={pathname}
+            mobileOpen={mobileSidebarOpen}
+            onClose={() => setMobileSidebarOpen(false)}
+          />
 
           <div className="flex min-h-screen flex-1 flex-col">
             {/* Executive Header */}
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-6 shadow-sm">
-              <div>
-                <h1 className="text-base font-bold text-zinc-900">{getPageTitle(pathname)}</h1>
-                <p className="text-[11px] font-medium text-zinc-400">EduRisk AI · Executive Command Center</p>
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 sm:px-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-600 hover:bg-violet-50 hover:text-violet-600 hover:border-violet-200 transition-colors md:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu size={18} />
+                </button>
+                <div>
+                  <h1 className="text-base font-bold text-zinc-900">{getPageTitle(pathname)}</h1>
+                  <p className="text-[11px] font-medium text-zinc-400">EduRisk AI · Executive Command Center</p>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">

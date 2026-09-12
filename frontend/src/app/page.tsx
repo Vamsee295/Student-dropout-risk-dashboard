@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <main className="font-sans antialiased overflow-x-hidden">
+    <main className="font-sans antialiased w-full max-w-full overflow-x-clip">
       <Navbar />
       <HeroSection />
       <ProblemSolution />

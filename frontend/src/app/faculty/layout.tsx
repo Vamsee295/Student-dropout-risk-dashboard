@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FacultySidebar } from "@/components/FacultySidebar";
 import { FacultyAIAssistant } from "@/components/faculty/FacultyAIAssistant";
-import { User, LogOut, Settings, Search, Bell, X, CheckCheck } from "lucide-react";
+import { User, LogOut, Settings, Search, Bell, X, CheckCheck, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleGuard } from "@/auth/RoleGuard";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -42,6 +42,7 @@ export default function FacultyLayout({ children }: { children: React.ReactNode 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
   const { user, logout } = useAuth();
   const { notifs, unreadCount, markRead, markAllRead } = useNotifications();
@@ -58,15 +59,28 @@ export default function FacultyLayout({ children }: { children: React.ReactNode 
     <RoleGuard allowedRoles={["FACULTY", "ADMIN"]}>
       <div className="min-h-screen bg-slate-50 text-slate-900">
         <div className="flex min-h-screen">
-          <FacultySidebar />
+          <FacultySidebar
+            activePath={pathname}
+            mobileOpen={mobileSidebarOpen}
+            onClose={() => setMobileSidebarOpen(false)}
+          />
 
           <div className="flex min-h-screen flex-1 flex-col bg-slate-50 overflow-hidden">
             {/* Top Header */}
-            <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm flex-shrink-0 z-30">
-              {/* Left: Page title */}
-              <div>
-                <h1 className="text-base font-bold text-slate-900">{getPageTitle(pathname)}</h1>
-                <p className="text-xs text-slate-400">EduRisk AI · Faculty Portal</p>
+            <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 shadow-sm flex-shrink-0 z-30">
+              {/* Left: Hamburger + Page title */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors md:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu size={18} />
+                </button>
+                <div>
+                  <h1 className="text-base font-bold text-slate-900">{getPageTitle(pathname)}</h1>
+                  <p className="text-xs text-slate-400">EduRisk AI · Faculty Portal</p>
+                </div>
               </div>
 
               {/* Right: Search, Notifications, Profile */}

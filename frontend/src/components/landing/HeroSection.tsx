@@ -37,7 +37,7 @@ export function HeroSection() {
   const words = "AI-Powered Student Success Platform".split(" ");
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-white via-cyan-50 to-cyan-100/50 pt-20">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-white via-cyan-50 to-cyan-100/50 pt-16 sm:pt-20">
       {/* Grid background */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
 
@@ -45,7 +45,7 @@ export function HeroSection() {
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-400/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-teal-400/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-5 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5 w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative z-10 py-12 sm:py-20">
         {/* Left — Copy */}
         <div>
           <motion.div
@@ -62,7 +62,7 @@ export function HeroSection() {
             variants={headline}
             initial="hidden"
             animate="visible"
-            className="text-4xl lg:text-6xl font-black text-slate-900 leading-tight mb-6"
+            className="text-3xl sm:text-4xl lg:text-6xl font-black text-slate-900 leading-tight mb-6 break-words"
           >
             {words.map((w, i) => (
               <motion.span key={i} variants={word} className="inline-block mr-3">
@@ -209,8 +209,8 @@ export function HeroSection() {
       </div>
 
       {/* Bottom wave (matches next section background) */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div className="absolute bottom-0 left-0 right-0 overflow-hidden pointer-events-none">
+        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block min-w-[600px] sm:min-w-full">
           <path d="M0 60L1440 60L1440 30C1440 30 1080 0 720 0C360 0 0 30 0 30L0 60Z" fill="#ffffff" />
         </svg>
       </div>

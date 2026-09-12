@@ -33,14 +33,14 @@ export function ProblemSolution() {
   return (
     <>
       {/* Problem */}
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-5">
+      <section className="py-16 sm:py-24 bg-slate-50 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5">
           <FadeInSection>
             <div className="text-center mb-14">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-red-500 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full mb-4">
                 The Problem
               </span>
-              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
                 Why Students Drop Out
               </h2>
               <p className="text-slate-500 max-w-xl mx-auto text-base leading-relaxed">
@@ -82,15 +82,15 @@ export function ProblemSolution() {
       </section>
 
       {/* Solution */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-5">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="py-16 sm:py-24 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <FadeInSection>
               <div>
                 <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
                   Our Solution
                 </span>
-                <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-5">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4 sm:mb-5">
                   How EduRisk AI <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
                     Solves It
@@ -118,7 +118,7 @@ export function ProblemSolution() {
             </FadeInSection>
 
             <FadeInSection delay={0.2}>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {[
                   { icon: "🤖", title: "AI Prediction", desc: "92.4% accurate dropout risk scoring using Gradient Boosted Trees + SHAP analysis" },
                   { icon: "⚡", title: "Early Warning", desc: "Automated alerts to faculty and advisors when students cross risk thresholds" },

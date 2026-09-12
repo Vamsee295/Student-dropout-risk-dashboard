@@ -23,9 +23,16 @@ import {
   ChevronRight,
   AlertTriangle,
   UsersRound,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
+
+export type SidebarProps = {
+  activePath?: string;
+  mobileOpen?: boolean;
+  onClose?: () => void;
+};
 
 type NavItem = {
   label: string;
@@ -59,7 +66,7 @@ const navItems: NavItem[] = [
   { label: "Profile", href: "/faculty/profile", icon: <UserCircle size={18} /> },
 ];
 
-export function FacultySidebar() {
+export function FacultySidebar({ activePath, mobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
   const router = useRouter();
@@ -86,13 +93,8 @@ export function FacultySidebar() {
     return item.children?.some((c) => isActive(c.href)) ?? false;
   };
 
-  return (
-    <aside className="hidden w-64 flex-col bg-white border-r border-slate-200 shadow-sm md:flex overflow-hidden">
-      {/* Logo */}
-      <div className="flex h-16 items-center px-5 border-b border-slate-100 flex-shrink-0">
-        <Logo variant="light" className="scale-90 origin-left" />
-      </div>
-
+  const renderNav = (isMobileView = false) => (
+    <>
       {/* Faculty Badge */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
@@ -135,6 +137,9 @@ export function FacultySidebar() {
                         <Link
                           key={child.href}
                           href={child.href}
+                          onClick={() => {
+                            if (isMobileView) onClose?.();
+                          }}
                           className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs font-medium transition-all duration-150 ${
                             childActive
                               ? "bg-emerald-100 text-emerald-700"
@@ -160,6 +165,9 @@ export function FacultySidebar() {
             <Link
               key={item.href}
               href={item.href!}
+              onClick={() => {
+                if (isMobileView) onClose?.();
+              }}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
                 active
                   ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
@@ -176,13 +184,52 @@ export function FacultySidebar() {
       {/* Bottom Logout */}
       <div className="border-t border-slate-100 p-3 flex-shrink-0">
         <button
-          onClick={handleLogout}
+          onClick={() => {
+            if (isMobileView) onClose?.();
+            handleLogout();
+          }}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
         >
           <LogOut size={18} />
           Logout
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden w-64 flex-col bg-white border-r border-slate-200 shadow-sm md:flex overflow-hidden">
+        {/* Logo */}
+        <div className="flex h-16 items-center px-5 border-b border-slate-100 flex-shrink-0">
+          <Logo variant="light" className="scale-90 origin-left" />
+        </div>
+        {renderNav(false)}
+      </aside>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          <aside className="relative flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl z-10 h-full overflow-hidden">
+            <div className="flex h-16 items-center justify-between px-5 border-b border-slate-100 flex-shrink-0">
+              <Logo variant="light" className="scale-90 origin-left" />
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                aria-label="Close sidebar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {renderNav(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

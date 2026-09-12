@@ -88,8 +88,8 @@ export function StatsAndTech() {
   return (
     <>
       {/* Stats */}
-      <section className="py-20 bg-gradient-to-r from-cyan-600 to-teal-500 text-white">
-        <div className="max-w-7xl mx-auto px-5">
+      <section className="py-16 sm:py-20 bg-gradient-to-r from-cyan-600 to-teal-500 text-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5">
           <FadeIn>
             <div className="text-center mb-12">
               <h2 className="text-3xl font-black mb-3">Platform at a Glance</h2>
@@ -113,14 +113,14 @@ export function StatsAndTech() {
       </section>
 
       {/* Tech Stack */}
-      <section id="technology" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-5">
+      <section id="technology" className="py-16 sm:py-24 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5">
           <FadeIn>
             <div className="text-center mb-14">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
                 Technology Stack
               </span>
-              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
                 Enterprise-Grade Technology
               </h2>
               <p className="text-slate-500 max-w-xl mx-auto text-base">

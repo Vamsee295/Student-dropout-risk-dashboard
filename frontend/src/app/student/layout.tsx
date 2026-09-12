@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { StudentSidebar } from "@/components/StudentSidebar";
 import { StudentAIAssistant } from "@/components/student/StudentAIAssistant";
-import { User, LogOut, Bell, Search, X, Settings, CheckCheck } from "lucide-react";
+import { User, LogOut, Bell, Search, X, Settings, CheckCheck, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleGuard } from "@/auth/RoleGuard";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -35,6 +35,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
   const { user, logout } = useAuth();
   const { notifs, unreadCount, markRead, markAllRead } = useNotifications();
@@ -60,14 +61,27 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <RoleGuard allowedRoles={["STUDENT"]}>
       <div className="min-h-screen bg-slate-50 text-slate-900">
         <div className="flex min-h-screen">
-          <StudentSidebar activePath={pathname} />
+          <StudentSidebar
+            activePath={pathname}
+            mobileOpen={mobileSidebarOpen}
+            onClose={() => setMobileSidebarOpen(false)}
+          />
 
           <div className="flex min-h-screen flex-1 flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-sm">
-              <div>
-                <h1 className="text-base font-bold text-slate-900">{getPageTitle(pathname)}</h1>
-                <p className="text-[11px] font-medium text-slate-400">EduRisk AI · Student Portal</p>
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-100 bg-white px-4 sm:px-6 shadow-sm">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors md:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu size={18} />
+                </button>
+                <div>
+                  <h1 className="text-base font-bold text-slate-900">{getPageTitle(pathname)}</h1>
+                  <p className="text-[11px] font-medium text-slate-400">EduRisk AI · Student Portal</p>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">

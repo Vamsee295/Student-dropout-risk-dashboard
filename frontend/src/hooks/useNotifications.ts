@@ -18,6 +18,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import apiClient from "@/api/axios";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { getWsBaseUrl } from "@/config/apiConfig";
+
 export interface NotifItem {
   id: number;
   title: string;
@@ -28,10 +30,7 @@ export interface NotifItem {
 }
 
 function getWsBase(): string {
-  if (typeof window === "undefined") return "ws://localhost:8000";
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host.replace(/:\d+$/, ":8000");
-  return `${proto}//${host}`;
+  return getWsBaseUrl();
 }
 
 export function useNotifications() {

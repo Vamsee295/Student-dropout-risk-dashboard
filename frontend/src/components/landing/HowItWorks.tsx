@@ -32,14 +32,14 @@ const colorMap = {
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-5">
+    <section id="how-it-works" className="py-16 sm:py-24 bg-slate-50 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5">
         <FadeIn>
           <div className="text-center mb-16">
             <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
               How It Works
             </span>
-            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
               From Raw Data to Student Success
             </h2>
             <p className="text-slate-500 max-w-xl mx-auto text-base">
@@ -58,7 +58,7 @@ export function HowItWorks() {
               const isRight = i % 2 !== 0;
               return (
                 <FadeIn key={i} delay={i * 0.08}>
-                  <div className={`relative flex items-center gap-8 ${isRight ? "flex-row-reverse" : ""}`}>
+                  <div className={`relative flex items-center gap-4 md:gap-8 ${isRight ? "md:flex-row-reverse" : ""}`}>
                     {/* Card */}
                     <div className="flex-1">
                       <div className={`${c.bg} border ${c.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow`}>

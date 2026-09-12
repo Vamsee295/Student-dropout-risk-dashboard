@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { ClipboardList, Plus, Upload, TrendingUp, AlertTriangle, CheckCircle2, Loader2, X, Users, Check, FileText } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import apiClient from "@/api/axios";
+import { getWsBaseUrl } from "@/config/apiConfig";
+import { tokenStorage } from "@/services/authService";
 
 interface ExamItem {
   id: number;
@@ -79,12 +81,10 @@ export default function AssessmentsPage() {
     // WebSocket for realtime updates
     let ws: WebSocket | null = null;
     const connectWs = () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || tokenStorage.getAccess();
       if (!token) return;
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = window.location.hostname;
-      const port = window.location.port ? `:${window.location.port}` : (host === "localhost" ? ":8000" : "");
-      ws = new WebSocket(`${protocol}//${host}${port}/api/v1/ws/dashboard?token=${token}`);
+      const wsBase = getWsBaseUrl();
+      ws = new WebSocket(`${wsBase}/api/v1/ws/dashboard?token=${token}`);
       
       ws.onmessage = (event) => {
         try {
@@ -295,7 +295,7 @@ export default function AssessmentsPage() {
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">{activeExam.title}</h3>
-                    <p className="text-sm text-slate-500 mt-1">{activeExam.course} · {activeExam.type} · Max {activeExam.totalMarks} Marks</p>
+                    <p className="text-sm text-slate-500 mt-1">{activeExam.course} · {activeExam.type} · Max {Math.round(Number(activeExam.totalMarks) || 50)} Marks</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -307,9 +307,9 @@ export default function AssessmentsPage() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   {[
-                    { label: "Average", value: activeExam.avgMarks, icon: <TrendingUp size={16} />, color: "blue" },
-                    { label: "Highest", value: activeExam.highestMarks, icon: <CheckCircle2 size={16} />, color: "emerald" },
-                    { label: "Lowest", value: activeExam.lowestMarks, icon: <AlertTriangle size={16} />, color: "red" },
+                    { label: "Average", value: typeof activeExam.avgMarks === 'number' ? Math.round(activeExam.avgMarks) : activeExam.avgMarks, icon: <TrendingUp size={16} />, color: "blue" },
+                    { label: "Highest", value: typeof activeExam.highestMarks === 'number' ? Math.round(activeExam.highestMarks) : activeExam.highestMarks, icon: <CheckCircle2 size={16} />, color: "emerald" },
+                    { label: "Lowest", value: typeof activeExam.lowestMarks === 'number' ? Math.round(activeExam.lowestMarks) : activeExam.lowestMarks, icon: <AlertTriangle size={16} />, color: "red" },
                     { label: "Pass Rate", value: `${activeExam.passRate}%`, icon: <ClipboardList size={16} />, color: "purple" },
                   ].map((stat, i) => (
                     <div key={i} className={`p-4 rounded-xl flex items-center gap-3 ${
@@ -378,7 +378,7 @@ export default function AssessmentsPage() {
                                 </span>
                               </td>
                               <td className="py-3 px-2 text-right font-semibold text-slate-700">
-                                {sub.obtained_marks !== null ? sub.obtained_marks : "-"} <span className="text-xs text-slate-400 font-normal">/ {activeExam.totalMarks}</span>
+                                {sub.obtained_marks !== null && sub.obtained_marks !== undefined ? Math.round(Number(sub.obtained_marks)) : "-"} <span className="text-xs text-slate-400 font-normal">/ {Math.round(Number(activeExam.totalMarks) || 50)}</span>
                               </td>
                               <td className="py-3 px-2 text-right">
                                 <button 

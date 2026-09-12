@@ -6,6 +6,10 @@ import apiClient from "@/api/axios";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useAuth } from "@/hooks/useAuth";
 import { tokenStorage } from "@/services/authService";
+import LectureNotesModal from "@/components/student/courses/LectureNotesModal";
+import RecordedClassesModal from "@/components/student/courses/RecordedClassesModal";
+import CourseDiscussionModal from "@/components/student/courses/CourseDiscussionModal";
+import CourseMarksModal from "@/components/student/courses/CourseMarksModal";
 
 interface CourseItem {
   code: string;
@@ -47,6 +51,9 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modals state
+  const [activeModal, setActiveModal] = useState<{ type: string; courseId: string; courseName: string } | null>(null);
+
   const studentId = zustandUser?.student_id || authUser?.student_id || tokenStorage.getUser()?.student_id;
 
   useEffect(() => {
@@ -82,7 +89,7 @@ export default function CoursesPage() {
   const totalCredits = courses.reduce((a, c) => a + c.credits, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">My Courses</h1>
@@ -153,21 +160,66 @@ export default function CoursesPage() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: "Lecture Notes", icon: <FileText size={12} /> },
-                    { label: "Recorded Classes", icon: <Video size={12} /> },
-                    { label: "Discussion", icon: <MessageSquare size={12} /> },
-                    { label: "Marks", icon: <Star size={12} /> },
-                  ].map((a, j) => (
-                    <button key={j} className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 font-medium transition-colors">
-                      {a.icon} {a.label}
-                    </button>
-                  ))}
+                  <button 
+                    onClick={() => setActiveModal({ type: 'notes', courseId: course.code, courseName: course.name })}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 font-medium transition-colors"
+                  >
+                    <FileText size={12} /> Lecture Notes
+                  </button>
+                  <button 
+                    onClick={() => setActiveModal({ type: 'recorded', courseId: course.code, courseName: course.name })}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 font-medium transition-colors"
+                  >
+                    <Video size={12} /> Recorded Classes
+                  </button>
+                  <button 
+                    onClick={() => setActiveModal({ type: 'discussion', courseId: course.code, courseName: course.name })}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 font-medium transition-colors"
+                  >
+                    <MessageSquare size={12} /> Discussion
+                  </button>
+                  <button 
+                    onClick={() => setActiveModal({ type: 'marks', courseId: course.code, courseName: course.name })}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 font-medium transition-colors"
+                  >
+                    <Star size={12} /> Marks
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modals Container */}
+      {activeModal?.type === 'notes' && (
+        <LectureNotesModal 
+          courseId={activeModal.courseId} 
+          courseName={activeModal.courseName} 
+          onClose={() => setActiveModal(null)} 
+        />
+      )}
+      {activeModal?.type === 'recorded' && (
+        <RecordedClassesModal 
+          courseId={activeModal.courseId} 
+          courseName={activeModal.courseName} 
+          onClose={() => setActiveModal(null)} 
+        />
+      )}
+      {activeModal?.type === 'discussion' && (
+        <CourseDiscussionModal 
+          courseId={activeModal.courseId} 
+          courseName={activeModal.courseName} 
+          onClose={() => setActiveModal(null)} 
+        />
+      )}
+      {activeModal?.type === 'marks' && (
+        <CourseMarksModal 
+          courseId={activeModal.courseId} 
+          courseName={activeModal.courseName} 
+          onClose={() => setActiveModal(null)}
+          studentId={studentId}
+        />
       )}
     </div>
   );

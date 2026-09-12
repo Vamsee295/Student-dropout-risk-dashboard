@@ -44,14 +44,14 @@ function FadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export function CoreFeatures() {
   return (
-    <section id="features" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-5">
+    <section id="features" className="py-16 sm:py-24 bg-white relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5">
         <FadeIn>
           <div className="text-center mb-16">
             <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
               Core Features
             </span>
-            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
               Everything You Need to Prevent Dropout
             </h2>
             <p className="text-slate-500 max-w-xl mx-auto text-base">

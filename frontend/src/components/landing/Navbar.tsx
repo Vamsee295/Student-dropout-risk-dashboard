@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useState } from "react";
-import { BrainCircuit, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -33,14 +34,7 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-md shadow-cyan-200">
-            <BrainCircuit size={16} className="text-white" />
-          </div>
-          <span className="text-base font-black text-slate-900">
-            EduRisk <span className="text-cyan-600">AI</span>
-          </span>
-        </Link>
+        <Logo href="/" size="md" variant="light" />
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">

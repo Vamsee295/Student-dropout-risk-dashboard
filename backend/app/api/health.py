@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.database.session import get_db
 import time
 
@@ -12,7 +13,7 @@ def health_check(db: Session = Depends(get_db)):
     # Check DB Connection
     db_status = "connected"
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
     except Exception:
         db_status = "disconnected"
 
@@ -44,7 +45,7 @@ def health_check(db: Session = Depends(get_db)):
 def readiness_check(db: Session = Depends(get_db)):
     """Used by Kubernetes/Docker to know when the container can accept traffic."""
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         return {"status": "ready"}
     except Exception:
         from fastapi import HTTPException

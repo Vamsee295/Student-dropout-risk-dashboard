@@ -71,14 +71,14 @@ export function TestimonialsFAQ() {
   return (
     <>
       {/* Testimonials */}
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-5">
+      <section className="py-16 sm:py-24 bg-slate-50 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5">
           <FadeIn>
             <div className="text-center mb-14">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
                 Testimonials
               </span>
-              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
                 Trusted by Students, Faculty, and Leaders
               </h2>
               <p className="text-slate-500 max-w-xl mx-auto text-base">
@@ -114,14 +114,14 @@ export function TestimonialsFAQ() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-24 bg-white">
-        <div className="max-w-3xl mx-auto px-5">
+      <section id="faq" className="py-16 sm:py-24 bg-white relative overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 sm:px-5">
           <FadeIn>
             <div className="text-center mb-14">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full mb-4">
                 FAQ
               </span>
-              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
                 Frequently Asked Questions
               </h2>
               <p className="text-slate-500 text-base">

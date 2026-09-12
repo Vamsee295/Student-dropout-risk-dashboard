@@ -19,6 +19,7 @@ import {
   LogOut,
   ChevronDown,
   GraduationCap,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
@@ -26,6 +27,8 @@ import { useState } from "react";
 
 export type SidebarProps = {
   activePath?: string;
+  mobileOpen?: boolean;
+  onClose?: () => void;
 };
 
 const navItems = [
@@ -44,7 +47,7 @@ const navItems = [
   { label: "Settings", href: "/student/settings", icon: Settings },
 ];
 
-export function StudentSidebar({ activePath }: SidebarProps) {
+export function StudentSidebar({ activePath, mobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const currentPath = activePath ?? pathname;
   const { logout, user } = useAuth();
@@ -58,13 +61,8 @@ export function StudentSidebar({ activePath }: SidebarProps) {
     ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
     : "ST";
 
-  return (
-    <aside className="hidden w-64 flex-col border-r border-slate-100 bg-white shadow-sm md:flex">
-      {/* Logo */}
-      <div className="flex h-16 items-center px-5 border-b border-slate-100">
-        <Logo variant="light" className="scale-90 origin-left" />
-      </div>
-
+  const renderNav = (isMobileView = false) => (
+    <>
       {/* Student Badge */}
       <div className="px-4 py-3 border-b border-slate-50 bg-blue-50/60">
         <div className="flex items-center gap-2.5">
@@ -92,6 +90,9 @@ export function StudentSidebar({ activePath }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => {
+                if (isMobileView) onClose?.();
+              }}
               className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150 ${
                 isActive
                   ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
@@ -111,13 +112,52 @@ export function StudentSidebar({ activePath }: SidebarProps) {
       {/* Logout */}
       <div className="border-t border-slate-100 p-3">
         <button
-          onClick={handleLogout}
+          onClick={() => {
+            if (isMobileView) onClose?.();
+            handleLogout();
+          }}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
         >
           <LogOut size={17} />
           Logout
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden w-64 flex-col border-r border-slate-100 bg-white shadow-sm md:flex">
+        {/* Logo */}
+        <div className="flex h-16 items-center px-5 border-b border-slate-100">
+          <Logo variant="light" className="scale-90 origin-left" />
+        </div>
+        {renderNav(false)}
+      </aside>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          <aside className="relative flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl z-10 h-full">
+            <div className="flex h-16 items-center justify-between px-5 border-b border-slate-100">
+              <Logo variant="light" className="scale-90 origin-left" />
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                aria-label="Close sidebar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {renderNav(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

@@ -13,14 +13,16 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(
         ..., 
-        min_length=8, 
-        description="Password must be at least 8 characters long and contain at least one letter and one number."
+        min_length=1,
+        description="Password (demo mode: accepts simple passwords like 'Password')"
     )
 
     @field_validator('password')
     def validate_password(cls, v):
-        if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$', v):
-            raise ValueError('Password must contain at least one letter and one number.')
+        # Demo mode: Accept any non-empty password
+        # In production, uncomment the regex validation below:
+        # if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$', v):
+        #     raise ValueError('Password must contain at least one letter and one number.')
         return v
 
 class PasswordResetRequest(BaseModel):
@@ -30,13 +32,16 @@ class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str = Field(
         ..., 
-        min_length=8
+        min_length=1,
+        description="New password (demo mode: accepts simple passwords)"
     )
 
     @field_validator('new_password')
     def validate_password(cls, v):
-        if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$', v):
-            raise ValueError('Password must contain at least one letter and one number.')
+        # Demo mode: Accept any non-empty password
+        # In production, uncomment the regex validation below:
+        # if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$', v):
+        #     raise ValueError('Password must contain at least one letter and one number.')
         return v
 
 class UserResponse(UserBase):

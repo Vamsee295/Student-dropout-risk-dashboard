@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database import SessionLocal
+from app.database.session import SessionLocal
 from app.services.risk_model import RiskModel
 from app.services.shap_explainer import SHAPExplainer
 from app.services.realtime_prediction import init_prediction_service, compute_all_risk_scores

@@ -11,6 +11,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { getWsBaseUrl } from '@/config/apiConfig';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   studentService,
@@ -105,11 +106,7 @@ export function useStudent(): UseStudentState {
     // When faculty posts attendance, the backend broadcasts on /ws/dashboard.
     // We catch that event and refetch just the overview (attendance_rate) to
     // keep the Student Dashboard live without a full page reload.
-    const WS_BASE =
-      process.env.NEXT_PUBLIC_WS_URL ||
-      (typeof window !== 'undefined'
-        ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host.replace('3000', '8000')}`
-        : 'ws://localhost:8000');
+    const WS_BASE = getWsBaseUrl();
 
     const ws = new WebSocket(`${WS_BASE}/api/v1/ws/dashboard`);
 

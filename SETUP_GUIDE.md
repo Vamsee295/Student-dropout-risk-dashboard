@@ -47,7 +47,26 @@ Frontend: http://localhost:3000
 
 ---
 
-## 🛠️ Manual Setup (Local Development)
+## � Demo Login Credentials
+
+**For Testing & Demos (Before Deployment):**
+
+| Role | Email | Password |
+|------|-------|----------|
+| 🎓 Student | `student@gmail.com` | `Password` |
+| 👨‍🏫 Faculty | `faculty@gmail.com` | `Password` |
+| 👑 Dean | `dean@gmail.com` | `Password` |
+
+**To seed demo users:**
+```bash
+python scripts/seed_demo_users.py
+```
+
+**⚠️ IMPORTANT:** Change these credentials before production deployment!
+
+---
+
+## �🛠️ Manual Setup (Local Development)
 
 ### Step 1: Backend Setup
 

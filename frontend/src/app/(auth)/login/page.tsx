@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/Logo";
 import { useAuth } from "@/auth/AuthProvider";
 import { authService, tokenStorage } from "@/services/authService";
 
@@ -76,7 +77,7 @@ export default function LoginPage() {
     setSelectedRole(role);
     setError("");
     setSuccessMsg("");
-    setFormData({ email: roleConfig[role].email, password: "passwords" });
+    setFormData({ email: roleConfig[role].email, password: "Password" });
   };
 
   const handleBack = () => {
@@ -140,12 +141,7 @@ export default function LoginPage() {
       {/* Header */}
       <header className="relative z-10 px-6 py-5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-md shadow-cyan-200">
-              <BrainCircuit size={16} className="text-white" />
-            </div>
-            <span className="text-sm font-black text-slate-900">EduRisk <span className="text-cyan-600">AI</span></span>
-          </Link>
+          <Logo href="/" size="sm" variant="light" />
           <Link href="/" className="text-xs text-slate-500 hover:text-cyan-600 transition-colors flex items-center gap-1 font-medium">
             ← Back to Home
           </Link>
@@ -167,7 +163,7 @@ export default function LoginPage() {
                   </span>
                 ))}
                 <span className="text-[10px] text-slate-500">
-                  · password: <span className="font-mono font-bold text-slate-700">passwords</span>
+                  · password: <span className="font-mono font-bold text-slate-700">Password</span>
                 </span>
               </div>
             </div>
@@ -325,7 +321,7 @@ export default function LoginPage() {
             {/* Demo hint */}
             <p className="text-center text-[11px] text-slate-500 mt-6 font-medium">
               Credentials pre-filled for demo · Password:{" "}
-              <span className="font-mono text-slate-700 font-bold bg-slate-100 px-1 py-0.5 rounded">passwords</span>
+              <span className="font-mono text-slate-700 font-bold bg-slate-100 px-1 py-0.5 rounded">Password</span>
             </p>
           </div>
         )}

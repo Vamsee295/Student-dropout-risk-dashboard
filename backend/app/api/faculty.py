@@ -6,18 +6,28 @@ from sqlalchemy import func
 from app.database.session import get_db
 from app.auth.security import get_current_user
 from app.models.user import User
-from app.models.enums import Role, RiskLevel, AttendanceStatus
+from app.models.enums import Role, RiskLevel, AttendanceStatus, Department
 from app.models.student import Student, StudentMetric
 from app.models.analytics import RiskScore
 from app.models.records import AttendanceRecord
 from app.models.academic import Course, Enrollment
+from pydantic import BaseModel, Field
 
 from app.services.realtime_prediction import compute_all_risk_scores
 
 router = APIRouter()
 
 
+class CreateCourseRequest(BaseModel):
+    code: str = Field(..., min_length=2, max_length=50, description="Course Code, e.g. CS301")
+    name: str = Field(..., min_length=2, max_length=200, description="Course Name")
+    department: str = Field("Computer Science (CSE)", description="Department Name")
+    credits: int = Field(3, ge=1, le=10, description="Course Credits")
+    semester: int = Field(4, ge=1, le=8, description="Semester")
+
+
 @router.get("/my-courses")
+@router.get("/courses")
 def get_faculty_courses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -49,11 +59,74 @@ def get_faculty_courses(
             "credits": course.credits,
             "students": total_students,
             "attendance": avg_attendance,
-            "avgMarks": 0,       # Could be computed from student_assessments
-            "completion": 0,      # Placeholder
+            "avgMarks": 0,
+            "completion": 0,
             "color": "blue",
         })
     return result
+
+
+@router.post("/my-courses")
+@router.post("/courses")
+def create_course(
+    req: CreateCourseRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create a new course by faculty and automatically enroll students so it's directly visible."""
+    if current_user.role not in (Role.FACULTY, Role.DEAN, Role.ADMIN):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    code_clean = req.code.strip().upper()
+    existing = db.query(Course).filter(Course.id == code_clean).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Course with code '{code_clean}' already exists")
+
+    # Match department enum
+    dept_enum = Department.CSE
+    for d in Department:
+        if d.value.lower() == req.department.lower() or d.name.lower() == req.department.lower():
+            dept_enum = d
+            break
+
+    new_course = Course(
+        id=code_clean,
+        name=req.name.strip(),
+        department=dept_enum,
+        credits=req.credits,
+        semester=req.semester,
+    )
+    db.add(new_course)
+    db.flush()
+
+    # Automatically enroll all existing students so it is directly visible in student portal
+    students = db.query(Student).all()
+    for s in students:
+        existing_enr = db.query(Enrollment).filter(
+            Enrollment.student_id == s.id,
+            Enrollment.course_id == new_course.id
+        ).first()
+        if not existing_enr:
+            enr = Enrollment(
+                student_id=s.id,
+                course_id=new_course.id,
+                semester=new_course.semester,
+            )
+            db.add(enr)
+
+    db.commit()
+
+    return {
+        "code": new_course.id,
+        "name": new_course.name,
+        "semester": new_course.semester,
+        "credits": new_course.credits,
+        "students": len(students),
+        "attendance": 0,
+        "avgMarks": 0,
+        "completion": 0,
+        "color": "blue",
+    }
 
 @router.post("/risk/recalculate")
 def recalculate_risk(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

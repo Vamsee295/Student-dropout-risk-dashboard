@@ -272,7 +272,7 @@ def _trigger_intervention(
 
     db.add(Intervention(
         student_id=student_id,
-        intervention_type=InterventionType.COUNSELING,
+        type=InterventionType.COUNSELING,
         status=InterventionStatus.PENDING,
         assigned_to=advisor_id or "Unassigned",
         notes=(

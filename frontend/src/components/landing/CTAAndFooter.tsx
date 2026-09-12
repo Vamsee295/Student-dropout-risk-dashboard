@@ -3,7 +3,8 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, BrainCircuit, Github, Mail, Linkedin } from "lucide-react";
+import { ArrowRight, Github, Mail, Linkedin } from "lucide-react";
+import { Logo, LogoIcon } from "@/components/Logo";
 
 function FadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
@@ -19,15 +20,15 @@ export function CTAAndFooter() {
   return (
     <>
       {/* CTA */}
-      <section className="py-28 bg-gradient-to-br from-cyan-50 via-white to-cyan-100/50 relative overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-200/30 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-teal-100/40 rounded-full blur-[80px] pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-5 text-center relative z-10">
+      <section className="py-20 sm:py-28 bg-gradient-to-br from-cyan-50 via-white to-cyan-100/50 relative overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-cyan-200/30 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-60 sm:w-80 h-60 sm:h-80 bg-teal-100/40 rounded-full blur-[80px] pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-5 text-center relative z-10">
           <FadeIn>
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-cyan-200">
-              <BrainCircuit size={28} className="text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-6 shadow-xl border border-slate-100">
+              <LogoIcon size={38} variant="light" />
             </div>
-            <h2 className="text-4xl lg:text-5xl font-black text-slate-900 mb-5 leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-5 leading-tight">
               Ready to Transform<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-600">
                 Student Success?
@@ -66,16 +67,13 @@ export function CTAAndFooter() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 text-slate-500 py-16">
-        <div className="max-w-7xl mx-auto px-5">
+      <footer className="bg-white border-t border-slate-200 text-slate-500 py-12 sm:py-16 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             {/* Brand */}
             <div className="md:col-span-1">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-md shadow-cyan-200">
-                  <BrainCircuit size={16} className="text-white" />
-                </div>
-                <span className="text-sm font-black text-slate-900">EduRisk <span className="text-cyan-600">AI</span></span>
+              <div className="mb-4">
+                <Logo href="/" size="md" variant="light" />
               </div>
               <p className="text-xs leading-relaxed mb-4">
                 AI-powered student dropout risk prediction for educational institutions. Predicting futures. Changing lives.

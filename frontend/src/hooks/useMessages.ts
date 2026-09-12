@@ -20,14 +20,12 @@ import {
   MessageResponse,
 } from "@/services/messageService";
 
+import { getWsBaseUrl } from "@/config/apiConfig";
+
 // ── WebSocket URL helper ──────────────────────────────────────────────────────
 
 function getWsBase(): string {
-  if (typeof window === "undefined") return "ws://localhost:8000";
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  // Replace Next.js dev port (3000) with backend port (8000)
-  const host = window.location.host.replace(/:\d+$/, ":8000");
-  return `${proto}//${host}`;
+  return getWsBaseUrl();
 }
 
 function getToken(): string | null {
